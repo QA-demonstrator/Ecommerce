@@ -6,8 +6,7 @@
    :alt: PyPI
    :target: https://github.com/shuup/shuup
 .. image:: https://snyk.io/test/github/shuup/shuup/badge.svg
-   :alt: Known Vulnerabilities
-   :target: https://snyk.io/test/github/shuup/shuup
+   
 
 Shuup
 =====
@@ -34,6 +33,8 @@ the CLA.rst file distributed with Shuup.
 
 License
 -------
+
+ahmad is the king
 
 Shuup is published under Open Software License version 3.0 (OSL-3.0).
 See the LICENSE file distributed with Shuup.
