@@ -37,7 +37,7 @@ VERSION_FILE = os.path.join(TOPDIR, "shuup", "_version.py")
 #      - Add ".post0.dev" suffix to VERSION variable here
 
 NAME = "shuup"
-VERSION = "3.0.0b2.post0.dev"
+VERSION = "3.1.0.post0.dev"
 DESCRIPTION = "E-Commerce Platform"
 AUTHOR = "Shuup Commerce Inc."
 AUTHOR_EMAIL = "shuup@shuup.com"
@@ -108,7 +108,7 @@ REQUIRES = [
     "Markdown>=3,<4",
     "openpyxl>=3.0.7,<4",
     "python-dateutil>=2.8",
-    "shuup-mirage-field>=2,<3",
+    "shuup-mirage-field>=2.2.0,<3",
     "toml>=0.10.0,<1" "pytz>=2015.4",
     "requests>=2.7,<3",
     "six>=1.9,<2",

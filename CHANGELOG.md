@@ -8,16 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 List all changes after the last release here (newer on top). Each change on a separate bullet point line
 
-### Added
-
-- Add new Catalog API to index and fetch products with annotated price and discounted price
-
 ### Fixed
 
-- Admin: Fix primary buttons, list buttons, and filter dropdowns to use css variables
+- Admin: fix typo in product cloner
+
+## [3.1.0] - 2021-08-17
 
 ### Changed
 
+- Pull translations from Transifex
+- BREAKING: Suppliers with no supplier modules cannot create shipments
+- Core: Category.get_hierarchy now ignores any None objects
+
+### Fixed
+
+- Core: fix reindex migration to active the default language
+
+## [3.0.0] - 2021-08-16
+
+### Added
+
+- Core: allow saving encrypted configurations
+- Core: add new Catalog API to index and fetch products with annotated price and discounted price
+
+### Fixed
+
+- Admin: do not break when it's not possible to create shipments
+- Admin: Fix primary buttons, list buttons, and filter dropdowns to use css variables
+- Discounts: show the `exclude_selected_category` field in admin
+
+### Changed
+
+- Admin: Do not let users to set value with decimals while adjusting stock quantity if the sales unit doesn't permit.
+- Core: Block an attempt to delete a service provider that still has associated shipping or payment methods.
+- Core: consider an order fully shipped only when all out shipments are sent
+- Front: improve SEO by tuning description meta tag to product, category and CMS pages
 - Importer: index product after importing it
 - BREAKING: Core: Discounts are not cumulative anymore. The best discounted price returned by discount modules is considered.
 - BREAKING: Discounts: Remove coupon code, availability exception and exclude selected contact group from the Discount model.
@@ -28,10 +53,7 @@ List all changes after the last release here (newer on top). Each change on a se
   and `ProductListFormModifier.get_queryset`.
 - Front: user the new Catalog API on every place that retrieve products from the database
 - Xtheme: user the new Catalog API on plugins that retrieve products
-
-### Fixed
-
-- Discounts: show the `exclude_selected_category` field in admin
+- Core: Edit verbose name for ProductMedia.ordering to be more intuitive.
 
 ## [2.14.2] - 2021-08-10
 
