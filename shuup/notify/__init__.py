@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -28,11 +28,20 @@ class ShuupNotifyAppConfig(AppConfig):
             "shuup.notify.actions:SendEmail",
             "shuup.notify.actions:AddNotification",
         ],
-        "notify_event": [],
+        "notify_event": [
+            "shuup.notify.notify_events:PasswordReset",
+        ],
+        "notify_script_template": [
+            "shuup.notify.script_templates:PasswordResetTemplate",
+        ],
         "admin_module": [
             "shuup.notify.admin_module:NotifyAdminModule",
-        ]
+            "shuup.notify.admin_module:EmailTemplateAdminModule",
+        ],
     }
+
+    def ready(self):
+        import shuup.notify.signal_handlers  # noqa F(401)
 
 
 default_app_config = "shuup.notify.ShuupNotifyAppConfig"

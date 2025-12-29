@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-import decimal
 import pytest
 from django.utils.timezone import now
 
-from shuup.core.models import (
-    get_person_contact, Order, OrderLine, OrderLineTax, OrderLineType
-)
+from shuup.core.models import Order, OrderLine, OrderLineTax, OrderLineType, get_person_contact
 from shuup.core.shortcuts import update_order_line_from_product
 from shuup.default_tax.module import DefaultTaxModule
 from shuup.testing.factories import (
-    get_address, get_default_payment_method, get_default_product,
-    get_default_shipping_method, get_default_supplier, get_default_tax,
-    get_initial_order_status, get_shop
+    get_address,
+    get_default_payment_method,
+    get_default_product,
+    get_default_shipping_method,
+    get_default_supplier,
+    get_default_tax,
+    get_initial_order_status,
+    get_shop,
 )
 from shuup.testing.utils import apply_request_middleware
 
@@ -47,11 +49,8 @@ def create_order(request, creator, customer, product):
     supplier = get_default_supplier()
     product_order_line = OrderLine(order=order)
     update_order_line_from_product(
-        pricing_context=request,
-        order_line=product_order_line,
-        product=product,
-        quantity=5,
-        supplier=supplier)
+        pricing_context=request, order_line=product_order_line, product=product, quantity=5, supplier=supplier
+    )
 
     assert product_order_line.text == product.safe_translation_getter("name")
     product_order_line.base_unit_price = shop.create_price(100)
@@ -96,7 +95,7 @@ def create_order(request, creator, customer, product):
     assert order.is_fully_shipped()
 
     assert shipment.total_products == 5, "All products were shipped"
-    assert shipment.weight == product.gross_weight * 5 / 1000, "Gravity works"
+    assert shipment.weight == product.gross_weight * 5, "Gravity works"
     assert not order.get_unshipped_products(), "Nothing was left in the warehouse"
 
     assert order.can_set_complete()
@@ -139,6 +138,7 @@ def create_simple_order(request, creator, customer):
     order.save()
     return order
 
+
 def assert_almost_equal(x, y):
     assert abs(x - y).value <= 0.005
 
@@ -156,10 +156,10 @@ def get_line_taxes_for(order_line):
 @pytest.mark.django_db
 @pytest.mark.parametrize("mode", ["taxful", "taxless"])
 def test_basic_order(rf, admin_user, mode):
-    prices_include_tax = (mode == "taxful")
+    prices_include_tax = mode == "taxful"
     shop = get_shop(prices_include_tax=prices_include_tax)
 
-    request = rf.get('/')
+    request = rf.get("/")
     request.shop = shop
     apply_request_middleware(request)
     product = get_default_product()
@@ -173,11 +173,11 @@ def test_basic_order(rf, admin_user, mode):
 def test_can_complete_productless_order(rf, admin_user):
     shop = get_shop(prices_include_tax=False)
     supplier = get_default_supplier()
-    request = rf.get('/')
+    request = rf.get("/")
     request.shop = shop
     apply_request_middleware(request)
     customer = get_person_contact(admin_user)
-    order =  create_simple_order(request, admin_user, customer)
+    order = create_simple_order(request, admin_user, customer)
     assert not order.has_products()
     assert order.can_set_complete()
     assert not order.is_fully_shipped()

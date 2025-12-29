@@ -1,22 +1,32 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 from decimal import Decimal
-from mock import patch
-
+from django.conf import settings
+from django.test import override_settings
 from django.utils import translation
 from jinja2 import Template
+from mock import patch
 
 from shuup.core.models import Shop
 from shuup.core.templatetags.shuup_common import (
-    get_global_configuration, get_shop_configuration, money, number, percent
+    get_global_configuration,
+    get_shop_configuration,
+    get_shuup_version,
+    money,
+    number,
+    percent,
+    safe_product_description,
+    safe_vendor_description,
+    shuup_static,
 )
+from shuup.core.utils.static import get_shuup_static_url
 from shuup.utils.money import Money
 
 
@@ -25,6 +35,7 @@ def nbsp(x):
     Convert space to non-breaking space.
     """
     return x.replace(" ", "\xa0")
+
 
 def usd(value):
     """
@@ -91,9 +102,9 @@ def test_percent_formatter_more_digits():
 
 
 def test_percent_formatter_fewer_digits():
-    assert en_percent("0.11111", 2) ==  "11.11%"
-    assert en_percent("0.11111", 1) ==  "11.1%"
-    assert en_percent("0.11111", 0) ==  "11%"
+    assert en_percent("0.11111", 2) == "11.11%"
+    assert en_percent("0.11111", 1) == "11.1%"
+    assert en_percent("0.11111", 0) == "11%"
 
 
 def test_percent_formatter_fewer_digits_rounding():
@@ -187,29 +198,62 @@ def test_money_formatter_with_extra_digits():
         assert money(usd("1234.123456"), widen=4) == nbsp("1 234,123456 $")
 
 
-@patch('shuup.configuration.get')
+@patch("shuup.configuration.get")
 def test_get_shop_configuration(conf_get_mock, rf):
-    shop = Shop(identifier='da-shop', name='The Shop')
-    request = rf.get('/')
+    shop = Shop(identifier="da-shop", name="The Shop")
+    request = rf.get("/")
     request.shop = shop
-    ctx = Template('').new_context({'request': request})
+    ctx = Template("").new_context({"request": request})
 
-    get_shop_configuration(ctx, 'some_variable')
-    conf_get_mock.assert_called_once_with(shop, 'some_variable', None)
+    get_shop_configuration(ctx, "some_variable")
+    conf_get_mock.assert_called_once_with(shop, "some_variable", None)
 
     conf_get_mock.reset_mock()
 
-    get_shop_configuration(ctx, 'some_variable', 'default')
-    conf_get_mock.assert_called_once_with(shop, 'some_variable', 'default')
+    get_shop_configuration(ctx, "some_variable", "default")
+    conf_get_mock.assert_called_once_with(shop, "some_variable", "default")
 
 
-@patch('shuup.configuration.get')
+@patch("shuup.configuration.get")
 def test_get_global_configuration(conf_get_mock, rf):
-    get_global_configuration('some_variable')
-    conf_get_mock.assert_called_once_with(None, 'some_variable', None)
+    get_global_configuration("some_variable")
+    conf_get_mock.assert_called_once_with(None, "some_variable", None)
 
 
-@patch('shuup.configuration.get')
+@patch("shuup.configuration.get")
 def test_get_global_configuration_with_default(conf_get_mock, rf):
-    get_global_configuration('some_variable', 'default')
-    conf_get_mock.assert_called_once_with(None, 'some_variable', 'default')
+    get_global_configuration("some_variable", "default")
+    conf_get_mock.assert_called_once_with(None, "some_variable", "default")
+
+
+def test_safe_product_description():
+    text = "<strong>product description</strong>\nSome text here."
+
+    with override_settings(SHUUP_ADMIN_ALLOW_HTML_IN_PRODUCT_DESCRIPTION=True):
+        assert safe_product_description(text) == text
+
+    with override_settings(SHUUP_ADMIN_ALLOW_HTML_IN_PRODUCT_DESCRIPTION=False):
+        assert (
+            safe_product_description(text)
+            == "<p>&lt;strong&gt;product description&lt;/strong&gt;<br>Some text here.</p>"
+        )
+
+
+def test_safe_vendor_description():
+    text = "<strong>vendor description</strong>\nSome text here."
+
+    with override_settings(SHUUP_ADMIN_ALLOW_HTML_IN_VENDOR_DESCRIPTION=True):
+        assert safe_vendor_description(text) == text
+
+    with override_settings(SHUUP_ADMIN_ALLOW_HTML_IN_VENDOR_DESCRIPTION=False):
+        assert (
+            safe_vendor_description(text) == "<p>&lt;strong&gt;vendor description&lt;/strong&gt;<br>Some text here.</p>"
+        )
+
+
+def test_get_shuup_static_url():
+    assert "test.js?v=%s" % get_shuup_version() in get_shuup_static_url("test.js")
+    assert get_shuup_static_url("test.js") == shuup_static("test.js")
+    assert "test.css?v=" in get_shuup_static_url("test.css", "django")
+    assert get_shuup_static_url("test2.js", "django") == shuup_static("test2.js", "django")
+    assert shuup_static("test3.js") != shuup_static("test3.js", "django")

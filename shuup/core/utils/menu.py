@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -16,6 +16,7 @@ class MainMenuUpdater(object):
         ORDERS_MENU_CATEGORY: [{"identifier": "subscriptions", "title": _("Subscriptions")}]
     }
     """
+
     updates = {}
 
     def __init__(self, menu):
@@ -28,6 +29,9 @@ class MainMenuUpdater(object):
         """
         for item in self.menu:
             for child in self.updates.get(item["identifier"], []):
-                if child not in item["children"]:
-                    item["children"].append(child)
+                try:
+                    if child not in item["entries"]:
+                        item["entries"].append(child)
+                except KeyError:
+                    item["entries"] = [child]
         return self.menu

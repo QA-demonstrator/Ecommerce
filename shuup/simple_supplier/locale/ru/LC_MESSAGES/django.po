@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-11 17:29+0000\n"
-"PO-Revision-Date: 2017-09-22 19:46+0000\n"
-"Last-Translator: Алекс Прометеев <promet.alex@gmail.com>\n"
+"POT-Creation-Date: 2021-06-02 18:31+0000\n"
+"PO-Revision-Date: 2021-06-02 23:25+0000\n"
+"Last-Translator: Christian Hess\n"
 "Language-Team: Russian (http://www.transifex.com/shuup/shuup/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -45,33 +45,41 @@ msgstr "Корректировка запасов"
 
 #, python-format
 msgid ""
-"Added %(delta)s %(unit_symbol)s for product %(product_name)s stock "
-"(%(supplier_name)s)"
-msgstr "Добавить %(delta)s %(unit_symbol)s для продукта %(product_name)s акции (%(supplier_name)s)"
+"Success! Added %(delta)s `%(unit_symbol)s` for product `%(product_name)s` "
+"stock (%(supplier_name)s)."
+msgstr ""
 
 #, python-format
 msgid ""
-"Removed %(delta)s %(unit_symbol)s from product %(product_name)s stock "
-"(%(supplier_name)s)"
-msgstr "Удалить %(delta)s %(unit_symbol)s для продукта %(product_name)s акции (%(supplier_name)s)"
+"Success! Removed %(delta)s `%(unit_symbol)s` from product `%(product_name)s`"
+" stock (%(supplier_name)s)."
+msgstr ""
 
 #, python-format
-msgid "Alert limit for product %(product_name)s set to %(value)s."
-msgstr "Предел предупреждений для продукта %(product_name)s установить равным %(value)s."
+msgid "Alert limit for product `%(product_name)s` set to `%(value)s`."
+msgstr ""
 
-msgid "Not allowed"
-msgstr "Не допускается"
+msgid "Non-POST request methods are forbidden."
+msgstr ""
 
-msgid "Error, please check submitted values and try again."
-msgstr "Ошибка, пожалуйста проверьте введённые значения и попробуйте снова."
-
-#, python-format
-msgid "Error, please check submitted values and try again (%(error)s)."
-msgstr "Ошибка. Проверьте правильность введенных значений и повторите попытку (%(error)s)."
+msgid "Please check submitted values and try again."
+msgstr ""
 
 #, python-format
-msgid "Purchase price per unit (%(currency_name)s)"
-msgstr "Цена покупки за единицу (%(currency_name)s)"
+msgid "Please check submitted values and try again (%(error)s)."
+msgstr ""
+
+#, python-brace-format
+msgid "Stock management is now enabled for {product}."
+msgstr ""
+
+#, python-brace-format
+msgid "Stock management is now disabled for {product}."
+msgstr ""
+
+#, python-brace-format
+msgid "Purchase price per unit ({currency_name})"
+msgstr ""
 
 msgid "Quantity"
 msgstr "Количество"
@@ -103,17 +111,45 @@ msgstr "тип"
 msgid "alert limit"
 msgstr "лимит предупреждений."
 
+msgid "stock managed"
+msgstr ""
+
+msgid "Use this to override the supplier default stock behavior per product."
+msgstr ""
+
 msgid "logical count"
 msgstr "логический подсчёт"
 
 msgid "physical count"
 msgstr "физический подсчёт"
 
+msgid "Simple Supplier"
+msgstr ""
+
+msgid "Error! Insufficient quantity in stock."
+msgstr ""
+
+#, python-format
+msgid "%(name)s (physical stock: %(quantity)s)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Insufficient physical stock count for the following products: "
+"`%(product_counts)s`."
+msgstr ""
+
 msgid "Alert Limit Reached"
 msgstr "Лимит предупреждений достигнут."
 
 msgid "Product"
 msgstr "Товар"
+
+msgid "Supplier Email"
+msgstr ""
+
+msgid "Shop Email"
+msgstr ""
 
 msgid "Fired in the last 24 hours?"
 msgstr "Выслан в последние 24 часа?"
@@ -173,23 +209,23 @@ msgstr "Предел предупреждения согласно <a href=\"%(n
 msgid "Change alert limit"
 msgstr "Изменить количество для предупреждения"
 
+msgid "Disable stock management"
+msgstr ""
+
+msgid "Enable stock management"
+msgstr ""
+
 #, python-format
 msgid ""
 "Product <a href=\"%(product_url)s\" target=\"_blank\">%(product_name)s</a> "
 "does not have suppliers with %(module_name)s module."
 msgstr "Продукт <a href=\"%(product_url)s\" target=\"_blank\"> %(product_name)s </a> не имеет поставщиков с модулем %(module_name)s."
 
-msgid "Please set suppliers at Purchasing section."
-msgstr "Пожалуйста, выберите поставщиков в пункте покупок."
-
 #, python-format
 msgid ""
-"Product <a href=\"%(product_url)s\" target=\"_blank\">%(product_name)s</a> "
-"is not stocked."
-msgstr "Продукта <a href=\"%(product_url)s\" target=\"_blank\">%(product_name)s</a> нет в наличии."
-
-msgid "Please set product stock behavior at Additional Details section."
-msgstr "Пожалуйста, задайте действия для складирования товара в разделе «Дополнительные сведения»."
+"Please go in this product's Additional tab section and add enabled Suppliers"
+" that have both %(module_name)s module and stock management enabled."
+msgstr ""
 
 #, python-format
 msgid "No suppliers with %(module_name)s available."
@@ -197,29 +233,28 @@ msgstr "Поставщики %(module_name)s отсутствуют."
 
 #, python-format
 msgid ""
-"Please set %(module_name)s module for at least one of the <a "
-"href=\"%(supplier_url)s\" target=\"_blank\">Suppliers</a>."
-msgstr "Пожалуйста, установите модуль%(module_name)s хотя бы для одного из <a href=\"%(supplier_url)s\" target=\"_blank\"> поставщиков </a>."
+"Please set %(module_name)s module for at least one of the enabled <a "
+"href=\"%(supplier_url)s\" target=\"_blank\">Suppliers</a> and enable the "
+"stock management for them."
+msgstr ""
 
-#, python-format
-msgid "Physical count: %(count)s %(sales_unit)s"
-msgstr "Физическое количество: %(count)s %(sales_unit)s"
+#, python-brace-format
+msgid "Physical count ({sales_unit})"
+msgstr ""
 
-#, python-format
-msgid "Logical count: %(count)s %(sales_unit)s"
-msgstr "Логический количество: %(count)s %(sales_unit)s"
+#, python-brace-format
+msgid "Logical count ({sales_unit})"
+msgstr ""
 
-#, python-format
-msgid "Value per unit: %(value)s"
-msgstr "Стоимость единицы: %(value)s"
+msgid "Value per unit"
+msgstr ""
 
-#, python-format
-msgid "Total value: %(value)s"
-msgstr "Общая стоимость: %(value)s"
+msgid "Total value"
+msgstr ""
 
-#, python-format
-msgid "Alert limit: %(limit)s"
-msgstr "Предел количества, для вывода предупреждения: %(limit)s"
+#, python-brace-format
+msgid "Alert limit ({sales_unit})"
+msgstr ""
 
 msgid "No stock information available."
 msgstr "Информация о запасах недоступна"

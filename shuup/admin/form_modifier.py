@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import abc
-
 import six
 from django.contrib import messages
 from django.db.transaction import atomic
@@ -20,7 +19,7 @@ class FormModifier(six.with_metaclass(abc.ABCMeta)):
         """
         Extra fields for creation view.
 
-        :param object: Object linked to form
+        :param object: Object linked to form.
         :type object: django.db.models.Model
         :return: List of extra fields that should be added to form.
         Tuple should contain field name and Django form field.
@@ -37,7 +36,7 @@ class FormModifier(six.with_metaclass(abc.ABCMeta)):
         may call `~Django.forms.Form.add_error` to add errors to form or
         modify the ``form.cleaned_data`` dictionary.
 
-        :param form: Form that is currently cleaned
+        :param form: Form that is currently cleaned.
         :type form: django.forms.Form
         :rtype: None
         """
@@ -45,11 +44,11 @@ class FormModifier(six.with_metaclass(abc.ABCMeta)):
 
     def form_valid_hook(self, form, object):
         """
-        Extra form valid handler for creation view.`
+        Extra form valid handler for creation view.
 
-        :param form: Form that is currently handled
+        :param form: Form that is currently handled.
         :type form: django.forms.Form
-        :param object: object linked to form
+        :param object: object linked to form.
         :type object: django.db.models.Model
         :rtype: None
         """

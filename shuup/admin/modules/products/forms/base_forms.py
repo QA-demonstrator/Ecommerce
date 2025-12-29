@@ -1,47 +1,65 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
+import bleach
 from collections import defaultdict
-
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.forms import BaseModelFormSet
 from django.forms.formsets import DEFAULT_MAX_NUM, DEFAULT_MIN_NUM
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 from filer.models import Image
 
+from shuup.admin.forms.fields import ObjectSelect2ModelField, ObjectSelect2ModelMultipleField
+from shuup.admin.forms.quick_select import NoModel
 from shuup.admin.forms.widgets import (
-    FileDnDUploaderWidget, QuickAddCategoryMultiSelect, QuickAddCategorySelect,
-    QuickAddDisplayUnitSelect, QuickAddManufacturerSelect,
-    QuickAddPaymentMethodsSelect, QuickAddProductTypeSelect,
-    QuickAddSalesUnitSelect, QuickAddShippingMethodsSelect,
-    QuickAddTaxClassSelect, TextEditorWidget
+    FileDnDUploaderWidget,
+    QuickAddCategoryMultiSelect,
+    QuickAddCategorySelect,
+    QuickAddDisplayUnitSelect,
+    QuickAddManufacturerSelect,
+    QuickAddPaymentMethodsSelect,
+    QuickAddProductTypeSelect,
+    QuickAddSalesUnitSelect,
+    QuickAddShippingMethodsSelect,
+    QuickAddSupplierMultiSelect,
+    QuickAddTaxClassSelect,
+    TextEditorWidget,
 )
+from shuup.admin.shop_provider import get_shop
 from shuup.admin.signals import form_post_clean, form_pre_clean
 from shuup.core.models import (
-    Attribute, AttributeType, Category, PaymentMethod, Product, ProductMedia,
-    ProductMediaKind, ShippingMethod, ShopProduct, Supplier
+    Attribute,
+    AttributeType,
+    Category,
+    Manufacturer,
+    PaymentMethod,
+    Product,
+    ProductMedia,
+    ProductMediaKind,
+    ProductType,
+    ShippingMethod,
+    ShopProduct,
+    Supplier,
 )
 from shuup.utils.i18n import get_language_name
-from shuup.utils.multilanguage_model_form import (
-    MultiLanguageModelForm, to_language_codes
-)
+from shuup.utils.multilanguage_model_form import MultiLanguageModelForm, to_language_codes
 
 
 class ProductBaseForm(MultiLanguageModelForm):
     file = forms.CharField(
         label=_("Primary Product Image"),
         widget=FileDnDUploaderWidget(kind="images", upload_path="/products/images"),
-        help_text=_("The main product image. You can add additional images on the Product Images tab."),
-        required=False
+        help_text=_("The main product image. You can add additional images in the `Product Images` tab."),
+        required=False,
     )
 
     class Meta:
@@ -60,7 +78,6 @@ class ProductBaseForm(MultiLanguageModelForm):
             "sales_unit",
             "shipping_mode",
             "sku",
-            "stock_behavior",
             "tax_class",
             "type",
             "width",
@@ -76,18 +93,43 @@ class ProductBaseForm(MultiLanguageModelForm):
             "keywords": forms.TextInput(),
             "sales_unit": QuickAddSalesUnitSelect(editable_model="shuup.SalesUnit"),
             "tax_class": QuickAddTaxClassSelect(editable_model="shuup.TaxClass"),
-            "type": QuickAddProductTypeSelect(editable_model="shuup.ProductType"),
-            "manufacturer": QuickAddManufacturerSelect(editable_model="shuup.Manufacturer"),
-            "description": TextEditorWidget(),
+            "description": (
+                TextEditorWidget()
+                if settings.SHUUP_ADMIN_ALLOW_HTML_IN_PRODUCT_DESCRIPTION
+                else forms.Textarea(attrs={"rows": 5})
+            ),
             "short_description": forms.TextInput(),
         }
 
     def __init__(self, **kwargs):
-        self.request = kwargs.pop('request', None)
+        self.request = kwargs.pop("request", None)
         super(ProductBaseForm, self).__init__(**kwargs)
         self.fields["sales_unit"].required = True  # TODO: Move this to model
+        self.fields["type"].required = True
         if self.instance.pk:
             del self.fields["file"]
+
+        self.fields["manufacturer"] = ObjectSelect2ModelField(
+            required=False,
+            initial=(self.instance.manufacturer if self.instance.pk else None),
+            model=Manufacturer,
+            widget=QuickAddManufacturerSelect(
+                initial=(self.instance.manufacturer if self.instance.pk else None),
+                editable_model="shuup.Manufacturer",
+                attrs={"data-placeholder": ugettext("Select a manufacturer")},
+            ),
+        )
+        if self.instance.pk:
+            initial_type = self.instance.type
+        else:
+            initial_type = kwargs.get("initial", {}).get("type")
+
+        self.fields["type"] = ObjectSelect2ModelField(
+            label=_("Product type"),
+            initial=initial_type,
+            model=ProductType,
+            widget=QuickAddProductTypeSelect(editable_model="shuup.ProductType", initial=initial_type),
+        )
 
     def clean_sku(self):
         sku = self.cleaned_data["sku"]
@@ -99,12 +141,13 @@ class ProductBaseForm(MultiLanguageModelForm):
         # Make sure sku is unique and raise proper validation error if not
         if sku_unique_qs.exists():
             raise ValidationError(
-                _("Given value is already in use, please use unique SKU and try again."), code="sku_not_unique")
+                _("Given value is already in use, please use unique SKU and try again."), code="sku_not_unique"
+            )
         return sku
 
     def save(self):
-        instance = super(ProductBaseForm, self).save()
-        if self.cleaned_data.get("file"):
+        instance = super().save()
+        if self.cleaned_data.get("file") and instance.primary_image is None:
             image = ProductMedia.objects.create(
                 product=instance,
                 file_id=self.cleaned_data["file"],
@@ -117,11 +160,15 @@ class ProductBaseForm(MultiLanguageModelForm):
         return instance
 
     def clean(self):
-        form_pre_clean.send(
-            Product, instance=self.instance, cleaned_data=self.cleaned_data)
+        form_pre_clean.send(Product, instance=self.instance, cleaned_data=self.cleaned_data)
         super(ProductBaseForm, self).clean()
-        form_post_clean.send(
-            Product, instance=self.instance, cleaned_data=self.cleaned_data)
+
+        if not settings.SHUUP_ADMIN_ALLOW_HTML_IN_PRODUCT_DESCRIPTION:
+            for key, value in self.cleaned_data.items():
+                if key.startswith("description__"):
+                    self.cleaned_data[key] = bleach.clean(value, tags=[])
+
+        form_post_clean.send(Product, instance=self.instance, cleaned_data=self.cleaned_data)
 
 
 class ShopProductForm(MultiLanguageModelForm):
@@ -131,6 +178,7 @@ class ShopProductForm(MultiLanguageModelForm):
             "default_price_value",
             "minimum_price_value",
             "suppliers",
+            "available_until",
             "visibility",
             "purchasable",
             "visibility_limit",
@@ -150,13 +198,13 @@ class ShopProductForm(MultiLanguageModelForm):
             # TODO: "shop_primary_image",
         )
         help_texts = {
-            "backorder_maximum": _("Number of units that can be purchased after the product is out of stock. "
-                                   "Set to blank for product to be purchasable without limits")
+            "backorder_maximum": _(
+                "Number of units that can be purchased after the product is out of stock. "
+                "Set to blank for product to be purchasable without limits."
+            )
         }
         widgets = {
             "display_unit": QuickAddDisplayUnitSelect(editable_model="shuup.DisplayUnit"),
-            "primary_category": QuickAddCategorySelect(editable_model="shuup.Category"),
-            "categories": QuickAddCategoryMultiSelect(),
             "payment_methods": QuickAddPaymentMethodsSelect(),
             "shipping_methods": QuickAddShippingMethodsSelect(),
         }
@@ -165,21 +213,77 @@ class ShopProductForm(MultiLanguageModelForm):
         # TODO: Revise this. Since this is shop product form then maybe we should have shop available insted of request
         self.request = kwargs.pop("request", None)
         super(ShopProductForm, self).__init__(**kwargs)
+
+        if "default_price_value" in self.fields:
+            self.initial["default_price_value"] = self.initial["default_price_value"] or 0
+
         payment_methods_qs = PaymentMethod.objects.all()
         shipping_methods_qs = ShippingMethod.objects.all()
-        suppliers_qs = Supplier.objects.all()
         if self.request:
             shop = self.request.shop
             payment_methods_qs = payment_methods_qs.filter(shop=shop)
             shipping_methods_qs = ShippingMethod.objects.filter(shop=shop)
-            suppliers_qs = shop.suppliers.all()
         self.fields["payment_methods"].queryset = payment_methods_qs
         self.fields["shipping_methods"].queryset = shipping_methods_qs
-        self.fields["suppliers"].queryset = suppliers_qs
-        category_qs = Category.objects.all_except_deleted(shop=self.request.shop).prefetch_related('translations')
         self.fields["default_price_value"].required = True
-        self.fields["primary_category"].queryset = category_qs
-        self.fields["categories"].queryset = category_qs
+
+        initial_categories = []
+        initial_suppliers = []
+
+        if self.instance.pk:
+            initial_categories = self.instance.categories.all()
+            initial_suppliers = self.instance.suppliers.all()
+        elif not settings.SHUUP_ENABLE_MULTIPLE_SUPPLIERS:
+            supplier = Supplier.objects.first()
+            initial_suppliers = [supplier] if supplier else []
+
+        if settings.SHUUP_ADMIN_LOAD_SELECT_OBJECTS_ASYNC.get("suppliers"):
+            self.fields["suppliers"] = ObjectSelect2ModelMultipleField(
+                initial=initial_suppliers,
+                model=Supplier,
+                widget=QuickAddSupplierMultiSelect(initial=initial_suppliers, attrs={"data-search-mode": "enabled"}),
+                label=self.fields["suppliers"].label,
+                required=False,
+            )
+        else:
+            self.fields["suppliers"].widget = QuickAddSupplierMultiSelect(initial=initial_suppliers)
+
+        if settings.SHUUP_ADMIN_LOAD_SELECT_OBJECTS_ASYNC.get("categories"):
+            self.fields["primary_category"] = ObjectSelect2ModelField(
+                initial=(self.instance.primary_category if self.instance.pk else None),
+                model=Category,
+                widget=QuickAddCategorySelect(
+                    editable_model="shuup.Category",
+                    initial=(self.instance.primary_category if self.instance.pk else None),
+                    attrs={"data-placeholder": ugettext("Select a category")},
+                ),
+                label=self.fields["primary_category"].label,
+                required=False,
+            )
+            self.fields["categories"] = ObjectSelect2ModelMultipleField(
+                initial=initial_categories,
+                model=Category,
+                widget=QuickAddCategoryMultiSelect(initial=initial_categories),
+                label=self.fields["categories"].label,
+                required=False,
+            )
+        else:
+            categories_choices = [
+                (cat.pk, cat.get_hierarchy())
+                for cat in Category.objects.all_except_deleted(shop=get_shop(self.request))
+            ]
+            self.fields["primary_category"].widget = QuickAddCategorySelect(
+                initial=(
+                    self.instance.primary_category if self.instance.pk and self.instance.primary_category else None
+                ),
+                editable_model="shuup.Category",
+                attrs={"data-placeholder": ugettext("Select a category")},
+                choices=categories_choices,
+                model=NoModel(),
+            )
+            self.fields["categories"].widget = QuickAddCategoryMultiSelect(
+                initial=initial_categories, choices=categories_choices, model=NoModel()
+            )
 
     # TODO: Move this to model
     def clean_minimum_purchase_quantity(self):
@@ -195,31 +299,34 @@ class ShopProductForm(MultiLanguageModelForm):
         return backorder_maximum
 
     def clean(self):
-        form_pre_clean.send(
-            ShopProduct, instance=self.instance, cleaned_data=self.cleaned_data)
+        form_pre_clean.send(ShopProduct, instance=self.instance, cleaned_data=self.cleaned_data)
         data = super(ShopProductForm, self).clean()
         if not getattr(settings, "SHUUP_AUTO_SHOP_PRODUCT_CATEGORIES", False):
             return data
 
         # handle this here since form_part save causes problems with signals
-        primary_category = data["primary_category"]
-        categories = data["categories"]
+        primary_category = data.get("primary_category")
+        categories = data.get("categories", []) or []
+        if categories:
+            categories = list(categories)
+
         if not primary_category and categories:
             primary_category = categories[0]  # first is going to be primary
+
         if primary_category and primary_category not in categories:
-            combined = [primary_category.pk] + list(categories.values_list("pk", flat=True))
-            categories = Category.objects.filter(pk__in=combined)
+            combined = [primary_category] + categories
+            categories = combined
+
         data["primary_category"] = primary_category
         data["categories"] = categories
-        form_post_clean.send(
-            ShopProduct, instance=self.instance, cleaned_data=data)
+
+        form_post_clean.send(ShopProduct, instance=self.instance, cleaned_data=data)
         return data
 
 
 class ProductAttributesForm(forms.Form):
     def __init__(self, **kwargs):
-        self.default_language = kwargs.pop(
-            "default_language", getattr(settings, "PARLER_DEFAULT_LANGUAGE_CODE"))
+        self.default_language = kwargs.pop("default_language", getattr(settings, "PARLER_DEFAULT_LANGUAGE_CODE"))
         self.languages = to_language_codes(kwargs.pop("languages", ()), self.default_language)
         self.language_names = dict((lang, get_language_name(lang)) for lang in self.languages)
         self.product = kwargs.pop("product")
@@ -227,12 +334,17 @@ class ProductAttributesForm(forms.Form):
         self.trans_name_map = defaultdict(dict)
         self.translated_field_names = []
         super(ProductAttributesForm, self).__init__(**kwargs)
-        if self.product.pk:
-            self.applied_attrs = dict((pa.attribute_id, pa) for pa in self.product.attributes.all())
-        else:
-            self.applied_attrs = {}
+        self.applied_attrs = self._get_applied_attributes()
         self._field_languages = {}
         self._build_fields()
+        self.empty_permitted = False
+
+    def _get_applied_attributes(self):
+        applied_attrs = {}
+        if self.product.pk:
+            for pa in self.product.attributes.select_related("attribute").prefetch_related("chosen_options"):
+                applied_attrs[pa.attribute_id] = pa
+        return applied_attrs
 
     def _build_fields(self):
         for attribute in self.attributes:
@@ -245,6 +357,8 @@ class ProductAttributesForm(forms.Form):
                 if pa:
                     if attribute.type == AttributeType.TIMEDELTA:  # Special case.
                         value = pa.numeric_value
+                    elif attribute.type == AttributeType.CHOICES:
+                        value = [choice.id for choice in pa.chosen_options.all()]
                     else:
                         value = pa.value
                     self.initial[attribute.identifier] = value
@@ -265,9 +379,7 @@ class ProductAttributesForm(forms.Form):
             self.translated_field_names.append(field_name)
 
             if pa and lang in extant_languages:
-                self.initial[field_name] = getattr(
-                    pa.get_translation(lang), "translated_string_value", None
-                )
+                self.initial[field_name] = getattr(pa.get_translation(lang), "translated_string_value", None)
             self._field_languages[attribute.identifier][lang] = field_name
 
     def save(self):
@@ -293,16 +405,7 @@ class ProductAttributesForm(forms.Form):
 class BaseProductMediaForm(MultiLanguageModelForm):
     class Meta:
         model = ProductMedia
-        fields = (
-            "file",
-            "ordering",
-            "external_url",
-            "public",
-            "title",
-            "description",
-            "purchased",
-            "kind"
-        )
+        fields = ("file", "ordering", "external_url", "public", "title", "description", "purchased", "kind")
 
     def __init__(self, **kwargs):
         self.product = kwargs.pop("product")
@@ -316,9 +419,7 @@ class BaseProductMediaForm(MultiLanguageModelForm):
             # multiple media kinds allowed, filter the choices list to reflect the `self.allowed_media_kinds`
             allowed_kinds_values = set(v.value for v in self.allowed_media_kinds)
             self.fields["kind"].choices = [
-                (value, choice)
-                for value, choice in self.fields["kind"].choices
-                if value in allowed_kinds_values
+                (value, choice) for value, choice in self.fields["kind"].choices if value in allowed_kinds_values
             ]
 
             if len(self.allowed_media_kinds) == 1:
@@ -339,7 +440,7 @@ class BaseProductMediaForm(MultiLanguageModelForm):
         try:
             thumbnail = self.instance.get_thumbnail()
         except Exception as error:
-            msg = _("Thumbnail generation of %(media)s failed: %(error)s") % {"media": self.instance, "error": error}
+            msg = _("Thumbnail generation of %(media)s failed: %(error)s.") % {"media": self.instance, "error": error}
             messages.error(request, msg)
             thumbnail = None
         return thumbnail
@@ -366,8 +467,7 @@ class BaseProductMediaFormSet(BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         self.product = kwargs.pop("product")
         self.request = kwargs.pop("request", None)
-        self.default_language = kwargs.pop(
-            "default_language", getattr(settings, "PARLER_DEFAULT_LANGUAGE_CODE"))
+        self.default_language = kwargs.pop("default_language", getattr(settings, "PARLER_DEFAULT_LANGUAGE_CODE"))
         self.languages = to_language_codes(kwargs.pop("languages", ()), self.default_language)
         kwargs.pop("empty_permitted", None)  # this is unknown to formset
         super(BaseProductMediaFormSet, self).__init__(*args, **kwargs)
@@ -376,7 +476,7 @@ class BaseProductMediaFormSet(BaseModelFormSet):
         qs = ProductMedia.objects.filter(product=self.product)
         if self.allowed_media_kinds:
             qs = qs.filter(kind__in=self.allowed_media_kinds)
-        return qs
+        return qs.distinct()
 
     def form(self, **kwargs):
         kwargs.setdefault("languages", self.languages)
@@ -405,7 +505,7 @@ class ProductMediaForm(BaseProductMediaForm):
 
         file = self.cleaned_data.get("file")
         if external_url and file:
-            raise ValidationError(_("Use only URL or file, not both"))
+            raise ValidationError(_("Use only URL or file, not both."))
         return external_url
 
 
@@ -428,7 +528,7 @@ class ProductImageMediaForm(BaseProductMediaForm):
     def clean_file(self):
         file = self.cleaned_data.get("file")
         if file and not isinstance(file, Image):
-            raise ValidationError(_("Only images allowed in this field"))
+            raise ValidationError(_("Only images are allowed in this field."))
         return file
 
     def save(self, commit=True):
@@ -451,13 +551,9 @@ class ProductImageMediaFormSet(ProductMediaFormSet):
         product if none is selected as such.
         """
         super(ProductImageMediaFormSet, self).save(commit)
-
-        has_primary = any(form.cleaned_data.get("is_primary") for form in (self.forms or []))
-        eligible_forms = [form for form in (self.forms or []) if
-                          (form.cleaned_data.get("file") and not form.cleaned_data.get("DELETE"))]
-
-        if eligible_forms and not has_primary and not self.forms[0].product.primary_image:
-            # make first form be the primary image as well
-            form_instance = self.forms[0]
-            form_instance.product.primary_image = form_instance.instance
-            form_instance.product.save()
+        self.product.refresh_from_db()
+        if not self.product.primary_image:
+            fallback_primary_image = self.product.media.filter(
+                enabled=True, public=True, kind=ProductMediaKind.IMAGE
+            ).first()
+            Product.objects.filter(id=self.product.pk).update(primary_image=fallback_primary_image)

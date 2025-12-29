@@ -1,31 +1,30 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-
 import pytest
-
-from django.core.urlresolvers import reverse
 from django.utils.translation import activate
 
 from shuup.core import cache
 from shuup.core.models import (
-    Category, CategoryStatus, Manufacturer, Product, ProductMode,
-    ProductVariationVariable, ProductVariationVariableValue, ShopProduct,
-    ShopProductVisibility
+    Category,
+    CategoryStatus,
+    Manufacturer,
+    Product,
+    ProductMode,
+    ProductVariationVariable,
+    ProductVariationVariableValue,
+    ShopProduct,
+    ShopProductVisibility,
 )
-from shuup.front.utils.sorts_and_filters import (
-    set_configuration
-)
-from shuup.testing.browser_utils import click_element, wait_until_condition
-from shuup.testing.factories import (
-    create_product, get_default_shop, get_default_supplier
-)
-from shuup.testing.browser_utils import initialize_front_browser_test
+from shuup.front.utils.sorts_and_filters import set_configuration
+from shuup.testing.browser_utils import click_element, initialize_front_browser_test, wait_until_condition
+from shuup.testing.factories import create_product, get_default_shop, get_default_supplier
+from shuup.utils.django_compat import reverse
 
 pytestmark = pytest.mark.skipif(os.environ.get("SHUUP_BROWSER_TESTS", "0") != "1", reason="No browser tests run.")
 
@@ -49,11 +48,12 @@ FIRST_CATEGORY_PRODUCT_DATA = [
 ]
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
-def test_category_product_filters_1(browser, live_server, settings):
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
+def test_category_product_filters_1(browser, live_server, settings, reindex_catalog):
     cache.clear()  # Avoid cache from past tests
     shop, first_cat, second_cat, third_cat, first_manufacturer = initialize_db()
+    reindex_catalog()
 
     # initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -71,9 +71,8 @@ def test_category_product_filters_1(browser, live_server, settings):
     second_category_page_change(browser, live_server, shop, second_cat)
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
-def test_category_product_filters_2(browser, live_server, settings):
+@pytest.mark.django_db
+def test_category_product_filters_2(browser, live_server, settings, reindex_catalog):
     cache.clear()  # Avoid cache from past tests
     shop, first_cat, second_cat, third_cat, first_manufacturer = initialize_db()
 
@@ -85,9 +84,10 @@ def test_category_product_filters_2(browser, live_server, settings):
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
-            "limit_product_list_page_size": True
-        }
+            "limit_product_list_page_size": True,
+        },
     )
+    reindex_catalog()
 
     # initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -104,12 +104,11 @@ def test_category_product_filters_2(browser, live_server, settings):
     second_category_sort_with_price_filter(browser, second_cat)
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
-@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_TRAVIS", "0") == "1", reason="Disable when run through tox.")
-def test_category_product_filters_3(browser, live_server, settings):
+@pytest.mark.django_db
+def test_category_product_filters_3(browser, live_server, settings, reindex_catalog):
     cache.clear()  # Avoid cache from past tests
     shop, first_cat, second_cat, third_cat, first_manufacturer = initialize_db()
+    reindex_catalog()
 
     # initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -133,10 +132,8 @@ def test_category_product_filters_3(browser, live_server, settings):
     categories_filter_test(browser, first_cat, second_cat, third_cat)
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
-@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_TRAVIS", "0") == "1", reason="Disable when run through tox.")
-def test_category_product_filters_4(browser, live_server, settings):
+@pytest.mark.django_db
+def test_category_product_filters_4(browser, live_server, settings, reindex_catalog):
     """
     Do not show manufacturer option if there is any product
     """
@@ -149,13 +146,15 @@ def test_category_product_filters_4(browser, live_server, settings):
     set_configuration(
         category=first_cat,
         data={
+            "override_default_configuration": True,
             "sort_products_by_name": True,
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
-            "filter_products_by_manufacturer": True
-        }
+            "filter_products_by_manufacturer": True,
+        },
     )
+    reindex_catalog()
 
     # initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -173,6 +172,7 @@ def test_category_product_filters_4(browser, live_server, settings):
     last_product = Product.objects.last()
     last_product.manufacturer = first_manufacturer
     last_product.save()
+    reindex_catalog()
     browser.visit("%s%s" % (live_server, url))
     assert browser.is_text_present("Manufacturers")
 
@@ -180,6 +180,7 @@ def test_category_product_filters_4(browser, live_server, settings):
     shop_product = last_product.get_shop_instance(shop)
     shop_product.visibility = ShopProductVisibility.NOT_VISIBLE
     shop_product.save()
+    reindex_catalog()
 
     # the manufacturer filter is removed
     browser.visit("%s%s" % (live_server, url))
@@ -191,6 +192,9 @@ def initialize_db():
     # initialize
     cache.clear()
     shop = get_default_shop()
+    supplier = get_default_supplier(shop)
+    supplier.stock_managed = False
+    supplier.save()
 
     for name, identifier in CATEGORY_DATA:
         category = Category()
@@ -216,20 +220,11 @@ def initialize_db():
         shop_product.categories.add(first_cat)
 
     # Add some variation products
-    add_variations(
-        shop, Product.objects.filter(sku="test-sku-1").first(),
-        ["Black", "Yellow"], ["Big", "Small"]
-    )
+    add_variations(shop, Product.objects.filter(sku="test-sku-1").first(), ["Black", "Yellow"], ["Big", "Small"])
 
-    add_variations(
-        shop, Product.objects.filter(sku="test-sku-2").first(),
-        ["Brown", "Pink"], ["S", "L", "XL"]
-    )
+    add_variations(shop, Product.objects.filter(sku="test-sku-2").first(), ["Brown", "Pink"], ["S", "L", "XL"])
 
-    add_variations(
-        shop, Product.objects.filter(sku="test-sku-3").first(),
-        ["Brown", "Black"], ["S", "L", "XL", "Big"]
-    )
+    add_variations(shop, Product.objects.filter(sku="test-sku-3").first(), ["Brown", "Black"], ["S", "L", "XL", "Big"])
 
     for i in range(1, 14):
         product = create_orderable_product("Test product", "sku-%s" % i, price=i)
@@ -238,7 +233,6 @@ def initialize_db():
         shop_product.primary_category = second_cat
         shop_product.save()
         shop_product.categories.add(second_cat)
-
 
     # Set manufacturer for first product only
     first_manufacturer = Manufacturer.objects.first()
@@ -255,14 +249,13 @@ def create_orderable_product(name, sku, price):
 
 
 def hide_sorts_for_shop(browser, shop):
-    set_configuration(
-        shop=shop, data={"sort_products_by_name": False, "sort_products_by_price": False})
+    set_configuration(shop=shop, data={"sort_products_by_name": False, "sort_products_by_price": False})
     browser.reload()
     wait_until_condition(browser, lambda x: not x.is_text_present("sort"), timeout=20)
 
 
 def show_sorts_for_the_category_only(browser, category):
-    set_configuration(category=category, data={"sort_products_by_name": True})
+    set_configuration(category=category, data={"override_default_configuration": True, "sort_products_by_name": True})
     browser.reload()
     wait_until_condition(browser, lambda x: x.is_text_present("Sort"))
     wait_until_condition(browser, lambda x: len(x.find_by_css("#id_sort option")) == 2)
@@ -271,13 +264,14 @@ def show_sorts_for_the_category_only(browser, category):
     set_configuration(
         category=category,
         data={
+            "override_default_configuration": True,
             "sort_products_by_name": True,
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
             "sort_products_by_date_created": True,
-            "sort_products_by_date_created_ordering": 3
-        }
+            "sort_products_by_date_created_ordering": 3,
+        },
     )
     browser.reload()
     wait_until_condition(browser, lambda x: len(x.find_by_css("#id_sort option")) == 5)
@@ -286,41 +280,36 @@ def show_sorts_for_the_category_only(browser, category):
 def sort_category_products_test(browser, category):
     # Lowest price first
     click_element(browser, "button[data-id='id_sort']")
-    # WARNING: data-original-index was removed after bootstrap-select 1.6.3
-    click_element(browser, "li[data-original-index='2'] a")
+    click_element(browser, "button[data-id='id_sort'] + .dropdown-menu li:nth-child(3) a")
     expected_first_prod_id = "product-%s" % Product.objects.filter(sku="test-sku-3").first().id
-    wait_until_condition(
-        browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
+    wait_until_condition(browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
 
     # Name from A-Z
     click_element(browser, "button[data-id='id_sort']")
-    click_element(browser, "li[data-original-index='0'] a")
+    click_element(browser, "button[data-id='id_sort'] + .dropdown-menu li:nth-child(1) a")
     expected_first_prod_id = "product-%s" % Product.objects.filter(sku="test-sku-2").first().id
-    wait_until_condition(
-        browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
+    wait_until_condition(browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
 
     # Name from Z-A
     click_element(browser, "button[data-id='id_sort']")
-    click_element(browser, "li[data-original-index='1'] a")
+    click_element(browser, "button[data-id='id_sort'] + .dropdown-menu li:nth-child(2) a")
     expected_first_prod_id = "product-%s" % Product.objects.filter(sku="test-sku-3").first().id
-    wait_until_condition(
-        browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
-
+    wait_until_condition(browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
 
     # Highest price first
     click_element(browser, "button[data-id='id_sort']")
-    click_element(browser, "li[data-original-index='3'] a")
+    click_element(browser, "button[data-id='id_sort'] + .dropdown-menu li:nth-child(4) a")
     expected_first_prod_id = "product-%s" % Product.objects.filter(sku="test-sku-2").first().id
-    wait_until_condition(
-        browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
+    wait_until_condition(browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
 
     # Date created
     click_element(browser, "button[data-id='id_sort']")
-    click_element(browser, "li[data-original-index='4'] a")
-    expected_first_prod_id = "product-%s" % Product.objects.filter(
-        shop_products__primary_category=category).order_by("-created_on").first().id
-    wait_until_condition(
-        browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
+    click_element(browser, "button[data-id='id_sort'] + .dropdown-menu li:nth-child(5) a")
+    expected_first_prod_id = (
+        "product-%s"
+        % Product.objects.filter(shop_products__primary_category=category).order_by("-created_on").first().id
+    )
+    wait_until_condition(browser, lambda x: x.find_by_css(".product-card").first["id"] == expected_first_prod_id)
 
 
 def manufacturer_filter_test(browser, category, manufacturer):
@@ -328,12 +317,13 @@ def manufacturer_filter_test(browser, category, manufacturer):
     set_configuration(
         category=category,
         data={
+            "override_default_configuration": True,
             "sort_products_by_name": True,
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
-            "filter_products_by_manufacturer": True
-        }
+            "filter_products_by_manufacturer": True,
+        },
     )
     browser.reload()
     wait_until_condition(browser, lambda x: x.is_text_present("Manufacturers"))
@@ -347,13 +337,14 @@ def variations_filter_test(browser, category):
     set_configuration(
         category=category,
         data={
+            "override_default_configuration": True,
             "sort_products_by_name": True,
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
             "filter_products_by_variation_value": True,
-            "filter_products_by_variation_value_ordering": 1
-        }
+            "filter_products_by_variation_value_ordering": 1,
+        },
     )
 
     def get_var_id(value):
@@ -378,7 +369,7 @@ def variations_filter_test(browser, category):
     browser.execute_script("$('#variation_color-%s').click();" % get_var_id("Brown"))  # unselect brown
 
     # Two Big or Black products
-    browser.execute_script("$('#variation_color-%s').click();"% get_var_id("Black"))
+    browser.execute_script("$('#variation_color-%s').click();" % get_var_id("Black"))
 
     wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 2)
 
@@ -406,12 +397,13 @@ def categories_filter_test(browser, first_cat, second_cat, third_cat):
     set_configuration(
         category=first_cat,
         data={
+            "override_default_configuration": True,
             "sort_products_by_name": True,
             "sort_products_by_name_ordering": 1,
             "sort_products_by_price": True,
             "sort_products_by_price_ordering": 2,
-            "filter_products_by_category": True
-        }
+            "filter_products_by_category": True,
+        },
     )
     browser.reload()
     wait_until_condition(browser, lambda x: x.is_element_present_by_id("categories-%s" % third_cat.id))
@@ -441,7 +433,7 @@ def second_category_sort_test(browser, live_server, shop, category):
     wait_until_condition(browser, lambda x: x.is_element_present_by_css("button[data-id='id_limit']"), timeout=30)
     # Set limit to 24
     click_element(browser, "button[data-id='id_limit']")
-    click_element(browser, "button[data-id='id_limit'] + .dropdown-menu li[data-original-index='1'] a")
+    click_element(browser, "button[data-id='id_limit'] + .dropdown-menu li:nth-child(2) a")
     wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 13, timeout=30)
 
     # Check that visibility change affects the product count
@@ -464,23 +456,20 @@ def second_category_sort_test(browser, live_server, shop, category):
 
 
 def add_variations(shop, parent, colors, sizes):
-    color_var = ProductVariationVariable.objects.create(
-        product_id=parent.id, identifier="color", name="Color")
-    size_var = ProductVariationVariable.objects.create(
-        product_id=parent.id, identifier="size", name="Size")
+    supplier = get_default_supplier()
+    color_var = ProductVariationVariable.objects.create(product_id=parent.id, identifier="color", name="Color")
+    size_var = ProductVariationVariable.objects.create(product_id=parent.id, identifier="size", name="Size")
 
     for color in colors:
-        ProductVariationVariableValue.objects.create(
-            variable_id=color_var.id, value=color)
+        ProductVariationVariableValue.objects.create(variable_id=color_var.id, value=color)
     for size in sizes:
-        ProductVariationVariableValue.objects.create(
-            variable_id=size_var.id, value=size)
+        ProductVariationVariableValue.objects.create(variable_id=size_var.id, value=size)
 
     combinations = list(parent.get_all_available_combinations())
     assert len(combinations) == (len(sizes) * len(colors))
     for combo in combinations:
         assert not combo["result_product_pk"]
-        child = create_product(sku="%s-xyz-%s" % (parent.sku, combo["sku_part"]), shop=shop)
+        child = create_product(sku="%s-xyz-%s" % (parent.sku, combo["sku_part"]), shop=shop, supplier=supplier)
         child.link_to_parent(parent, combination_hash=combo["hash"])
     assert parent.mode == ProductMode.VARIABLE_VARIATION_PARENT
 
@@ -489,27 +478,28 @@ def second_category_sort_with_price_filter(browser, category):
     set_configuration(
         category=category,
         data={
+            "override_default_configuration": True,
             "filter_products_by_price": True,
             "filter_products_by_price_range_min": 5,
             "filter_products_by_price_range_max": 12,
-            "filter_products_by_price_range_size": 3
-        }
+            "filter_products_by_price_range_size": 3,
+        },
     )
     browser.reload()
 
     wait_until_condition(browser, lambda x: len(x.find_by_css("#id_price_range option")) == 5)
-    # 5 products and let's filter all products with price less than 5
-    click_element(browser, "button[data-id='id_price_range']")
-    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li[data-original-index='1'] a")
 
-    # 4 products and let's filter products with price +12
-    wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 4)
+    # let's filter all products with price less than 5 => 5
     click_element(browser, "button[data-id='id_price_range']")
-    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li[data-original-index='4'] a")
+    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li:nth-child(2) a")
+    wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 5)
 
-    # Now 2 products left and now filter with price 8-11
+    # let's filter products with price +12 => 2
+    click_element(browser, "button[data-id='id_price_range']")
+    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li:nth-child(5) a")
     wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 2)
-    click_element(browser, "button[data-id='id_price_range']")
-    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li[data-original-index='3'] a")
 
-    wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 3)
+    # filter with price 8-11 => 4
+    click_element(browser, "button[data-id='id_price_range']")
+    click_element(browser, "button[data-id='id_price_range'] + .dropdown-menu li:nth-child(4) a")
+    wait_until_condition(browser, lambda x: len(x.find_by_css(".product-card")) == 4)

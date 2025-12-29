@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -14,11 +14,9 @@ from shuup.admin.currencybound import CurrencyBound
 class SalesDashboardModule(CurrencyBound, AdminModule):
     name = _("Sales Dashboard")
 
-    def get_required_permissions(self):
-        return ("shuup.view_sales_dashboard",)
-
     def get_dashboard_blocks(self, request):
         import shuup.admin.modules.sales_dashboard.dashboard as dashboard
+
         currency = self.currency
         if not currency:
             shop = request.shop

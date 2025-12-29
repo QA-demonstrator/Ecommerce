@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -8,11 +8,11 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import string_concat
 
 from shuup.admin.utils.picotable import Column
 from shuup.admin.utils.views import CreateOrUpdateView, PicotableListView
 from shuup.default_tax.models import TaxRule
+from shuup.utils.django_compat import format_lazy
 from shuup.utils.patterns import PATTERN_SYNTAX_HELP_TEXT
 
 
@@ -31,15 +31,11 @@ class TaxRuleForm(forms.ModelForm):
             "enabled",
         ]
         help_texts = {
-            "country_codes_pattern": string_concat(
-                PATTERN_SYNTAX_HELP_TEXT,
-                " ",
-                _("Use ISO 3166-1 country codes (US, FI etc.)")
+            "country_codes_pattern": format_lazy(
+                PATTERN_SYNTAX_HELP_TEXT, " ", _("Use ISO 3166-1 country codes (US, FI etc.)")
             ),
-            "region_codes_pattern": string_concat(
-                PATTERN_SYNTAX_HELP_TEXT,
-                " ",
-                _("Use two letter state codes for the US")
+            "region_codes_pattern": format_lazy(
+                PATTERN_SYNTAX_HELP_TEXT, " ", _("Use two letter state codes for the US")
             ),
             "postal_codes_pattern": PATTERN_SYNTAX_HELP_TEXT,
         }
@@ -70,7 +66,7 @@ class TaxRuleListView(PicotableListView):
         Column("country_codes_pattern", _("Countries")),
         Column("region_codes_pattern", _("Regions")),
         Column("postal_codes_pattern", _("Postal Codes")),
-        Column("priority", _(u"Priority")),
-        Column("override_group", _(u"Override Group")),
-        Column("enabled", _(u"Enabled")),
+        Column("priority", _("Priority")),
+        Column("override_group", _("Override Group")),
+        Column("enabled", _("Enabled")),
     ]

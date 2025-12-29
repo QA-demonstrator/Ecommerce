@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,22 +9,22 @@ from __future__ import unicode_literals
 
 import datetime
 import json
-
 import six
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Manager, Q, QuerySet
 from django.http.response import HttpResponse, JsonResponse
 from django.template.defaultfilters import yesno
-from django.utils.encoding import force_text
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
+from django.views.generic import View
 from easy_thumbnails.files import get_thumbnailer
 from filer.models import Image
 
-from shuup.admin.utils.urls import get_model_url, NoModelUrl
+from shuup.admin.utils.urls import NoModelUrl, get_model_url
 from shuup.apps.provides import get_provide_objects
 from shuup.core.models import ProductMedia
 from shuup.utils.dates import try_parse_datetime
+from shuup.utils.django_compat import force_text
 from shuup.utils.i18n import format_money, get_locally_formatted_datetime
 from shuup.utils.importing import load
 from shuup.utils.money import Money
@@ -41,16 +41,20 @@ def maybe_callable(thing, context=None):
         return thing
 
     if isinstance(thing, six.string_types):
-        thing = getattr(context, thing, None)
-        if callable(thing):
-            return thing
+        callable_thing = getattr(context, thing, None)
+        if callable(callable_thing):
+            # prevent returning a callable that is defined in a base View class
+            # this won't allow leaking methods like: dispatch, options, get, post etc
+            base_view_thing = getattr(View, thing, None)
+            if not callable(base_view_thing):
+                return callable_thing
 
     return None
 
 
 def maybe_call(thing, context, args=None, kwargs=None):
     """
-    If `thing` is callable, call it with args and kwargs and return the value.
+    If `thing` is callable, call it with `args` and `kwargs` and return the value.
     If `thing` names a callable attribute of `context`, call it with args and kwargs and return the value.
     Otherwise return `thing`.
     """
@@ -93,9 +97,7 @@ class ChoicesFilter(Filter):
         if isinstance(choices, QuerySet):
             choices = [(c.pk, c) for c in choices]
         return [("_all", "---------")] + [
-            (force_text(value, strings_only=True), force_text(display).title())
-            for (value, display)
-            in choices
+            (force_text(value, strings_only=True), force_text(display)) for (value, display) in choices
         ]
 
     def to_json(self, context):
@@ -103,10 +105,7 @@ class ChoicesFilter(Filter):
         default_choice = self.default
         if default_choice is None and choices:
             default_choice = choices[0][0]
-        return {
-            "choices": choices,
-            "defaultChoice": default_choice
-        }
+        return {"choices": choices, "defaultChoice": default_choice}
 
     def filter_queryset(self, queryset, column, value, context):
         if value == "_all":
@@ -153,12 +152,14 @@ class RangeFilter(Filter):
 
     def to_json(self, context):
         return {
-            "range": compact({
-                "min": maybe_call(self.min, context=context),
-                "max": maybe_call(self.max, context=context),
-                "step": maybe_call(self.step, context=context),
-                "type": self.field_type,
-            })
+            "range": compact(
+                {
+                    "min": maybe_call(self.min, context=context),
+                    "max": maybe_call(self.max, context=context),
+                    "step": maybe_call(self.step, context=context),
+                    "type": self.field_type,
+                }
+            )
         }
 
     def filter_queryset(self, queryset, column, value, context):
@@ -184,7 +185,6 @@ class RangeFilter(Filter):
 
 
 class DateRangeFilter(RangeFilter):
-
     def __init__(self, *args, **kwargs):
         super(DateRangeFilter, self).__init__(*args, **kwargs)
         if not self.field_type:
@@ -192,10 +192,7 @@ class DateRangeFilter(RangeFilter):
 
     def filter_queryset(self, queryset, column, value, context):
         if value:
-            value = {
-                "min": try_parse_datetime(value.get("min")),
-                "max": try_parse_datetime(value.get("max"))
-            }
+            value = {"min": try_parse_datetime(value.get("min")), "max": try_parse_datetime(value.get("max"))}
         return super(DateRangeFilter, self).filter_queryset(queryset, column, value, context)
 
 
@@ -220,10 +217,12 @@ class TextFilter(Filter):
 
     def to_json(self, context):
         return {
-            "text": compact({
-                "type": self.field_type,
-                "placeholder": force_text(self.placeholder) if self.placeholder else None,
-            })
+            "text": compact(
+                {
+                    "type": self.field_type,
+                    "placeholder": force_text(self.placeholder) if self.placeholder else None,
+                }
+            )
         }
 
     def filter_queryset(self, queryset, column, value, context):
@@ -254,14 +253,10 @@ class MultiFieldTextFilter(TextFilter):
         return queryset
 
 
-true_or_false_filter = ChoicesFilter([
-    (False, _("no")),
-    (True, _("yes"))
-])
+true_or_false_filter = ChoicesFilter([(False, _("no")), (True, _("yes"))])
 
 
 class Column(object):
-
     def __init__(self, id, title, **kwargs):
         self.id = id
         self.title = title
@@ -274,6 +269,7 @@ class Column(object):
         self.ordering = kwargs.pop("ordering", 9999)
         self.context = None  # will be set after initializing
         self.sort_field = kwargs.pop("sort_field", None)
+        self.allow_highlight = kwargs.pop("allow_highlight", True)
 
         if kwargs and type(self) is Column:  # If we're not derived, validate that client code doesn't fail
             raise NameError("Unexpected kwarg(s): %s" % kwargs.keys())
@@ -286,6 +282,7 @@ class Column(object):
             "filter": self.filter_config.to_json(context=context) if self.filter_config else None,
             "sortable": bool(self.sortable),
             "linked": bool(self.linked),
+            "allowHighlight": bool(self.allow_highlight),
             "raw": bool(self.raw),
         }
         return dict((key, value) for (key, value) in six.iteritems(out) if value is not None)
@@ -331,7 +328,7 @@ class Column(object):
             value = getattr(value, bit, None)
 
         return_value = self.check_different_types(value)
-        if return_value:
+        if return_value is not None:
             return return_value
 
         if not value:
@@ -341,7 +338,7 @@ class Column(object):
 
     def check_different_types(self, value):
         if isinstance(value, ProductMedia):
-            return "<img src='/media/%s'>" % value.get_thumbnail()
+            return "<img src='%s'>" % value.get_thumbnail().url
 
         if isinstance(value, Image):
             thumbnailer = get_thumbnailer(value)
@@ -386,11 +383,12 @@ class Picotable(object):
         self.columns_by_id = dict((c.id, c) for c in self.columns)
         self.get_object_url = maybe_callable("get_object_url", context=self.context)
         self.get_object_abstract = maybe_callable("get_object_abstract", context=self.context)
+        self.get_object_extra = maybe_callable("get_object_extra", context=self.context)
         self.default_filters = self._get_default_filters()
 
     def _get_default_filter(self, column):
         filter_config = getattr(column, "filter_config")
-        if(filter_config and hasattr(filter_config, "default") and filter_config.default is not None):
+        if filter_config and hasattr(filter_config, "default") and filter_config.default is not None:
             field = filter_config.filter_field or column.id
             return (field, filter_config.default)
         else:
@@ -410,7 +408,7 @@ class Picotable(object):
         if ordered is not None and not ordered:
             queryset = self.queryset.order_by("-id")
 
-        filters = (query.get("filters") or self._get_default_filters())
+        filters = query.get("filters") or self._get_default_filters()
         for column, value in six.iteritems(filters):
             column = self.columns_by_id.get(column)
             if column:
@@ -418,10 +416,10 @@ class Picotable(object):
 
         sort = query.get("sort")
         if sort:
-            desc = (sort[0] == "-")
+            desc = sort[0] == "-"
             column = self.columns_by_id.get(sort[1:])
             if not (column and column.sortable):
-                raise ValueError("Can't sort by column %r" % sort[1:])
+                raise ValueError("Error! Can't sort by column %r." % sort[1:])
             queryset = column.sort_queryset(queryset, desc=desc)
 
         return queryset
@@ -442,25 +440,29 @@ class Picotable(object):
             },
             "massActions": self.mass_actions,
             "items": [self.process_item(item) for item in page],
-            "itemInfo": _("Showing %(per_page)s of %(n_items)s %(verbose_name_plural)s") % {
+            "itemInfo": _("Showing %(per_page)s of %(n_items)s %(verbose_name_plural)s")
+            % {
                 "per_page": min(paginator.per_page, paginator.count),
                 "n_items": paginator.count,
                 "verbose_name_plural": self.get_verbose_name_plural(),
-            }
+            },
         }
         return out
 
     def process_item(self, object):
         object_url = self.get_object_url(object) if callable(self.get_object_url) else None
+        object_extra = self.get_object_extra(object) if callable(self.get_object_extra) else None
         out = {
             "_id": object.id,
             "_url": object_url,
-            "_linked_in_mobile": True if object_url else False
+            "_linked_in_mobile": True if object_url else False,
+            "_extra": object_extra,
         }
         for column in self.columns:
             out[column.id] = column.get_display_value(context=self.context, object=object)
+
         out["type"] = type(object).__name__
-        out["_abstract"] = (self.get_object_abstract(object, item=out) if callable(self.get_object_abstract) else None)
+        out["_abstract"] = self.get_object_abstract(object, item=out) if callable(self.get_object_abstract) else None
         return out
 
     def get_verbose_name_plural(self):
@@ -479,6 +481,7 @@ class PicotableViewMixin(object):
     related_objects = []
     template_name = "shuup/admin/base_picotable.jinja"
     toolbar_buttons_provider_key = None
+    mass_actions_provider_key = None
 
     def process_picotable(self, query_json):
         mass_actions = self.load_mass_actions()
@@ -487,7 +490,7 @@ class PicotableViewMixin(object):
             columns=self.columns,
             mass_actions=mass_actions,
             queryset=self.get_queryset(),
-            context=self
+            context=self,
         )
         return JsonResponse(pico.get_data(json.loads(query_json)), encoder=ExtendedJSONEncoder)
 
@@ -499,7 +502,7 @@ class PicotableViewMixin(object):
 
     def post(self, request, *args, **kwargs):
         """
-        Post action is where Mass Actions post their data
+        Post action is where Mass Actions post their data.
         """
         data = request.body.decode("utf-8")
         data = json.loads(data)
@@ -508,15 +511,29 @@ class PicotableViewMixin(object):
 
         mass_action = self._get_mass_action(action_identifier)
         if mass_action is None:
-            return JsonResponse({"error": force_text(_("Unknown error"))})
+            return JsonResponse({"error": force_text(_("Mass Action encountered an unknown error."))})
         if isinstance(mass_action, PicotableFileMassAction):
             return mass_action.process(request, ids)
 
         mass_action.process(request, ids)
         return JsonResponse({"ok": True})
 
+    def _get_mass_actions(self):
+        mass_actions = self.mass_actions[:]  # copy
+
+        # add mass actions from the view mass action provider
+        if getattr(self, "mass_actions_provider_key", None):
+            for mass_action_provider in get_provide_objects(self.mass_actions_provider_key):
+                mass_actions.extend(list(mass_action_provider.get_mass_actions_for_view(self)))
+
+        # add mass actions from the global mass action provider
+        for mass_action_provider in get_provide_objects("admin_mass_actions_provider"):
+            mass_actions.extend(list(mass_action_provider.get_mass_actions_for_view(self)))
+
+        return mass_actions
+
     def _get_mass_action(self, action_identifier):
-        for mass_action in self.mass_actions:
+        for mass_action in self._get_mass_actions():
             loaded_action = load(mass_action)()
             if loaded_action.identifier == action_identifier:
                 return loaded_action
@@ -540,10 +557,22 @@ class PicotableViewMixin(object):
         * class (CSS class name -- `header` for instance)
         * raw (boolean; whether or not the `text` is raw HTML)
 
-        :param instance: The instance
+        :param instance: The instance.
         :param item: The item dict so far. Useful for reusing precalculated values.
-        :return: Iterable of dicts to pass through to the picotable javascript
+        :return: Iterable of dicts to pass through to the picotable javascript.
         :rtype: Iterable[dict]
+        """
+        return None
+
+    def get_object_extra(self, instance):
+        """
+        Returns extra information as a dictionary for each object.
+
+        The following special keys are used in picotable:
+
+        * class - add the class list (space separated) to each row/item class list
+
+        :rtype: None|dict
         """
         return None
 
@@ -552,9 +581,8 @@ class PicotableViewMixin(object):
         return json.loads(filter_string) if filter_string else {}
 
     def load_mass_actions(self):
-        # TODO: Make extendable through provides in near future
         actions = []
-        for action in self.mass_actions:
+        for action in self._get_mass_actions():
             obj = load(action)()
             action_data = {}
             extra_data = obj.get_action_info(self.request)
@@ -562,17 +590,14 @@ class PicotableViewMixin(object):
             if extra_data and isinstance(extra_data, dict):
                 action_data.update(extra_data)
 
-            action_data.update({
-                "key": obj.identifier,
-                "value": obj.label
-            })
+            action_data.update({"key": obj.identifier, "value": obj.label})
             actions.append(action_data)
         return actions
 
 
 class PicotableMassAction(object):
     """
-    Simple Mass Action
+    Simple Mass Action.
 
     This action only processes the given id's in subclass.
 
@@ -580,6 +605,7 @@ class PicotableMassAction(object):
     * `shuup.admin.modules.orders.mass_actions.CancelOrderAction`
     * `shuup.admin.modules.products.mass_actions.VisibleMassAction`
     """
+
     label = _("Mass Action")
     identifier = "mass_action"
 
@@ -588,10 +614,10 @@ class PicotableMassAction(object):
 
     def process(self, request, ids):
         """
-        Process the given ids in masses
+        Process the given ids in masses.
 
         :param request: `WSGIRequest`
-        :param ids: list of ids
+        :param ids: list of ids.
         :return: None
         """
         pass
@@ -600,25 +626,39 @@ class PicotableMassAction(object):
         """
         Returns a dict with additional action data to be rendered
         in html action option element as data-xxx attribute.
+
         :param request: `WSGIRequest`
-        :return dict: dictionary with extra info to be rendered in option element
+        :return dict: dictionary with extra info to be rendered in option element.
         """
         return {}
 
 
+class PicotableMassActionProvider(object):
+    @classmethod
+    def get_mass_actions_for_view(cls, view):
+        """
+        Returns a list of mass actions for a given `view`.
+
+        :param view: `django.views.View`
+        :return list[PicotableMassAction]: list of picotable mass actions definition (strings).
+        """
+        return []
+
+
 class PicotableFileMassAction(PicotableMassAction):
     """
-    File Mass Action
+    File Mass Action.
 
     This action returns file as a response.
 
     Examples:
     * `shuup.admin.modules.orders.mass_actions.OrderConfirmationPdfAction`
-    * `shuup.admin.modules.products.mass_actions.FileResponseAction`
+    * `shuup.admin.modules.products.mass_actions.ExportProductsCSVAction`
     """
+
     def process(self, request, ids):
         """
-        Process and return `HttpResponse`
+        Process and return `HttpResponse`.
 
         Example:
             response = HttpResponse(content_type="text/csv")
@@ -628,7 +668,7 @@ class PicotableFileMassAction(PicotableMassAction):
             return response
 
         :param request: `WSGIRequest`
-        :param ids: list of ids
+        :param ids: list of ids.
         :return: `HttpResponse`
         """
         pass
@@ -636,12 +676,12 @@ class PicotableFileMassAction(PicotableMassAction):
 
 class PicotableRedirectMassAction(PicotableMassAction):
     """
-    Redirect Mass Action
+    Redirect Mass Action.
 
     This view saves selected id's into session which are then
     further processed in the mass action view.
 
-    Redirect of this view is handled in `picotable.js`
+    Redirect of this view is handled in `picotable.js`.
 
     To use this action, your admin module must supply admin_url
     and a view for the action.
@@ -650,6 +690,7 @@ class PicotableRedirectMassAction(PicotableMassAction):
     * `shuup.admin.modules.contacts.mass_actions.EditContactsAction`
     * `shuup.admin.modules.products.mass_actions.EditProductAttributesAction`
     """
+
     redirect_url = None
 
     def process(self, request, ids):
@@ -658,17 +699,14 @@ class PicotableRedirectMassAction(PicotableMassAction):
 
     def get_action_info(self, request):
         if self.redirect_url:
-            return {
-                "redirects": True,
-                "redirect_url": self.redirect_url
-            }
+            return {"redirects": True, "redirect_url": self.redirect_url}
 
         return {}
 
 
 class PicotableJavascriptMassAction(PicotableMassAction):
     """
-    Javascript Mass Action
+    Javascript Mass Action.
 
     This view saves invokes a pre-defined javascript function
     with the list of object ids.
@@ -676,9 +714,8 @@ class PicotableJavascriptMassAction(PicotableMassAction):
     Set the function call in `callback`, e.g. `deleteProducts`.
     The mass action will then invoce the callback as `deleteProducts(ids)`
     """
+
     callback = None
 
     def get_action_info(self, request):
-        return {
-            "callback": self.callback
-        }
+        return {"callback": self.callback}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-13 13:43+0000\n"
+"POT-Creation-Date: 2021-08-03 19:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -25,8 +25,8 @@ msgstr ""
 #, python-format
 msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "
-"be case-sensitive. In case of multiple accounts with same email only "
-"username can be used to login."
+"be case-sensitive. In case of multiple accounts with the same email, only "
+"username can be used to log in."
 msgstr ""
 
 msgid "This account is inactive."
@@ -36,6 +36,9 @@ msgid "Username or email address"
 msgstr ""
 
 msgid "Create New"
+msgstr ""
+
+msgid "Select an option"
 msgstr ""
 
 msgid "Monday"
@@ -89,49 +92,32 @@ msgstr ""
 msgid "Content"
 msgstr ""
 
-msgid "Elements"
-msgstr ""
-
-msgid "Design"
-msgstr ""
-
-msgid "Other"
-msgstr ""
-
 msgid "Reports"
 msgstr ""
 
 msgid "Shops"
 msgstr ""
 
+msgid "Addons"
+msgstr ""
+
 msgid "Settings"
 msgstr ""
 
-msgid "Payment & Shipping"
+msgid "Logs"
 msgstr ""
 
-msgid "Currency"
+msgid "Messages"
 msgstr ""
 
 msgid "Attributes"
 msgstr ""
 
-msgid "Other settings"
+msgid "Allow the user to select attributes in admin."
 msgstr ""
 
-msgid "Addons"
-msgstr ""
-
-msgid "Data Transfer"
-msgstr ""
-
-msgid "Taxes"
-msgstr ""
-
-msgid "Permissions"
-msgstr ""
-
-msgid "Other Settings"
+#, python-format
+msgid "%s has been deleted."
 msgstr ""
 
 msgid "Identifier"
@@ -161,31 +147,34 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-msgid "Add a product category to organize your products"
+msgid "Add a product category to organize your products."
 msgstr ""
 
 msgid "New category"
 msgstr ""
 
-msgid "Can not use this category as parent for this shop."
+msgid "Allow the user to select categories in admin."
+msgstr ""
+
+msgid "Can't use this category as a parent for this shop."
 msgstr ""
 
 msgid "Primary Category"
 msgstr ""
 
-msgid "Set this category as a primary for selected products."
+msgid "Set this category as a primary category for selected products."
 msgstr ""
 
 msgid "Additional Category"
 msgstr ""
 
-msgid "Add selected products to this category"
+msgid "Add selected products to this category."
 msgstr ""
 
 msgid "Remove Products"
 msgstr ""
 
-msgid "Remove selected products from this category"
+msgid "Remove selected products from this category."
 msgstr ""
 
 msgid "Invalid category"
@@ -193,10 +182,6 @@ msgstr ""
 
 #, python-format
 msgid "Visibility settings copied to %d product(s)"
-msgstr ""
-
-#, python-format
-msgid "%s has been deleted."
 msgstr ""
 
 msgid "Image"
@@ -252,21 +237,30 @@ msgstr ""
 
 #, python-format
 msgid "%(count)s member added"
-msgid_plural "%(count)s members added"
+msgid_plural "%(count)s members added."
 msgstr[0] ""
 msgstr[1] ""
 
 #, python-format
 msgid "%(count)s member removed"
-msgid_plural "%(count)s members removed"
+msgid_plural "%(count)s members removed."
 msgstr[0] ""
 msgstr[1] ""
 
 msgid "Number of Members"
 msgstr ""
 
+msgid "Allow the user to select contacts in admin."
+msgstr ""
+
+msgid "Allow the user to select person contacts in admin."
+msgstr ""
+
+msgid "Allow the user to select company contacts in admin."
+msgstr ""
+
 #, python-format
-msgid "User %(bind_user)s already has a contact"
+msgid "User `%(bind_user)s` already has a contact."
 msgstr ""
 
 msgid ""
@@ -372,13 +366,21 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
+msgid "Login as User"
+msgstr ""
+
+msgid "Login as Staff User"
+msgstr ""
+
 msgid "Edit"
 msgstr ""
 
-msgid "You can not deactivate a superuser."
+msgid "You can not deactivate a superuser. Remove superuser permission first."
 msgstr ""
 
-msgid "You can not deactivate yourself."
+msgid ""
+"You can not deactivate yourself. Use another account to deactivate the "
+"current one."
 msgstr ""
 
 #, python-format
@@ -401,6 +403,9 @@ msgid "Person"
 msgstr ""
 
 msgid "Company"
+msgstr ""
+
+msgid "Staff"
 msgstr ""
 
 msgid "Email"
@@ -454,124 +459,16 @@ msgstr ""
 msgid "Mass Edit: Contacts"
 msgstr ""
 
-msgid "Contacts changed successfully"
+msgid "Contacts were changed."
 msgstr ""
 
 msgid "Mass Edit: Contact Groups"
 msgstr ""
 
-msgid "Contacts Groups changed successfully"
+msgid "Contacts Groups were changed."
 msgstr ""
 
 msgid "The contact does not have an associated user."
-msgstr ""
-
-msgid "About Us"
-msgstr ""
-
-msgid "Privacy Policy"
-msgstr ""
-
-msgid "Terms and Conditions"
-msgstr ""
-
-msgid "Refund Policy"
-msgstr ""
-
-msgid "{{ order.shop }} - Order {{ order.identifier }} Received"
-msgstr ""
-
-msgid "Send customer order confirmation email"
-msgstr ""
-
-msgid ""
-"We will configure a notification to send the customer an email after a "
-"placed order. You can disable this option later or even change the layout of "
-"the email."
-msgstr ""
-
-msgid "Create About Us page"
-msgstr ""
-
-msgid ""
-"We have already created an 'About Us' template for you based on your shop "
-"information. You must review the page and change it accordingly."
-msgstr ""
-
-msgid ""
-"We will create an 'About Us' template for you. We will base content of the "
-"page on your shop information. After we are done, you must review the page "
-"and change it accordingly."
-msgstr ""
-
-msgid "Create Privacy Policy page"
-msgstr ""
-
-msgid ""
-"We have already created a 'Privacy Policy' template for you based on your "
-"shop information. You must review the page and change it accordingly."
-msgstr ""
-
-msgid ""
-"We will create a 'Privacy Policy' template for you. We will base content of "
-"the page on your shop information. After we are done, you must review the "
-"page and change it accordingly."
-msgstr ""
-
-msgid "Create Terms and Conditions page"
-msgstr ""
-
-msgid ""
-"We have already created a 'Terms & Conditions' template for you based on "
-"your shop information. You must review the page and change it accordingly."
-msgstr ""
-
-msgid ""
-"We will create an 'Terms & Conditions' template for you. We will base "
-"content of the page on your shop information. After we are done, you must "
-"review the page and change it accordingly."
-msgstr ""
-
-msgid "Create Refund Policy page"
-msgstr ""
-
-msgid ""
-"We have already created a 'Refund Policy' template for you based on your "
-"shop information. You must review the page and change it accordingly."
-msgstr ""
-
-msgid ""
-"We will create an 'Refund Policy' template for you. We will base content of "
-"the page on your shop information. After we are done, you must review the "
-"page and change it accordingly."
-msgstr ""
-
-msgid "Configure the footer"
-msgstr ""
-
-msgid ""
-"We will now configure your shop footer and fill it with some of your shop's "
-"information. Don't worry, you can change this at any time."
-msgstr ""
-
-msgid "Content & Behavior"
-msgstr ""
-
-msgid ""
-"Add the initial content and configure the customer notifications for your "
-"shop"
-msgstr ""
-
-msgid "Configure notifications for your shop"
-msgstr ""
-
-msgid "Add the initial content"
-msgstr ""
-
-msgid "Configure the initial content pages"
-msgstr ""
-
-msgid "Configure some notifications"
 msgstr ""
 
 msgid "Currencies"
@@ -595,10 +492,19 @@ msgstr ""
 msgid "Based on orders within 30 days"
 msgstr ""
 
-msgid "Demo"
+msgid "Labels"
+msgstr ""
+
+msgid "Created on"
+msgstr ""
+
+msgid "Modified on"
 msgstr ""
 
 msgid "Manufacturers"
+msgstr ""
+
+msgid "Allow the user to select manufacturers in admin."
 msgstr ""
 
 msgid ""
@@ -617,6 +523,9 @@ msgstr ""
 msgid "Media browser"
 msgstr ""
 
+msgid "Visible for all everyone in the media browser"
+msgstr ""
+
 msgid "Root"
 msgstr ""
 
@@ -629,45 +538,101 @@ msgid "{num} files moved to {folder}."
 msgstr ""
 
 #, python-format
-msgid "Folder %s deleted."
+msgid "Folder `%s` was deleted."
 msgstr ""
 
 msgid "Browse Media"
 msgstr ""
 
+msgid "You do not have permissions to create a subfolder here."
+msgstr ""
+
+msgid "Folder was renamed."
+msgstr ""
+
 #, python-format
-msgid "%(file)s uploaded to %(folder)s"
+msgid "Folder can't be renamed to %s."
 msgstr ""
 
-msgid "Can not rename shared folder."
+msgid ""
+"Can't rename this folder, either you don't have permssion to do it or it's a "
+"shared folder between more then one shop or it has a owner"
 msgstr ""
 
-msgid "Folder renamed."
+msgid "This folder is protected and cannot be deleted."
 msgstr ""
 
-msgid "Can not delete shared folder."
+msgid ""
+"Can't delete this folder, either you don't have permssion to do it or it's a "
+"shared folder between more then one shop"
 msgstr ""
 
-msgid "Can not rename shared file."
+msgid "File was renamed."
 msgstr ""
 
-msgid "File renamed."
+msgid "Can not rename this file."
 msgstr ""
 
-msgid "Can not delete shared file."
+msgid "File was deleted."
 msgstr ""
 
-msgid "File deleted."
+msgid "Can not delete this file."
 msgstr ""
 
-msgid "Can not move shared file."
+msgid "Can't move a shared file."
 msgstr ""
 
 #, python-format
 msgid "%(file)s moved from %(old)s to %(new)s."
 msgstr ""
 
+#, python-format
+msgid "%(file)s uploaded to %(folder)s."
+msgstr ""
+
+msgid "You do not have permission to upload content to this folder"
+msgstr ""
+
+msgid "You don't have access to preform this action."
+msgstr ""
+
+msgid "Customize Your Admin Menu"
+msgstr ""
+
+msgid "Arrange Your Admin Menu"
+msgstr ""
+
+msgid "Customize SuperUser Admin Menu"
+msgstr ""
+
+msgid "Arrange SuperUser Admin Menu"
+msgstr ""
+
+msgid "Customize Staff Admin Menu"
+msgstr ""
+
+msgid "Arrange Staff Admin Menu"
+msgstr ""
+
+msgid "Customize Supplier Admin Menu"
+msgstr ""
+
+msgid "Arrange Supplier Admin Menu"
+msgstr ""
+
+msgid "Menu saved"
+msgstr ""
+
+msgid "Menu reset"
+msgstr ""
+
 msgid "Show orders"
+msgstr ""
+
+msgid "Shipments"
+msgstr ""
+
+msgid "Show shipments"
 msgstr ""
 
 msgid "Outstanding Orders"
@@ -687,22 +652,25 @@ msgid "List Statuses"
 msgstr ""
 
 #, python-format
-msgid "The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s)"
+msgid "The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s)."
 msgstr ""
 
 #, python-format
-msgid "The price '%(price)s' (for line %(text)s) is invalid (%(error)s)"
+msgid "The price '%(price)s' (for line %(text)s) is invalid (%(error)s)."
 msgstr ""
 
 #, python-format
-msgid "The discount '%(discount)s' (for line %(text)s is invalid (%(error)s)"
+msgid "The discount '%(discount)s' (for line %(text)s is invalid (%(error)s)."
+msgstr ""
+
+msgid "Product line does not have a supplier."
 msgstr ""
 
 msgid "Product line does not have a product set."
 msgstr ""
 
 #, python-format
-msgid "Product %s does not exist."
+msgid "Product `%s` does not exist."
 msgstr ""
 
 #, python-format
@@ -730,22 +698,25 @@ msgstr ""
 msgid "Print Confirmation PDF(s)"
 msgstr ""
 
-msgid "Selecting all is not supported."
+msgid "Error! Selecting all is not supported."
 msgstr ""
 
 msgid "Print Delivery PDF(s)"
 msgstr ""
 
-msgid "Payments"
+msgid "Details"
 msgstr ""
 
-msgid "Shipments"
+msgid "Payments"
 msgstr ""
 
 msgid "Log Entries"
 msgstr ""
 
 msgid "Admin comment/notes"
+msgstr ""
+
+msgid "Status history"
 msgstr ""
 
 msgid "Set Status"
@@ -775,9 +746,6 @@ msgstr ""
 msgid "Set Paid"
 msgstr ""
 
-msgid "Create Shipment"
-msgstr ""
-
 msgid "Create Refund"
 msgstr ""
 
@@ -795,7 +763,7 @@ msgid "%(field)s updated from: %(old_address)s"
 msgstr ""
 
 #, python-format
-msgid "%(field)s saved successfully."
+msgid "%(field)s were saved."
 msgstr ""
 
 #, python-format
@@ -805,32 +773,39 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-msgid "Unable to set order as completed at this point"
+msgid "Unable to set order as completed at this point."
+msgstr ""
+
+msgid "You can't cancel orders that are paid, shipped, or already canceled."
 msgstr ""
 
 #, python-brace-format
-msgid "Order status changed: {old_status} to {new_status}"
+msgid "Order status changed: from `{old_status}` to `{new_status}`."
 msgstr ""
 
 msgid "Create Order"
 msgstr ""
 
 #, python-format
-msgid "Contact %s does not exist."
+msgid "Contact `%s` does not exist."
 msgstr ""
 
 #, python-format
-msgid "Order %(identifier)s updated."
+msgid "Product `%(product)s` is not available in the `%(shop)s` shop."
 msgstr ""
 
 #, python-format
-msgid "Order %(identifier)s created."
+msgid "Order `%(identifier)s` was updated."
 msgstr ""
 
-msgid "Could not proceed with order:"
+#, python-format
+msgid "Order `%(identifier)s` created."
 msgstr ""
 
-msgid "Could not finalize order:"
+msgid "Could not proceed with the order: "
+msgstr ""
+
+msgid "Could not finalize the order: "
 msgstr ""
 
 msgid "Order"
@@ -848,7 +823,10 @@ msgstr ""
 msgid "Shipping Status"
 msgstr ""
 
-msgid "Total"
+msgid "Total, incl. tax"
+msgstr ""
+
+msgid "Total, excl. tax"
 msgstr ""
 
 #, python-format
@@ -858,14 +836,14 @@ msgstr ""
 msgid "Payment amount"
 msgstr ""
 
-msgid "Payment amount cannot be 0"
+msgid "Payment amount cannot be 0."
 msgstr ""
 
 #, python-format
 msgid "Payment %s created."
 msgstr ""
 
-msgid "Order has already been paid"
+msgid "Order has already been paid."
 msgstr ""
 
 msgid "Only orders which are not paid or deferred can be set as paid."
@@ -947,22 +925,26 @@ msgstr ""
 msgid "Create Full Refund -- %s"
 msgstr ""
 
-msgid "Could not create full refund."
+msgid "Could not create a full refund."
 msgstr ""
 
 msgid "Full refund created."
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Tracking Code"
+msgstr ""
+
+msgid "Tracking URL"
 msgstr ""
 
 #, python-format
 msgid "Create Shipment -- %s"
 msgstr ""
 
-msgid "Supplier"
-msgstr ""
-
-msgid ""
-"Select the shipment supplier. You can only ship the suppliers assigned to "
-"order lines."
+msgid "Create Shipment"
 msgstr ""
 
 #, python-format
@@ -976,17 +958,30 @@ msgid "Shipping address is not set."
 msgstr ""
 
 #, python-format
-msgid "Shipment %s created."
+msgid "Shipment %s was created."
 msgstr ""
 
 #, python-format
 msgid "Shipment %s has been deleted."
 msgstr ""
 
-msgid "Identifier already exists"
+msgid "Shipment has been marked as sent."
 msgstr ""
 
-msgid "Order Statuses"
+msgid "ID"
+msgstr ""
+
+msgid "Supplier"
+msgstr ""
+
+#, python-brace-format
+msgid "Shipment {shipment_id}"
+msgstr ""
+
+msgid "Tracking code"
+msgstr ""
+
+msgid "Identifier already exists."
 msgstr ""
 
 msgid "Public Name"
@@ -998,22 +993,22 @@ msgstr ""
 msgid "Default"
 msgstr ""
 
-msgid "Permission Groups"
+msgid "Allowed Next Status"
 msgstr ""
 
-msgid "The permission group name."
+msgid "Visible For Customer"
 msgstr ""
 
-msgid "Module Permissions"
+msgid "No allowed next status."
 msgstr ""
 
-msgid ""
-"Select the modules that should be accessible by this permission group. "
-"Modules with the same permissions as selected modules will be added "
-"automatically."
+msgid "Granular Permission Groups"
 msgstr ""
 
-msgid "Set the users that belong to this permission group."
+msgid "Allow the user to select permission group in admin."
+msgstr ""
+
+msgid "The Permission Group name."
 msgstr ""
 
 msgid "Create new Permission Group"
@@ -1025,9 +1020,25 @@ msgstr ""
 msgid "Product types"
 msgstr ""
 
+msgid "Allow the user to select product types in admin."
+msgstr ""
+
+#, python-format
+msgid "%s has been marked deleted."
+msgstr ""
+
 msgid ""
 "Select attributes that go with your product type. These are defined in "
 "Products Settings - Attributes."
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+#, python-format
+msgid ""
+"Are you sure you wish to delete %s? Warrning: all related products will "
+"disappear from storefront until new value for product type is set!"
 msgstr ""
 
 msgid "Number of Attributes"
@@ -1050,12 +1061,24 @@ msgstr ""
 msgid "Add a product to see it in your store"
 msgstr ""
 
+msgid "Allow the user to select products in admin."
+msgstr ""
+
+msgid "Allow the user to select shop_products in admin."
+msgstr ""
+
 msgid "Primary Product Image"
 msgstr ""
 
 msgid ""
-"The main product image. You can add additional images on the Product Images "
-"tab."
+"The main product image. You can add additional images in the `Product "
+"Images` tab."
+msgstr ""
+
+msgid "Select a manufacturer"
+msgstr ""
+
+msgid "Product type"
 msgstr ""
 
 msgid "Given value is already in use, please use unique SKU and try again."
@@ -1063,7 +1086,10 @@ msgstr ""
 
 msgid ""
 "Number of units that can be purchased after the product is out of stock. Set "
-"to blank for product to be purchasable without limits"
+"to blank for product to be purchasable without limits."
+msgstr ""
+
+msgid "Select a category"
 msgstr ""
 
 msgid "Minimum Purchase Quantity must be greater than 0."
@@ -1073,45 +1099,32 @@ msgid "Backorder maximum must be greater than or equal to 0."
 msgstr ""
 
 #, python-format
-msgid "Thumbnail generation of %(media)s failed: %(error)s"
+msgid "Thumbnail generation of %(media)s failed: %(error)s."
 msgstr ""
 
-msgid "Use only URL or file, not both"
+msgid "Use only URL or file, not both."
 msgstr ""
 
 msgid "Is primary"
 msgstr ""
 
-msgid "Only images allowed in this field"
+msgid "Only images are allowed in this field."
 msgstr ""
 
 #, python-format
-msgid "Unable to make package %(product)s: %(error)s"
+msgid "Unable to make package %(product)s: %(error)s."
 msgstr ""
 
 #, python-format
-msgid "New: %d"
+msgid "New products: %d."
 msgstr ""
 
 #, python-format
-msgid "Removed: %d"
+msgid "Removed products: %d."
 msgstr ""
 
 #, python-format
-msgid "Couldn't add product %s to own package"
-msgstr ""
-
-msgid "child"
-msgstr ""
-
-msgid "Unlink"
-msgstr ""
-
-#, python-format
-msgid "Unable to link %(product)s: %(error)s"
-msgstr ""
-
-msgid "variable combination"
+msgid "Couldn't add product %s to its own package."
 msgstr ""
 
 msgid "Set visible"
@@ -1120,21 +1133,18 @@ msgstr ""
 msgid "Set invisible"
 msgstr ""
 
-msgid "Export CSV"
-msgstr ""
-
 msgid "Edit products"
 msgstr ""
 
-#, python-format
-msgid "%s has been marked deleted."
+#, python-brace-format
+msgid "{product_name} was successfully copied"
 msgstr ""
 
 msgid "Minimum Purchase Quantity has been rounded to match Sales Unit."
 msgstr ""
 
 #, python-format
-msgid "Changes to shop instance for %s saved"
+msgid "Changes to shop instance for %s saved."
 msgstr ""
 
 msgid "Product is not available."
@@ -1154,13 +1164,16 @@ msgstr ""
 msgid "Edit Media: %s"
 msgstr ""
 
-msgid "Files added to product."
+msgid "Changes were saved."
+msgstr ""
+
+msgid "Files added to the product."
 msgstr ""
 
 msgid "Clear package"
 msgstr ""
 
-msgid "Are you sure? This will remove all products from package."
+msgid "Are you sure? This will remove all products from the package."
 msgstr ""
 
 #, python-format
@@ -1168,32 +1181,6 @@ msgid "Edit Package: %s"
 msgstr ""
 
 msgid "Package cleared."
-msgstr ""
-
-msgid ""
-"Are you sure? This will unlink all children and remove all variation "
-"variables."
-msgstr ""
-
-msgid "Clear variation"
-msgstr ""
-
-msgid ""
-"Are you sure? This will remove all variation variables, converting children "
-"to direct links."
-msgstr ""
-
-msgid "Convert to simple variation"
-msgstr ""
-
-#, python-format
-msgid "Edit Variation: %s"
-msgstr ""
-
-msgid "Variation cleared."
-msgstr ""
-
-msgid "Variation simplified."
 msgstr ""
 
 msgid "Primary Image"
@@ -1214,6 +1201,12 @@ msgstr ""
 msgid "Filter by category name..."
 msgstr ""
 
+msgid "Filter by supplier name..."
+msgstr ""
+
+msgid "Suppliers"
+msgstr ""
+
 msgid "Additional Categories"
 msgstr ""
 
@@ -1223,13 +1216,16 @@ msgstr ""
 msgid "Mass Edit: Products"
 msgstr ""
 
-msgid "Products changed successfully"
+msgid "Products changed."
 msgstr ""
 
 msgid "Manage Cross-Selling"
 msgstr ""
 
 msgid "Cross-Selling"
+msgstr ""
+
+msgid "Other"
 msgstr ""
 
 #, python-format
@@ -1244,12 +1240,6 @@ msgstr ""
 msgid "Sibling: %s"
 msgstr ""
 
-msgid "Variations"
-msgstr ""
-
-msgid "Manage Variations"
-msgstr ""
-
 msgid "Packages"
 msgstr ""
 
@@ -1257,18 +1247,6 @@ msgid "Manage Package"
 msgstr ""
 
 msgid "Convert to Package Parent"
-msgstr ""
-
-msgid "Convert to Variation Parent"
-msgstr ""
-
-msgid "Save and Exit"
-msgstr ""
-
-msgid "Save and Create New"
-msgstr ""
-
-msgid "Save as a copy"
 msgstr ""
 
 msgid "Sales Dashboard"
@@ -1312,134 +1290,6 @@ msgid "Symbol"
 msgstr ""
 
 msgid "Allowed decimals"
-msgstr ""
-
-msgid ""
-"There is sample data installed. Access \"Settings > Sample Data\" for more "
-"information."
-msgstr ""
-
-msgid ""
-"There is sample data installed. Click here to consolidate or delete them."
-msgstr ""
-
-msgid "Sample Data"
-msgstr ""
-
-msgid "Cosmetics and perfumes"
-msgstr ""
-
-msgid "USpicy Makeup Brushes"
-msgstr ""
-
-msgid ""
-"Professional 10 pieces makeup brush set with soft oval toothbrush design"
-msgstr ""
-
-msgid "Precision Eyelash Curler"
-msgstr ""
-
-msgid ""
-"Precision Eyelash Curler is the professional choice of makeup artists "
-"everywhere."
-msgstr ""
-
-msgid "PureMoist Lipstick"
-msgstr ""
-
-msgid ""
-"PureMoist Lipstick has a moisturizing formula designed to quench, comfort "
-"and protect lips."
-msgstr ""
-
-msgid "Clinique Happy"
-msgstr ""
-
-msgid "A hint of citrus. A wealth of flowers. A mix of emotions."
-msgstr ""
-
-msgid "Tommy Girld by Tommy Hilfiger Perfume"
-msgstr ""
-
-msgid ""
-"A refreshing and energetic floral - with low notes of sandalwood and heather."
-msgstr ""
-
-msgid "Bvlgari Omnia Crystalline Eau de Toilette"
-msgstr ""
-
-msgid ""
-"Give yourself over to this fragrance as intoxicating and pure as a woman's "
-"soul is fragile."
-msgstr ""
-
-msgid "Still Jennifer Lopez Perfume"
-msgstr ""
-
-msgid ""
-"Be driven with vitality and confidence, as you wear the Jennifer Lopez Still "
-"fragrance."
-msgstr ""
-
-msgid "La Vie Est Belle"
-msgstr ""
-
-msgid "A captivating new scent joins the La vie est belle path to happiness."
-msgstr ""
-
-msgid "Smooth Viking Beard Brush"
-msgstr ""
-
-msgid "Just a beard brush."
-msgstr ""
-
-msgid "Beard & Stash Oil"
-msgstr ""
-
-msgid "This oil is natural, and is made with the perfect combination of oils."
-msgstr ""
-
-msgid "Sample Carousel"
-msgstr ""
-
-msgid "Business Segment"
-msgstr ""
-
-msgid "Select your business segment to install categories."
-msgstr ""
-
-msgid "Install Categories"
-msgstr ""
-
-msgid "Check this to install sample categories."
-msgstr ""
-
-msgid "Install Products"
-msgstr ""
-
-msgid "Check this to install sample products."
-msgstr ""
-
-msgid "Install Carousel"
-msgstr ""
-
-msgid "Check this to install a sample carousel."
-msgstr ""
-
-msgid "Uninstall Categories"
-msgstr ""
-
-msgid "Uninstall Products"
-msgstr ""
-
-msgid "Uninstall Carousel"
-msgstr ""
-
-msgid "Sample data were consolidated"
-msgstr ""
-
-msgid ""
-"To start shopping right now, please install some sample data into your shop"
 msgstr ""
 
 msgid "Service Providers"
@@ -1500,6 +1350,15 @@ msgid "Instructions"
 msgstr ""
 
 msgid "Additional instructions shown in the shop checkout process."
+msgstr ""
+
+msgid "Allow the user to select carriers in admin."
+msgstr ""
+
+msgid "Allow the user to select payment methods in admin."
+msgstr ""
+
+msgid "Allow the user to select shipping methods in admin."
 msgstr ""
 
 msgid "Shipping Methods"
@@ -1608,16 +1467,13 @@ msgid ""
 "reference."
 msgstr ""
 
-msgid "Settings saved"
+msgid "Settings saved."
 msgstr ""
 
 msgid "Reset Defaults"
 msgstr ""
 
-msgid "Changes saved successfully"
-msgstr ""
-
-msgid "No changes detected"
+msgid "No changes detected."
 msgstr ""
 
 msgid "Save system settings"
@@ -1629,22 +1485,34 @@ msgstr ""
 msgid "Add logo"
 msgstr ""
 
+msgid "Publish your store"
+msgstr ""
+
+msgid "Let customers browse your store and make purchases"
+msgstr ""
+
+msgid "Publish shop"
+msgstr ""
+
 msgid "Set \"{}\" as the active shop"
 msgstr ""
 
 msgid "Available Shops [currently active: {}]"
 msgstr ""
 
+msgid "Allow the user to select shops in admin."
+msgstr ""
+
 msgid ""
 "This field cannot be changed since there are existing orders for this shop."
+msgstr ""
+
+msgid "Currency"
 msgstr ""
 
 msgid ""
 "The primary shop currency. This is the currency used when selling your "
 "products."
-msgstr ""
-
-msgid "Staff"
 msgstr ""
 
 msgid "Select staff members for this shop."
@@ -1694,13 +1562,13 @@ msgstr ""
 msgid "The country in which your shop is located."
 msgstr ""
 
-msgid "There are still some pending actions to complete!"
+msgid "There are still some pending actions to complete."
 msgstr ""
 
-msgid "Your store is now live!"
+msgid "Your store is now live."
 msgstr ""
 
-msgid "Shop {} is now active!"
+msgid "Shop {} is now active."
 msgstr ""
 
 msgid "Domain"
@@ -1715,20 +1583,33 @@ msgstr ""
 msgid "Default Tax Class"
 msgstr ""
 
-msgid "Suppliers"
+msgid "Allow the user to select suppliers in admin."
 msgstr ""
 
 msgid "Select shops for this supplier. Keep it blank to share with all shops."
 msgstr ""
 
+msgid "Is approved for {}"
+msgstr ""
+
+msgid "Indicates whether this supplier is approved for the shop."
+msgstr ""
+
 msgid "It is not possible to manage inventory when no module is selected."
+msgstr ""
+
+msgid "{} is not in the Shops field."
+msgstr ""
+
+#, python-format
+msgid "Success! %s has been marked deleted."
+msgstr ""
+
+msgid "Modules"
 msgstr ""
 
 #, python-format
 msgid "No %s module"
-msgstr ""
-
-msgid "Module"
 msgstr ""
 
 msgid "Shuup Support"
@@ -1748,10 +1629,22 @@ msgstr ""
 msgid "Opt-in for telemetry"
 msgstr ""
 
+msgid "Taxes"
+msgstr ""
+
 msgid "Customer Tax Groups"
 msgstr ""
 
 msgid "Tax Classes"
+msgstr ""
+
+msgid "Allow the user to select customer tax groups in admin."
+msgstr ""
+
+msgid "Allow the user to select taxes in admin."
+msgstr ""
+
+msgid "Allow the user to select tax classes in admin."
 msgstr ""
 
 msgid "Rate"
@@ -1760,10 +1653,43 @@ msgstr ""
 msgid "Users"
 msgstr ""
 
+msgid "Allow the user to change the passwords of other users."
+msgstr ""
+
+msgid "Allow the user send the reset password email."
+msgstr ""
+
+msgid "Allow the user to change the permission groups of other users."
+msgstr ""
+
+msgid "Allow the user to see a user detail."
+msgstr ""
+
+msgid "Allow the user to create a new user."
+msgstr ""
+
+msgid "Allow the user to list the users."
+msgstr ""
+
+msgid "Allow the user to impersonate a different user."
+msgstr ""
+
+msgid "Allow the user to impersonate a staff user."
+msgstr ""
+
+msgid "Allow the user to change the user list columns."
+msgstr ""
+
+msgid "Allow the user to select users in admin."
+msgstr ""
+
 msgid "Add some users to help manage your shop"
 msgstr ""
 
 msgid "New user"
+msgstr ""
+
+msgid "Send Reset Password Email"
 msgstr ""
 
 #, python-format
@@ -1775,7 +1701,7 @@ msgid ""
 "details:\n"
 "        Shop url: %(shop_url)s\n"
 "        Login url: %(admin_url)s\n"
-"        Your username: %(username)s\n"
+"        Your username: '%(username)s'\n"
 "        Your password: Please contact your admin.\n"
 msgstr ""
 
@@ -1785,10 +1711,21 @@ msgstr ""
 msgid "The user password."
 msgstr ""
 
-msgid "See the permissions view to change these."
+msgid "Main Permissions"
 msgstr ""
 
-msgid "See Contacts - Permission Groups to change these."
+msgid ""
+"Two fundamental permissions: Access to Admin Panel and Superuser status "
+"rights. Go to user account -> `Actions` -> `Edit Main Permissions` to change "
+"these."
+msgstr ""
+
+msgid ""
+"Use Permission Groups to granularly give more permissions. Search for "
+"`Permission Groups` to change these and add them to multiple users. Go to "
+"user account -> `Actions` -> `Edit Main Permissions` to add them to a "
+"specific user. Will not influence Superusers as they already have all the "
+"rights and can't be stripped of them without removing Superuser status first."
 msgstr ""
 
 msgid "The user email address. Used for password resets."
@@ -1800,16 +1737,19 @@ msgstr ""
 msgid "The last name of the user."
 msgstr ""
 
-msgid "staff"
+msgid "Access to Admin Panel"
 msgstr ""
 
-msgid "superuser"
+msgid "Superuser (Full rights)"
 msgstr ""
 
-msgid "No special permissions"
+msgid "No Main Permissions selected."
 msgstr ""
 
-msgid "No permission groups"
+msgid "No Granular Permission Groups selected."
+msgstr ""
+
+msgid "No Granular Permission Groups available."
 msgstr ""
 
 msgid "Send email confirmation"
@@ -1817,10 +1757,10 @@ msgstr ""
 
 msgid ""
 "Send an email to the user to let them know they've been added as a shop "
-"user. Applicable only for users with staff status."
+"user. Applicable only for users with Access to Admin Panel status."
 msgstr ""
 
-msgid "Please enter an email to send a confirmation"
+msgid "Please enter an email to send a confirmation to."
 msgstr ""
 
 msgid "Change Password"
@@ -1832,7 +1772,7 @@ msgstr ""
 msgid "Send Password Reset Email"
 msgstr ""
 
-msgid "Edit Permissions"
+msgid "Edit Main Permissions"
 msgstr ""
 
 msgid "Contact Details"
@@ -1847,18 +1787,21 @@ msgstr ""
 msgid "Deactivate User"
 msgstr ""
 
-msgid "Login as User"
+#, python-format
+msgid "Info! User bound to contact %(contact)s."
 msgstr ""
 
 #, python-format
-msgid "User bound to contact %(contact)s."
-msgstr ""
-
-#, python-format
-msgid "You've been added as an admin user to %s"
+msgid "You've been added as an admin user to `%s`."
 msgstr ""
 
 msgid "User"
+msgstr ""
+
+msgid "You can not deactivate a Superuser. Remove Superuser status first."
+msgstr ""
+
+msgid "You can not deactivate yourself. Use another account."
 msgstr ""
 
 #, python-format
@@ -1875,7 +1818,7 @@ msgid "This user is not active."
 msgstr ""
 
 #, python-brace-format
-msgid "You're now logged in as {username}"
+msgid "You're now logged in as `{username}`."
 msgstr ""
 
 msgid "Username"
@@ -1885,17 +1828,6 @@ msgid "First Name"
 msgstr ""
 
 msgid "Last Name"
-msgstr ""
-
-msgid "Superuser"
-msgstr ""
-
-#, python-format
-msgid "First Name: %s"
-msgstr ""
-
-#, python-format
-msgid "Last Name: %s"
 msgstr ""
 
 msgid "The two password fields didn't match."
@@ -1929,42 +1861,81 @@ msgstr ""
 msgid "Reset User Password"
 msgstr ""
 
-msgid "The `shuup.front.apps.auth` app needs to be enabled for password reset."
+msgid ""
+"Error! The `shuup.front.apps.auth` app needs to be enabled for password "
+"reset."
 msgstr ""
 
 #, python-format
-msgid "Password recovery email sent to %(email)s"
+msgid "Password recovery email sent to %(email)s."
 msgstr ""
 
-msgid "Sending the password recovery email failed."
+msgid "Error! Sending the password recovery email failed."
 msgstr ""
 
 msgid ""
-"The permission groups that this user belongs to. Permission groups are "
-"configured through Contacts - Permission Groups."
+"In order to allow making significant changes to accounts, we need to confirm "
+"that you know the password for the account you are using."
 msgstr ""
 
-msgid "You can't unset this status for yourself."
+msgid "Superuser (Full rights) status"
+msgstr ""
+
+msgid ""
+"Designates whether this user has all permissions without explicitly "
+"assigning them. Assigning Granular Permission Groups to a Superuser will not "
+"have any effect because Granular Permission Groups are only  able to give "
+"more rights, but Superuser already has them all."
+msgstr ""
+
+msgid "Access to Admin Panel status"
+msgstr ""
+
+msgid ""
+"Designates whether this user can log into this admin site. Even Superusers "
+"should have this status enabled, otherwise they won't be able to access the "
+"Admin Panel."
+msgstr ""
+
+msgid ""
+"Use Permission Groups to granularly give more permissions. User can belong "
+"to many groups and their permissions add and stack together. Search for "
+"`Permission Groups` to change these and add them to multiple users. Go to "
+"user account -> `Actions` -> `Edit Main Permissions` to add them to a "
+"specific user. Will not influence Superusers as they already have all the "
+"rights and can't be stripped of them without removing Superuser status first."
+msgstr ""
+
+msgid ""
+"You can't unset this status for yourself due to security reasons. Use "
+"another account if you want to remove permissions for this particular "
+"account."
 msgstr ""
 
 msgid "Change User Permissions"
 msgstr ""
 
 #, python-format
-msgid "Change Permissions: %s"
+msgid "Change Main Permissions: %s"
 msgstr ""
 
 #, python-format
 msgid "Permissions changed for %s."
 msgstr ""
 
-msgid "You must be a staff user"
+msgid "You must have the Access to Admin Panel permission."
 msgstr ""
 
-msgid "You are not a staff member of this shop"
+msgid "You must have the Access to Admin Panel permissions to this shop."
 msgstr ""
 
-msgid "New Attribute"
+msgid "General Information"
+msgstr ""
+
+msgid "Choice Options"
+msgstr ""
+
+msgid "Add new option"
 msgstr ""
 
 msgid "Login"
@@ -2014,6 +1985,12 @@ msgstr ""
 msgid "Send password recovery instructions"
 msgstr ""
 
+msgid "Active shop:"
+msgstr ""
+
+msgid "Active vendor:"
+msgstr ""
+
 msgid "Dashboard"
 msgstr ""
 
@@ -2026,13 +2003,13 @@ msgstr ""
 msgid "Search for"
 msgstr ""
 
-msgid "Support ID: "
-msgstr ""
-
-msgid "Go home"
-msgstr ""
-
 msgid "Hello"
+msgstr ""
+
+msgid "Stop Auto Refresh"
+msgstr ""
+
+msgid "Auto Refresh Every 30s"
 msgstr ""
 
 msgid "Show Tour"
@@ -2041,16 +2018,13 @@ msgstr ""
 msgid "Log out"
 msgstr ""
 
-msgid "General Information"
-msgstr ""
-
 msgid "Copy visibility settings to products"
 msgstr ""
 
 msgid "Category Image"
 msgstr ""
 
-msgid "* Products that has this category as a primary category."
+msgid "* Products that have this category as a primary category."
 msgstr ""
 
 msgid "Add a new product category"
@@ -3100,7 +3074,16 @@ msgid ""
 "Let’s go through some of the things you can do here. Click next to begin."
 msgstr ""
 
+msgid "shop logo"
+msgstr ""
+
 msgid "Date"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Save and Exit"
 msgstr ""
 
 msgid "This action effects on all items."
@@ -3113,22 +3096,34 @@ msgstr ""
 msgid "Upload"
 msgstr ""
 
+msgid "Copy folder path"
+msgstr ""
+
+msgid "Access to folder"
+msgstr ""
+
+msgid "Customize admin menu"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "Drag me"
+msgstr ""
+
 msgid "Comment"
 msgstr ""
 
 msgid "Save comment"
 msgstr ""
 
-msgid "Comment saved."
+msgid "Comment was saved."
 msgstr ""
 
-msgid "There was an error updating the admin comment."
-msgstr ""
-
-msgid "Description"
-msgstr ""
-
-msgid "Delete"
+msgid "Updating the admin comment failed."
 msgstr ""
 
 msgid "No payments have been created yet."
@@ -3137,120 +3132,10 @@ msgstr ""
 msgid "Are you sure you want to delete this payment?"
 msgstr ""
 
-msgid "Text"
-msgstr ""
-
-msgid "Taxless Unit Price"
-msgstr ""
-
-msgid "Taxless Discount"
-msgstr ""
-
-msgid "Taxless Discount Percentage"
-msgstr ""
-
-msgid "Tax"
-msgstr ""
-
-msgid "Taxless Total"
-msgstr ""
-
-msgid "Total incl. Tax"
-msgstr ""
-
-msgid "Discount"
-msgstr ""
-
-msgid "Taxless"
-msgstr ""
-
-msgid "Message"
-msgstr ""
-
-msgid "No log entries have been added yet."
-msgstr ""
-
-msgid "Use the input below to add new log entries."
-msgstr ""
-
-msgid "Add to Log"
-msgstr ""
-
-msgid "Log entry added."
-msgstr ""
-
-msgid "There was an error adding the log entry."
-msgstr ""
-
-msgid "Tracking Code"
-msgstr ""
-
-msgid "Created"
-msgstr ""
-
-msgid "No shipments have been created yet."
-msgstr ""
-
-msgid ""
-"Shipped shipments should not be deleted. Deletion will affect products "
-"physical stock count. Delete anyway?"
-msgstr ""
-
-msgid "Line #"
-msgstr ""
-
-msgid "Refunded Quantity"
-msgstr ""
-
-msgid "Refund Amount"
-msgstr ""
-
-msgid "Are you sure you want to create a full refund?"
-msgstr ""
-
-msgid "Confirm Refund"
-msgstr ""
-
-msgid "Order Contents"
-msgstr ""
-
-msgid "Paid"
-msgstr ""
-
-msgid "Remaining"
-msgstr ""
-
-msgid "Refunded"
-msgstr ""
-
-msgid "Add Another Refund"
-msgstr ""
-
-msgid "Order Line"
-msgstr ""
-
-msgid "To Ship"
-msgstr ""
-
-msgid "Ordered"
-msgstr ""
-
-msgid "Shipped"
-msgstr ""
-
-msgid "Unshipped"
-msgstr ""
-
-msgid "Set All Products To Ship"
-msgstr ""
-
-msgid "Ship All"
-msgstr ""
-
-msgid "Details"
-msgstr ""
-
 msgid "Order Details"
+msgstr ""
+
+msgid "Order Shop"
 msgstr ""
 
 msgid "Order Number"
@@ -3290,6 +3175,176 @@ msgid "Tracking codes"
 msgstr ""
 
 msgid "Address Information"
+msgstr ""
+
+msgid "Picture"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Taxless Unit Price"
+msgstr ""
+
+msgid "Taxless Discount"
+msgstr ""
+
+msgid "Taxless Discount Percentage"
+msgstr ""
+
+msgid "Tax"
+msgstr ""
+
+msgid "Taxless Total"
+msgstr ""
+
+msgid "Total incl. Tax"
+msgstr ""
+
+#, python-format
+msgid "Supplied by %(supplier)s"
+msgstr ""
+
+msgid "Discount"
+msgstr ""
+
+msgid "Taxless"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "No log entries have been added yet."
+msgstr ""
+
+msgid "Use the input below to add new log entries."
+msgstr ""
+
+msgid "Add to Log"
+msgstr ""
+
+msgid "Log entry was added."
+msgstr ""
+
+msgid "Adding the log entry failed."
+msgstr ""
+
+msgid "Unshipped"
+msgstr ""
+
+msgid "Shipped"
+msgstr ""
+
+msgid "Ordered"
+msgstr ""
+
+msgid "Refunded"
+msgstr ""
+
+#, python-format
+msgid "Create new shipment for %(supplier_name)s"
+msgstr ""
+
+msgid "Created"
+msgstr ""
+
+msgid "Mark as sent"
+msgstr ""
+
+msgid ""
+"Shipped shipments should not be deleted. Deletion will affect products "
+"physical stock count. Delete anyway?"
+msgstr ""
+
+msgid "Do you want to mark this shipment as sent?"
+msgstr ""
+
+msgid "When"
+msgstr ""
+
+msgid "The order has no status history."
+msgstr ""
+
+msgid "Are you sure you want to delete this order status history item?"
+msgstr ""
+
+msgid "Line #"
+msgstr ""
+
+msgid "Refunded Quantity"
+msgstr ""
+
+msgid " Mark as sent "
+msgstr ""
+
+msgid "Refund Amount"
+msgstr ""
+
+msgid "Are you sure you want to create a full refund?"
+msgstr ""
+
+msgid "Confirm Refund"
+msgstr ""
+
+msgid "Order Contents"
+msgstr ""
+
+msgid "Paid"
+msgstr ""
+
+msgid "Remaining"
+msgstr ""
+
+msgid "Add Another Refund"
+msgstr ""
+
+msgid "Order Line"
+msgstr ""
+
+msgid "To Ship"
+msgstr ""
+
+msgid "Set All Products To Ship"
+msgstr ""
+
+msgid "Ship All"
+msgstr ""
+
+msgid "Permissions"
+msgstr ""
+
+msgid "Select all permissions"
+msgstr ""
+
+msgid "Deselect all permissions"
+msgstr ""
+
+msgid "Open all permission groups"
+msgstr ""
+
+msgid "(All permissions granted)"
+msgstr ""
+
+msgid "(Partial permissions granted)"
+msgstr ""
+
+msgid "Module permission"
+msgstr ""
+
+msgid "Select the following permission to enable users to access this module."
+msgstr ""
+
+msgid "Select all permissions for this module"
+msgstr ""
+
+msgid "Features permissions"
+msgstr ""
+
+msgid ""
+"Select the permissions to enable access to specific features of the module."
+msgstr ""
+
+msgid "Close all permission groups"
 msgstr ""
 
 msgid "Error!"
@@ -3430,29 +3485,6 @@ msgstr ""
 msgid "Package Products"
 msgstr ""
 
-msgid "Simple Variation Children"
-msgstr ""
-
-msgid "Variable Children"
-msgstr ""
-
-msgid "Combination"
-msgstr ""
-
-msgid "Variables"
-msgstr ""
-
-msgid "This product is not yet a variation."
-msgstr ""
-
-msgid "To create a simple variation, choose products below."
-msgstr ""
-
-msgid ""
-"To create a variation with multiple variables, create the variables on the "
-"Variables tab and then link them to products here."
-msgstr ""
-
 msgid "Recent Orders"
 msgstr ""
 
@@ -3584,7 +3616,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The data contains an unique installation key, as well as the hostname of the "
+"The data contains a unique installation key, as well as the hostname of the "
 "installation (as sent by the visiting browser; currently <code>%(host)s</"
 "code>)."
 msgstr ""
@@ -3643,7 +3675,7 @@ msgstr ""
 msgid "Here is an example of the data that would be submitted right now."
 msgstr ""
 
-msgid "User Information"
+msgid "Customer Information"
 msgstr ""
 
 #, python-format
@@ -3673,8 +3705,17 @@ msgstr ""
 msgid "Discard Changes"
 msgstr ""
 
+msgid "Save as a copy"
+msgstr ""
+
+msgid "Save and Create New"
+msgstr ""
+
 #, python-format
 msgid "Are you sure you wish to delete %s?"
+msgstr ""
+
+msgid "Export as CSV file"
 msgstr ""
 
 #, python-format
@@ -3684,7 +3725,7 @@ msgstr ""
 msgid "objects"
 msgstr ""
 
-msgid "Unknown error"
+msgid "Mass Action encountered an unknown error."
 msgstr ""
 
 msgid "Mass Action"
@@ -3697,10 +3738,12 @@ msgstr ""
 msgid "Log in with different credentials..."
 msgstr ""
 
-msgid "Sign in to continue"
+msgid "Sign in to continue."
 msgstr ""
 
-msgid "You must be a staff member."
+msgid ""
+"Your account must have `Access to Admin Panel` permissions to access this "
+"page."
 msgstr ""
 
 msgid "There is no active shop available. Contact support for more details."
@@ -3710,6 +3753,12 @@ msgstr ""
 msgid "You do not have the required permissions: %s"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Can't view this page. You do not have the required permission(s): "
+"`{permissions}`."
+msgstr ""
+
 msgid "Unnamed"
 msgstr ""
 
@@ -3717,11 +3766,11 @@ msgid "Item"
 msgstr ""
 
 #, python-format
-msgid "New %s created."
+msgid "New %s was created."
 msgstr ""
 
 #, python-format
-msgid "%s edited."
+msgid "%s was edited."
 msgstr ""
 
 #, python-format
@@ -3745,14 +3794,7 @@ msgstr ""
 msgid "Invalid model."
 msgstr ""
 
-#, python-format
-msgid "You do not have the required permission(s): %s"
-msgstr ""
-
-msgid "Unauthorized"
-msgstr ""
-
-msgid "Object not found"
+msgid "Object not found."
 msgstr ""
 
 msgid "Storefront"
@@ -3767,13 +3809,7 @@ msgstr ""
 msgid "Complete the setup wizard"
 msgstr ""
 
-msgid "Publish your store"
-msgstr ""
-
-msgid "Let customers browse your store and make purchases"
-msgstr ""
-
-msgid "Publish shop"
+msgid "All set. Nothing to be configured"
 msgstr ""
 
 msgid ""
@@ -3784,9 +3820,12 @@ msgstr ""
 msgid "This recovery link is invalid."
 msgstr ""
 
-msgid "Password changed successfully!"
+msgid "Password was changed."
 msgstr ""
 
 #, python-format
 msgid "Couldn't get selections for %s."
+msgstr ""
+
+msgid "Selector not found."
 msgstr ""

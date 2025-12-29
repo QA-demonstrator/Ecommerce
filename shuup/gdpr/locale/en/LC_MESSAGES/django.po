@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-07-27 19:23+0000\n"
+"POT-Creation-Date: 2021-07-06 22:55+0000\n"
 "PO-Revision-Date: 2018-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,7 +38,7 @@ msgstr ""
 msgid "General Data Protection Regulation"
 msgstr ""
 
-msgid "Contact anonymized!"
+msgid "Contact was anonymized."
 msgstr ""
 
 msgid "My Data"
@@ -51,6 +51,12 @@ msgid "enabled"
 msgstr ""
 
 msgid "Define if the GDPR is active."
+msgstr ""
+
+msgid "skip consent on login"
+msgstr ""
+
+msgid "Do not require consent on login when GDPR is activated."
 msgstr ""
 
 msgid "privacy policy page"
@@ -81,6 +87,14 @@ msgstr ""
 msgid "The summary text to be presented about cookie privacy."
 msgstr ""
 
+msgid "login consent text"
+msgstr ""
+
+msgid ""
+"Shown in login page between the form and the button. Optional, but should be "
+"considered when the consent on login is disabled."
+msgstr ""
+
 msgid "GDPR settings"
 msgstr ""
 
@@ -90,12 +104,26 @@ msgstr ""
 msgid "always active"
 msgstr ""
 
+msgid "active by default"
+msgstr ""
+
+msgid "whether this cookie category is active by default"
+msgstr ""
+
 msgid "cookies used"
 msgstr ""
 
 msgid ""
 "Comma separated list of cookies names, prefix or suffix that will be "
 "included in this category, e.g. _ga, mysession, user_c_"
+msgstr ""
+
+msgid "Snippets to block if not consented"
+msgstr ""
+
+msgid ""
+"Select the snippets that shouldn't be injected if the cookie is not "
+"consented."
 msgstr ""
 
 msgid "name"
@@ -139,13 +167,13 @@ msgid ""
 "class='gdpr_consent_doc_check'>{}</a>"
 msgstr ""
 
-msgid "You must accept to this to register."
+msgid "You must accept this in order to register."
 msgstr ""
 
-msgid "You must accept to this to order."
+msgid "You must accept this to order."
 msgstr ""
 
-msgid "You must accept to this to authenticate."
+msgid "You must accept this in order to authenticate."
 msgstr ""
 
 msgid ""
@@ -770,7 +798,7 @@ msgstr ""
 msgid "Privacy Preferences"
 msgstr ""
 
-msgid "I Agree"
+msgid "I Understand"
 msgstr ""
 
 msgid "Privacy Preference Center"

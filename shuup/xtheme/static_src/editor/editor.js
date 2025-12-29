@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,6 +25,66 @@ function post(args) {
     form.submit();
 }
 
+function activateSelect($select, model, searchMode, extraFilters = null, noExpand = false, attrs = {}) {
+    if (!noExpand) {
+        // make sure to expand the select2 to use all the available space
+        $select.width("100%");
+    }
+
+    if (!model) {
+        return $select.select2({
+            language: "xx",
+            ...attrs
+        }).on('select2:select', function (e) {
+            var id = e.params.data.id;
+            var option = $(e.target).children('[value=' + id + ']');
+            option.detach();
+            $(e.target).append(option).change();
+        });
+    }
+
+    return $select.select2(Object.assign({
+        language: "xx",
+        minimumInputLength: window.ShuupAdminConfig.settings.minSearchInputLength,
+        ajax: {
+            url: window.ShuupAdminConfig.browserUrls.select,
+            dataType: "json",
+            data: function (params) {
+                const data = {
+                    model: model,
+                    searchMode: searchMode,
+                    search: params.term,
+                };
+                // extraFilters is a fn that returns extra params for the query
+                if (extraFilters) {
+                    Object.assign(data, extraFilters(params));
+                }
+                return data;
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data.results, function (item) {
+                        return { text: item.name, id: item.id };
+                    })
+                };
+            }
+        }
+    }, attrs));
+}
+
+function activateSelects() {
+    $("select").each(function (idx, object) {
+        const select = $(object);
+        // only activate selects that aren't already select2 inputs
+        if (!select.hasClass("select2-hidden-accessible") && !select.hasClass("no-select2")) {
+            const model = select.data("model");
+            const searchMode = select.data("search-mode");
+            const noExpand = select.data("no-expand");
+            activateSelect(select, model, searchMode, noExpand);
+        }
+    });
+}
+
 function updateModelChoiceWidgetURL(select) {
     const selectedObject = select.options[select.selectedIndex];
     const url = selectedObject.dataset.adminUrl;
@@ -36,6 +96,11 @@ function updateModelChoiceWidgetURL(select) {
 domready(() => {
     let changesMade = false;
     $(".layout-cell").on("click", function() {
+        if(changesMade) {
+            if(!confirm(gettext("Changing plugin cells without saving will cause changes made to this cell to be lost."))) {
+                return;
+            }
+        }
         const {x, y} = this.dataset;
         const newQs = mutate({x, y});
         location.href = "?" + newQs;
@@ -152,6 +217,7 @@ domready(() => {
             }
         });
     }
+    activateSelects();
 });
 
 window.refreshPlaceholderInParent = (placeholderName) => {

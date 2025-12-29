@@ -1,38 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import copy
-from collections import defaultdict, OrderedDict
-
+from collections import OrderedDict, defaultdict
 from django import forms
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from shuup.notify.admin_module.utils import get_name_map
-from shuup.notify.enums import TemplateUse, UNILINGUAL_TEMPLATE_LANGUAGE
+from shuup.notify.enums import UNILINGUAL_TEMPLATE_LANGUAGE, TemplateUse
 from shuup.notify.models import Script
 from shuup.utils.i18n import get_language_name
 
 
 class ScriptForm(forms.ModelForm):
-    event_identifier = forms.ChoiceField(
-        label=_(u"Event"),
-        help_text=_(u"Choose which event to bind this script to.")
-    )
-    name = forms.CharField(
-        label=_(u"Script Name"),
-        help_text=_(u"Type in a descriptive name for your new script.")
-    )
+    event_identifier = forms.ChoiceField(label=_("Event"), help_text=_("Choose which event to bind this script to."))
+    name = forms.CharField(label=_("Script Name"), help_text=_("Type in a descriptive name for your new script."))
     enabled = forms.BooleanField(
-        label=_(u"Enable Script"),
-        help_text=_(u"Choose whether this script should be activated when its event fires."),
-        required=False
+        label=_("Enable Script"),
+        help_text=_("Choose whether this script should be activated when its event fires."),
+        required=False,
     )
 
     class Meta:
@@ -46,8 +39,8 @@ class ScriptForm(forms.ModelForm):
         self.fields["event_identifier"].choices = event_choices
         self.fields["event_identifier"].widget.choices = event_choices
         if self.instance.pk:
-            self.fields["event_identifier"].help_text = (
-                _(u"Warning: Changing the event for an existing script may have unexpected effects.")
+            self.fields["event_identifier"].help_text = _(
+                "Warning! Changing the event for an existing script may have unexpected effects."
             )
 
     def save(self, commit=True):
@@ -81,51 +74,52 @@ class ScriptItemEditForm(forms.Form):
             for language_code, language_name in settings.LANGUAGES:
                 self.template_languages.append((language_code, get_language_name(language_code)))
         elif template_use == TemplateUse.UNILINGUAL:
-            self.template_languages = [UNILINGUAL_TEMPLATE_LANGUAGE, _(u"Template")]
+            self.template_languages = [(UNILINGUAL_TEMPLATE_LANGUAGE, _("Template"))]
         else:  # Nothing to do
             return
 
-        ordered_fields = sorted(self.script_item.template_fields.items(), key=lambda p: p[1].creation_counter)
+        fields = self.script_item.template_fields.items()
         for lang_code, lang_name in self.template_languages:
-            for t_field_name, base_field in ordered_fields:
+            for t_field_name, base_field in fields:
                 field = copy.deepcopy(base_field)
                 field.label = "%s (%s)" % (field.label, lang_name)
-                field.required = False
+
+                if lang_code == settings.PARLER_DEFAULT_LANGUAGE_CODE:  # Only default language is required
+                    field.required = getattr(base_field, "required", False)
+                else:
+                    field.required = False
                 field_name = "t_%s_%s" % (lang_code, t_field_name)
                 self.fields[field_name] = field
                 self.template_field_info[lang_code][t_field_name] = field_name
 
     def _populate_binding_fields(self, binding_identifier, binding):
         """
-        :param binding_identifier: Binding identifier
+        :param binding_identifier: Binding identifier.
         :type binding_identifier: str
-        :param binding: Binding object
+        :param binding: Binding object.
         :type binding: Binding
         """
         binding_field_info = self.binding_field_info.setdefault(binding_identifier, {"binding": binding})
         if binding.allow_constant:
             field_name = "b_%s_c" % binding_identifier
             self.fields[field_name] = binding.type.get_field(
-                label=u"Constant",
-                required=(binding.required and not binding.allow_variable),
-                initial=binding.default
+                label="Constant", required=(binding.required and not binding.allow_variable), initial=binding.default
             )
             binding_field_info["constant"] = field_name
 
         if binding.allow_variable:
             variables = [
                 (var_identifier, var.name)
-                for (var_identifier, var)
-                in self.variables.items()
+                for (var_identifier, var) in self.variables.items()
                 if binding.accepts_any_type or binding.type.is_coercible_from(var.type)
             ]
             if variables:
-                choices = [("", "")] + variables
+                choices = [("", "---------")] + variables
                 field_name = "b_%s_v" % binding_identifier
                 self.fields[field_name] = forms.ChoiceField(
                     choices=choices,
                     label=_("Bind to Variable"),
-                    required=(binding.required and not binding.allow_constant)
+                    required=(binding.required and not binding.allow_constant),
                 )
                 binding_field_info["variable"] = field_name
                 # TODO: Maybe show a disabled field instead of nothing?
@@ -150,7 +144,7 @@ class ScriptItemEditForm(forms.Form):
 
         return initial
 
-    def _save_binding(self, new_data, identifier, binding):
+    def _save_binding(self, new_data, identifier, binding):  # noqa (C901)
         field_info = self.binding_field_info.get(identifier)
         if not field_info:
             return
@@ -166,11 +160,13 @@ class ScriptItemEditForm(forms.Form):
             if constant_value:
                 if hasattr(constant_value, "value"):  # Might be an enum TODO: fixme
                     constant_value = constant_value.value
+                if hasattr(constant_value, "pk"):  # Might be a model instance TODO: fixme
+                    constant_value = constant_value.pk
                 new_data[identifier] = {"constant": constant_value}
                 return
 
         if binding.required:
-            message = "Binding %s is required but has no value" % binding.name
+            message = "Error! Binding %s is required, but has no value." % binding.name
             if field_info.get("constant"):
                 self.add_error(field_info["constant"], message)
             if field_info.get("variable"):
@@ -182,20 +178,23 @@ class ScriptItemEditForm(forms.Form):
 
     def _save_template(self, new_data):
         template_data = {}
+
         for lang_code, field_info in self.template_field_info.items():
+            t_field_name_to_field_name = dict(field_info.items())
             lang_vals = dict(
                 (t_field_name, (self.cleaned_data.get(field_name) or "").strip())
-                for (t_field_name, field_name)
-                in field_info.items()
+                for (t_field_name, field_name) in field_info.items()
             )
             if not any(lang_vals.values()):  # Not worth saving
                 continue
-
             can_save = True
-            for t_field_name, content in lang_vals.items():
-                if not content:
-                    self.add_error(field_info[t_field_name], u"This field is missing content")
-                    can_save = False
+
+            if lang_code == settings.PARLER_DEFAULT_LANGUAGE_CODE:
+                for t_field_name, content in lang_vals.items():
+                    actual_field_name = t_field_name_to_field_name[t_field_name]
+                    if self.fields[actual_field_name].required and not content:  # Add error only to default languages
+                        self.add_error(field_info[t_field_name], _("This field is missing content."))
+                        can_save = False
 
             if can_save:
                 template_data[lang_code] = lang_vals
@@ -206,6 +205,6 @@ class ScriptItemEditForm(forms.Form):
         self._save_bindings(new_data)
         self._save_template(new_data)
         if self.errors:
-            raise forms.ValidationError("There are errors")
-        self.script_item.data.update(new_data)
+            raise forms.ValidationError("Error! There are errors.")
+        self.script_item.data = new_data
         return self.script_item

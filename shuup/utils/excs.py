@@ -1,17 +1,18 @@
 from django.core.exceptions import ValidationError
-from django.utils.encoding import force_text
+from django.utils.html import escape
 
+from shuup.utils.django_compat import force_text
 
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
 
 class Problem(Exception):
-    """ User-visible exception """
+    """ User-visible exception. """
 
     message = property(lambda self: self.args[0] if self.args else None)
 
@@ -29,11 +30,11 @@ class Problem(Exception):
 
             raise Problem("Oops").with_link("...", "...")
 
-        :param url: URL string
+        :param url: URL string.
         :type url: str
-        :param title: Title text
+        :param title: Title text.
         :type title: str
-        :return: This same Problem
+        :return: This same Problem.
         :rtype: shuup.utils.excs.Problem
         """
         self.links.append({"url": url, "title": title})
@@ -61,10 +62,10 @@ def extract_messages(obj_list):
     for obj in obj_list:
         if isinstance(obj, ValidationError):
             for msg in obj.messages:
-                yield force_text(msg)
+                yield escape(force_text(msg))
             continue
         if isinstance(obj, Exception):
             if len(obj.args):
-                yield force_text(obj.args[0])
+                yield escape(force_text(obj.args[0]))
                 continue
-        yield force_text(obj)
+        yield escape(force_text(obj))

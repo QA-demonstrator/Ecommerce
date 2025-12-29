@@ -1,18 +1,37 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-from django.utils.encoding import force_text
 from jinja2.sandbox import SandboxedEnvironment
+
+from shuup.utils.django_compat import force_text
+from shuup.utils.importing import cached_load
 
 
 class NoLanguageMatches(Exception):
     pass
+
+
+def get_sandboxed_template_environment(context, **kwargs):
+    """
+    Returns a Jinja2 enviroment for rendering templates in notifications
+
+    :param context: Script context.
+    :type context: shuup.notify.script.Context
+    :param kwargs: extra args.
+    :type kwargs: dict
+    :return: The environment used to render.
+    :rtype: jinja2.environment.Environment
+    """
+    env_kwargs = dict()
+    if "html_intent" in kwargs:
+        env_kwargs = dict(autoescape=kwargs["html_intent"])
+    return SandboxedEnvironment(**env_kwargs)
 
 
 def render_in_context(context, template_text, html_intent=False):
@@ -26,12 +45,13 @@ def render_in_context(context, template_text, html_intent=False):
     :param html_intent: Is the template text intended for HTML output?
                         This currently turns on autoescaping.
     :type html_intent: bool
-    :return: Rendered template text
+    :return: Rendered template text.
     :rtype: str
-    :raises: Whatever Jinja2 might happen to raise
+    :raises: Whatever Jinja2 might happen to raise.
     """
-    # TODO: Add some filters/globals into this environment?
-    env = SandboxedEnvironment(autoescape=html_intent)
+
+    environment_provider = cached_load("SHUUP_NOTIFY_TEMPLATE_ENVIRONMENT_PROVIDER")
+    env = environment_provider(context=context, html_intent=html_intent)
     template = env.from_string(template_text)
     return template.render(context.get_variables())
 
@@ -39,9 +59,9 @@ def render_in_context(context, template_text, html_intent=False):
 class Template(object):
     def __init__(self, context, data):
         """
-        :param context: Script context
+        :param context: Script context.
         :type context: shuup.notify.script.Context
-        :param data: Template data dictionary
+        :param data: Template data dictionary.
         :type data: dict
         """
         self.context = context
@@ -63,7 +83,7 @@ class Template(object):
         Render this template in the given language,
         returning the given fields.
 
-        :param language: Language code (ISO 639-1 or ISO 639-2)
+        :param language: Language code (ISO 639-1 or ISO 639-2).
         :type language: str
         :param fields: Desired fields to render.
         :type fields: list[str]
@@ -88,6 +108,7 @@ class Template(object):
                 rendered = self.render(language=language, fields=fields)
                 rendered["_language"] = language
                 return rendered
-        raise NoLanguageMatches("No language in template matches any of languages %r for fields %r" % (
-            language_preferences, fields.keys()
-        ))
+        raise NoLanguageMatches(
+            "Error! No language in template matches any of languages `%r` for fields `%r`."
+            % (language_preferences, fields.keys())
+        )

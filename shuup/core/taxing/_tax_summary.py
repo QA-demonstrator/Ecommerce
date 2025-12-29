@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -8,9 +8,8 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 from decimal import Decimal
-from itertools import chain
-
 from django.utils.translation import ugettext as _
+from itertools import chain
 
 from shuup.core.fields.utils import ensure_decimal_places
 from shuup.utils.money import Money
@@ -24,9 +23,9 @@ class TaxSummary(list):
         """
         Create TaxSummary from LineTaxes.
 
-        :param line_taxes: List of line taxes to summarize
+        :param line_taxes: List of line taxes to summarize.
         :type line_taxes: list[LineTax]
-        :param untaxed: Sum of taxless prices that have no taxes added
+        :param untaxed: Sum of taxless prices that have no taxes added.
         :type untaxed: shuup.core.pricing.TaxlessPrice
         """
         zero_amount = Money(0, untaxed.currency)
@@ -46,14 +45,20 @@ class TaxSummary(list):
         if untaxed:
             lines.append(
                 TaxSummaryLine(
-                    tax_id=None, tax_code='', tax_name=_("Untaxed"),
-                    tax_rate=Decimal(0), based_on=untaxed.amount.as_rounded(),
-                    raw_based_on=untaxed.amount, tax_amount=zero_amount))
+                    tax_id=None,
+                    tax_code="",
+                    tax_name=_("Untaxed"),
+                    tax_rate=Decimal(0),
+                    based_on=untaxed.amount.as_rounded(),
+                    raw_based_on=untaxed.amount,
+                    tax_amount=zero_amount,
+                )
+            )
         return cls(sorted(lines, key=TaxSummaryLine.get_sort_key))
 
     def __repr__(self):
         super_repr = super(TaxSummary, self).__repr__()
-        return '%s(%s)' % (type(self).__name__, super_repr)
+        return "%s(%s)" % (type(self).__name__, super_repr)
 
 
 class TaxSummaryLine(object):
@@ -63,12 +68,16 @@ class TaxSummaryLine(object):
     @classmethod
     def from_tax(cls, tax, based_on, raw_based_on, tax_amount):
         return cls(
-            tax_id=tax.id, tax_code=tax.code, tax_name=tax.name,
-            tax_rate=tax.rate, based_on=based_on, raw_based_on=raw_based_on,
-            tax_amount=tax_amount)
+            tax_id=tax.id,
+            tax_code=tax.code,
+            tax_name=tax.name,
+            tax_rate=tax.rate,
+            based_on=based_on,
+            raw_based_on=raw_based_on,
+            tax_amount=tax_amount,
+        )
 
-    def __init__(self, tax_id, tax_code, tax_name, tax_rate,
-                 based_on, raw_based_on, tax_amount):
+    def __init__(self, tax_id, tax_code, tax_name, tax_rate, based_on, raw_based_on, tax_amount):
         self.tax_id = tax_id
         self.tax_code = tax_code
         self.tax_name = tax_name
@@ -82,10 +91,9 @@ class TaxSummaryLine(object):
         return (-self.tax_rate or 0, self.tax_name)
 
     def __repr__(self):
-        return '<{} {}/{}/{:.3%} based_on={} tax_amount={})>'.format(
-            type(self).__name__,
-            self.tax_id, self.tax_code, float(self.tax_rate or 0),
-            self.based_on, self.tax_amount)
+        return "<{} {}/{}/{:.3%} based_on={} tax_amount={})>".format(
+            type(self).__name__, self.tax_id, self.tax_code, float(self.tax_rate or 0), self.based_on, self.tax_amount
+        )
 
     def to_dict(self):
         return dict(chain(*(self._serialize_field(x) for x in self._FIELDS)))
@@ -94,7 +102,7 @@ class TaxSummaryLine(object):
         value = getattr(self, key)
         if isinstance(value, Money):
             if key not in self._MONEY_FIELDS:
-                raise TypeError('Non-price field "%s" has %r' % (key, value))
-            return [(key, value.value), (key + '_currency', value.currency)]
+                raise TypeError('Error! Non-price field "%s" has %r.' % (key, value))
+            return [(key, value.value), (key + "_currency", value.currency)]
         assert not isinstance(value, Money)
         return [(key, value)]

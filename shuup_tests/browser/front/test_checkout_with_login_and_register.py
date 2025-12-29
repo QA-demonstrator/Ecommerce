@@ -1,29 +1,32 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
 import pytest
-
-from django.core.urlresolvers import reverse
+import time
 from django.test.utils import override_settings
 
 from shuup.core import cache
-from shuup.core.models import (
-    Order, OrderStatus, OrderStatusRole, PersonContact, Product
-)
+from shuup.core.models import Order, OrderStatus, OrderStatusRole, PersonContact, Product
 from shuup.testing.browser_utils import (
-    click_element, wait_until_appeared, wait_until_condition,
-    wait_until_disappeared
+    click_element,
+    initialize_front_browser_test,
+    wait_until_appeared,
+    wait_until_condition,
+    wait_until_disappeared,
 )
 from shuup.testing.factories import (
-    create_product, get_default_payment_method, get_default_shipping_method,
-    get_default_shop, get_default_supplier
+    create_product,
+    get_default_payment_method,
+    get_default_shipping_method,
+    get_default_shop,
+    get_default_supplier,
 )
-from shuup.testing.browser_utils import initialize_front_browser_test
+from shuup.utils.django_compat import reverse
 
 pytestmark = pytest.mark.skipif(os.environ.get("SHUUP_BROWSER_TESTS", "0") != "1", reason="No browser tests run.")
 
@@ -35,12 +38,10 @@ def create_orderable_product(name, sku, price):
     return product
 
 
-
 @override_settings(SHUUP_REGISTRATION_REQUIRES_ACTIVATION=False)
-@pytest.mark.urls('shuup.testing.checkout_with_login_and_register_urls')
-@pytest.mark.browser
-@pytest.mark.djangodb
-def test_checkout_with_login_and_register(browser, live_server, settings):
+@pytest.mark.urls("shuup.testing.checkout_with_login_and_register_urls")
+@pytest.mark.django_db
+def test_checkout_with_login_and_register(browser, live_server, reindex_catalog):
     cache.clear()  # Avoid caches from past tests
     # initialize
     product_name = "Test Product"
@@ -48,12 +49,8 @@ def test_checkout_with_login_and_register(browser, live_server, settings):
     get_default_payment_method()
     get_default_shipping_method()
     product = create_orderable_product(product_name, "test-123", price=100)
-    OrderStatus.objects.create(
-        identifier="initial",
-        role=OrderStatusRole.INITIAL,
-        name="initial",
-        default=True
-    )
+    reindex_catalog()
+    OrderStatus.objects.create(identifier="initial", role=OrderStatusRole.INITIAL, name="initial", default=True)
 
     # Initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -76,10 +73,10 @@ def test_checkout_with_login_and_register(browser, live_server, settings):
 
 
 @override_settings(SHUUP_REGISTRATION_REQUIRES_ACTIVATION=False)
-@pytest.mark.urls('shuup.testing.single_page_checkout_with_login_and_register_conf')
-@pytest.mark.browser
-@pytest.mark.djangodb
-def test_single_page_checkout_with_login_and_register(browser, live_server, settings):
+@pytest.mark.urls("shuup.testing.single_page_checkout_with_login_and_register_conf")
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
+def test_single_page_checkout_with_login_and_register(browser, live_server, reindex_catalog):
     cache.clear()  # Avoid caches from past tests
 
     # initialize
@@ -88,12 +85,8 @@ def test_single_page_checkout_with_login_and_register(browser, live_server, sett
     get_default_payment_method()
     get_default_shipping_method()
     product = create_orderable_product(product_name, "test-123", price=100)
-    OrderStatus.objects.create(
-        identifier="initial",
-        role=OrderStatusRole.INITIAL,
-        name="initial",
-        default=True
-    )
+    reindex_catalog()
+    OrderStatus.objects.create(identifier="initial", role=OrderStatusRole.INITIAL, name="initial", default=True)
 
     # Initialize test and go to front page
     browser = initialize_front_browser_test(browser, live_server)
@@ -118,15 +111,18 @@ def navigate_to_checkout(browser, product):
     click_element(browser, "#product-%s" % product.pk)  # open product from product list
     click_element(browser, "#add-to-cart-button-%s" % product.pk)  # add product to basket
 
-    wait_until_appeared(browser, ".cover-wrap")
-    wait_until_disappeared(browser, ".cover-wrap")
+    time.sleep(1)
 
     click_element(browser, "#navigation-basket-partial")  # open upper basket navigation menu
     click_element(browser, "a[href='/basket/']")  # click the link to basket in dropdown
+    time.sleep(1)
+
     wait_until_condition(browser, lambda x: x.is_text_present("Shopping cart"))  # we are in basket page
     wait_until_condition(browser, lambda x: x.is_text_present(product.name))  # product is in basket
 
-    click_element(browser, "a[href='/checkout/']") # click link that leads to checkout
+    click_element(browser, "a[href='/checkout/']")  # click link that leads to checkout
+
+    time.sleep(1)
 
 
 def guest_ordering_test(browser, live_server):
@@ -138,8 +134,7 @@ def guest_ordering_test(browser, live_server):
     wait_until_appeared(browser, "div.alert.alert-danger")
 
     click_element(browser, "button[data-id='id_checkout_method_choice-register']")
-    # WARNING: data-original-index was removed after bootstrap-select 1.6.3
-    click_element(browser, "li[data-original-index='0'] a")
+    click_element(browser, "button[data-id='id_checkout_method_choice-register'] + .dropdown-menu li:nth-child(1) a")
     click_element(browser, "div.clearfix button.btn.btn-primary.btn-lg.pull-right")
     wait_until_condition(browser, lambda x: x.is_text_present("Checkout: Addresses"))
     url = reverse("shuup:checkout", kwargs={"phase": "checkout_method"})
@@ -148,19 +143,19 @@ def guest_ordering_test(browser, live_server):
 
 def register_test(browser, live_server, test_username, test_email, test_password):
     click_element(browser, "button[data-id='id_checkout_method_choice-register']")
-    click_element(browser, "li[data-original-index='1'] a")
+    click_element(browser, "button[data-id='id_checkout_method_choice-register'] + .dropdown-menu li:nth-child(2) a")
     click_element(browser, "div.clearfix button.btn.btn-primary.btn-lg.pull-right")
     wait_until_condition(browser, lambda x: x.is_text_present("Register"))
 
-    browser.find_by_id("id_username").fill(test_username)
-    browser.find_by_id("id_email").fill(test_email)
-    browser.find_by_id("id_password1").fill(test_password)
-    browser.find_by_id("id_password2").fill("typo-%s" % test_password)
+    browser.find_by_id("id_registration_for_username").fill(test_username)
+    browser.find_by_id("id_registration_for_email").fill(test_email)
+    browser.find_by_id("id_registration_for_password1").fill(test_password)
+    browser.find_by_id("id_registration_for_password2").fill("typo-%s" % test_password)
     click_element(browser, "div.clearfix button.btn.btn-primary.btn-lg.pull-right")
     wait_until_appeared(browser, "div.form-group.passwordinput.required.has-error")
 
-    browser.find_by_id("id_password1").fill(test_password)
-    browser.find_by_id("id_password2").fill(test_password)
+    browser.find_by_id("id_registration_for_password1").fill(test_password)
+    browser.find_by_id("id_registration_for_password2").fill(test_password)
     click_element(browser, "div.clearfix button.btn.btn-primary.btn-lg.pull-right")
 
     wait_until_condition(browser, lambda x: x.is_text_present("Addresses"))

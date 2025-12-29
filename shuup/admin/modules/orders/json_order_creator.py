@@ -1,21 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 from copy import deepcopy
-
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from shuup.core.models import (
-    CompanyContact, Contact, MutableAddress, OrderLineType, OrderStatus,
-    PaymentMethod, PersonContact, Product, ShippingMethod, Shop, ShopProduct
+    CompanyContact,
+    Contact,
+    MutableAddress,
+    OrderLineType,
+    OrderStatus,
+    PaymentMethod,
+    PersonContact,
+    Product,
+    ShippingMethod,
+    Shop,
+    ShopProduct,
+    Supplier,
 )
 from shuup.core.order_creator import OrderCreator, OrderModifier, OrderSource
 from shuup.core.order_creator._source import LineSource
@@ -28,7 +38,7 @@ class AdminOrderSource(OrderSource):
         return []
 
     def is_cash_order(self):
-        return (self.payment_method and self.payment_method.choice_identifier == "cash")
+        return self.payment_method and self.payment_method.choice_identifier == "cash"
 
 
 class AdminOrderCreator(OrderCreator):
@@ -42,7 +52,6 @@ class AdminOrderModifier(OrderModifier):
 
 
 class JsonOrderCreator(object):
-
     def __init__(self):
         self._errors = []
 
@@ -53,8 +62,8 @@ class JsonOrderCreator(object):
 
     @staticmethod
     def is_empty_address(address_data):
-        """An address will have at minimum a tax_number field it will still be considered empty"""
-        return list(address_data.keys()) == ['tax_number']
+        """An address will have at least a tax_number field. It will still be considered empty."""
+        return list(address_data.keys()) == ["tax_number"]
 
     def add_error(self, error):
         self._errors.append(error)
@@ -72,7 +81,7 @@ class JsonOrderCreator(object):
         try:
             sl_kwargs["quantity"] = parse_decimal_string(quantity_val)
         except Exception as exc:
-            msg = _("The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s)") % {
+            msg = _("The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s).") % {
                 "text": sl_kwargs["text"],
                 "quantity": quantity_val,
                 "error": exc,
@@ -85,10 +94,10 @@ class JsonOrderCreator(object):
         try:
             sl_kwargs["base_unit_price"] = source.create_price(parse_decimal_string(price_val))
         except Exception as exc:
-            msg = _("The price '%(price)s' (for line %(text)s) is invalid (%(error)s)") % {
+            msg = _("The price '%(price)s' (for line %(text)s) is invalid (%(error)s).") % {
                 "text": sl_kwargs["text"],
                 "price": price_val,
-                "error": exc
+                "error": exc,
             }
             self.add_error(ValidationError(msg, code="invalid_price"))
             return False
@@ -97,10 +106,10 @@ class JsonOrderCreator(object):
         try:
             sl_kwargs["discount_amount"] = source.create_price(parse_decimal_string(discount_val))
         except Exception as exc:
-            msg = _("The discount '%(discount)s' (for line %(text)s is invalid (%(error)s)") % {
+            msg = _("The discount '%(discount)s' (for line %(text)s is invalid (%(error)s).") % {
                 "discount": discount_val,
                 "text": sl_kwargs["text"],
-                "error": exc
+                "error": exc,
             }
             self.add_error(ValidationError(msg, code="invalid_discount"))
 
@@ -108,23 +117,37 @@ class JsonOrderCreator(object):
 
     def _process_product_line(self, source, sline, sl_kwargs):
         product_info = sline.pop("product", None)
+        supplier_info = sline.pop("supplier", None)
+
+        if not supplier_info:
+            self.add_error(ValidationError(_("Product line does not have a supplier."), code="no_supplier"))
+            return False
+
         if not product_info:
             self.add_error(ValidationError(_("Product line does not have a product set."), code="no_product"))
             return False
         product = self.safe_get_first(Product, pk=product_info["id"])
         if not product:
-            self.add_error(ValidationError(_("Product %s does not exist.") % product_info["id"], code="no_product"))
+            self.add_error(ValidationError(_("Product `%s` does not exist.") % product_info["id"], code="no_product"))
             return False
         try:
             shop_product = product.get_shop_instance(source.shop)
         except ShopProduct.DoesNotExist:
-            self.add_error(ValidationError((_("Product %(product)s is not available in the %(shop)s shop.") % {
-                "product": product,
-                "shop": source.shop
-            }), code="no_shop_product"))
+            self.add_error(
+                ValidationError(
+                    (
+                        _("Product %(product)s is not available in the %(shop)s shop.")
+                        % {"product": product, "shop": source.shop}
+                    ),
+                    code="no_shop_product",
+                )
+            )
             return False
 
-        supplier = shop_product.get_supplier(source.customer, sl_kwargs["quantity"], source.shipping_address)
+        supplier = self.safe_get_first(Supplier, pk=supplier_info["id"])
+
+        if not supplier:
+            supplier = shop_product.get_supplier(source.customer, sl_kwargs["quantity"], source.shipping_address)
 
         sl_kwargs["product"] = product
         sl_kwargs["supplier"] = supplier
@@ -141,8 +164,11 @@ class JsonOrderCreator(object):
             sku=sline.pop("sku", None),
             text=sline.pop("text", None),
             shop=source.shop,
-            type=OrderLineType.OTHER  # Overridden in the `product` branch
+            type=OrderLineType.OTHER,  # Overridden in the `product` branch
         )
+
+        # _process_product_line pops this value, so need to store it here
+        supplier_info = sline.get("supplier")
 
         if type != "text":
             if not self._process_line_quantity_and_price(source, sline, sl_kwargs):
@@ -151,6 +177,11 @@ class JsonOrderCreator(object):
         if type == "product":
             if not self._process_product_line(source, sline, sl_kwargs):
                 valid = False
+        else:
+            if supplier_info:
+                supplier = self.safe_get_first(Supplier, pk=supplier_info["id"])
+                if supplier:
+                    sl_kwargs["supplier"] = supplier
 
         if valid:
             source.add_line(**sl_kwargs)
@@ -190,8 +221,9 @@ class JsonOrderCreator(object):
                 for error_msg in errors:
                     self.add_error(
                         ValidationError(
-                            "%(field_label)s: %(error_msg)s" % {"field_label": field_label, "error_msg": error_msg},
-                            code="invalid_address"
+                            "Error! %(field_label)s: %(error_msg)s"
+                            % {"field_label": field_label, "error_msg": error_msg},
+                            code="invalid_address",
                         )
                     )
             return None
@@ -218,7 +250,8 @@ class JsonOrderCreator(object):
         shipping_address_data = (
             billing_address_data
             if customer_data.pop("shipToBillingAddress", False)
-            else customer_data.pop("shippingAddress", {}))
+            else customer_data.pop("shippingAddress", {})
+        )
         is_company = customer_data.pop("isCompany", False)
         save_address = customer_data.pop("saveAddress", False)
 
@@ -242,11 +275,11 @@ class JsonOrderCreator(object):
 
         methods_data = state.pop("methods", None) or {}
         shipping_method = methods_data.pop("shippingMethod")
-        if not shipping_method:
+        if not shipping_method and settings.SHUUP_ADMIN_REQUIRE_SHIPPING_METHOD_AT_ORDER_CREATOR:
             self.add_error(ValidationError(_("Please select shipping method."), code="no_shipping_method"))
 
         payment_method = methods_data.pop("paymentMethod")
-        if not payment_method:
+        if not payment_method and settings.SHUUP_ADMIN_REQUIRE_PAYMENT_METHOD_AT_ORDER_CREATOR:
             self.add_error(ValidationError(_("Please select payment method."), code="no_payment_method"))
 
         if self.errors:
@@ -259,8 +292,12 @@ class JsonOrderCreator(object):
             billing_address=billing_address,
             shipping_address=shipping_address,
             status=OrderStatus.objects.get_default_initial(),
-            shipping_method=self.safe_get_first(ShippingMethod, pk=shipping_method.get("id")),
-            payment_method=self.safe_get_first(PaymentMethod, pk=payment_method.get("id")),
+            shipping_method=(
+                self.safe_get_first(ShippingMethod, pk=shipping_method.get("id")) if shipping_method else None
+            ),
+            payment_method=(
+                self.safe_get_first(PaymentMethod, pk=payment_method.get("id")) if payment_method else None
+            ),
         )
         return source
 
@@ -276,7 +313,7 @@ class JsonOrderCreator(object):
         return customer
 
     def _postprocess_order(self, order, state):
-        comment = (state.pop("comment", None) or "")
+        comment = state.pop("comment", None) or ""
         if comment:
             order.add_log_entry(comment, kind=LogEntryKind.NOTE, user=order.creator)
 
@@ -284,26 +321,27 @@ class JsonOrderCreator(object):
         """
         Create an order source from a state dict unserialized from JSON.
 
-        :param state: State dictionary
+        :param state: State dictionary.
         :type state: dict
-        :param creator: Creator user
+        :param creator: Creator user.
         :type creator: django.contrib.auth.models.User|None
-        :param save: Flag whether order customer and addresses is saved to database
+        :param save: Flag whether order customer and addresses is saved to database.
         :type save: boolean
-        :param order_to_update: Order object to edit
+        :param order_to_update: Order object to edit.
         :type order_to_update: shuup.core.models.Order|None
-        :return: The created order source, or None if something failed along the way
+        :return: The created order source, or None if something failed along the way.
         :rtype: OrderSource|None
         """
         if not self.is_valid:  # pragma: no cover
-            raise ValueError("Create a new JsonOrderCreator for each order.")
+            raise ValueError("Error! Create a new `JsonOrderCreator` for each order.")
         # We'll be mutating the state to make it easier to track we've done everything,
         # so it's nice to deepcopy things first.
         state = deepcopy(state)
 
         # First, initialize an OrderSource.
         source = self._initialize_source_from_state(
-            state, creator=creator, ip_address=ip_address, save=save, order_to_update=order_to_update)
+            state, creator=creator, ip_address=ip_address, save=save, order_to_update=order_to_update
+        )
         if not source:
             return None
 
@@ -320,7 +358,8 @@ class JsonOrderCreator(object):
             processor = source.payment_method.payment_processor
             taxful_total = source.taxful_total_price
             rounded = nickel_round(
-                taxful_total, quant=processor.rounding_quantize, rounding=processor.rounding_mode.value)
+                taxful_total, quant=processor.rounding_quantize, rounding=processor.rounding_mode.value
+            )
             remainder = rounded - taxful_total
             line_data = dict(
                 line_id="rounding",
@@ -330,7 +369,7 @@ class JsonOrderCreator(object):
                 text="Rounding",
                 base_unit_price=source.create_price(remainder.value),
                 tax_class=None,
-                line_source=LineSource.ADMIN
+                line_source=LineSource.ADMIN,
             )
             source.add_line(**line_data)
             source.get_final_lines()
@@ -341,17 +380,19 @@ class JsonOrderCreator(object):
         """
         Create an order from a state dict unserialized from JSON.
 
-        :param state: State dictionary
+        :param state: State dictionary.
         :type state: dict
-        :param creator: Creator user
+        :param creator: Creator user.
         :type creator: django.contrib.auth.models.User|None
-        :param ip_address: Remote IP address (IPv4 or IPv6)
+        :param ip_address: Remote IP address (IPv4 or IPv6).
         :type ip_address: str
-        :return: The created order, or None if something failed along the way
+        :return: The created order, or None if something failed along the way.
         :rtype: Order|None
         """
-        source = self.create_source_from_state(
-            state, creator=creator, ip_address=ip_address, save=True)
+        source = self.create_source_from_state(state, creator=creator, ip_address=ip_address, save=True)
+
+        if not source:
+            return
 
         # Then create an OrderCreator and try to get things done!
         creator = AdminOrderCreator()
@@ -367,11 +408,11 @@ class JsonOrderCreator(object):
         """
         Update an order from a state dict unserialized from JSON.
 
-        :param state: State dictionary
+        :param state: State dictionary.
         :type state: dict
-        :param order_to_update: Order object to edit
+        :param order_to_update: Order object to edit.
         :type order_to_update: shuup.core.models.Order
-        :return: The created order, or None if something failed along the way
+        :return: The created order, or None if something failed along the way.
         :rtype: Order|None
         """
         # Collect ids for products that were removed from the order for stock update
@@ -396,11 +437,11 @@ class JsonOrderCreator(object):
 
     def get_removed_product_ids(self, state, order_to_update):
         """
-        Collects product ids for products which were removed from the order.
+        Collect product ids for products which were removed from the order.
 
-        :param state: State dictionary
+        :param state: State dictionary.
         :type state: dict
-        :param order_to_update: Order object to edit
+        :param order_to_update: Order object to edit.
         :type order_to_update: shuup.core.models.Order
         :return: set
         """
@@ -421,14 +462,13 @@ class JsonOrderCreator(object):
         """
         Update stocks for products which were completely removed from the updated order.
 
-        :param removed_ids: Set of removed product ids
+        :param removed_ids: Set of removed product ids.
         :type removed_ids: set
-        :param shop: Shop instance where this order is made
+        :param shop: Shop instance where this order is made.
         :type shop: shuup.core.models.Shop
         """
         for prod_id in removed_ids:
             product = Product.objects.get(id=prod_id)
             shop_product = product.get_shop_instance(shop)
-            supplier = shop_product.suppliers.first()
-            if supplier:
-                supplier.module.update_stock(product)
+            for supplier in shop_product.suppliers.enabled():
+                supplier.update_stock(product.id)

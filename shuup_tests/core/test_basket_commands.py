@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import json
 import pytest
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 
-from shuup.core.basket import commands as basket_commands
-from shuup.core.basket import get_basket
+from shuup.apps.provides import override_provides
+from shuup.core.basket import commands as basket_commands, get_basket, get_basket_command_dispatcher
 from shuup.core.models import AnonymousContact, get_person_contact
 from shuup.testing import factories
 from shuup.testing.utils import apply_request_middleware
@@ -18,7 +19,7 @@ from shuup.testing.utils import apply_request_middleware
 CORE_BASKET_SETTINGS = dict(
     SHUUP_BASKET_ORDER_CREATOR_SPEC="shuup.core.basket.order_creator:BasketOrderCreator",
     SHUUP_BASKET_STORAGE_CLASS_SPEC="shuup.core.basket.storage:DatabaseBasketStorage",
-    SHUUP_BASKET_CLASS_SPEC="shuup.core.basket.objects:Basket"
+    SHUUP_BASKET_CLASS_SPEC="shuup.core.basket.objects:Basket",
 )
 
 
@@ -83,7 +84,8 @@ def test_add_product_with_extra_parent_line(rf):
         assert line1._data["more"] == "stuff"
 
         cmd_response = basket_commands.handle_add(
-            request, basket, product.id, 1, parent_line=line1, force_new_line=True)
+            request, basket, product.id, 1, parent_line=line1, force_new_line=True
+        )
         line_id2 = cmd_response["line_id"]
         assert cmd_response["ok"]
         line2 = basket.get_basket_line(line_id2)
@@ -326,3 +328,33 @@ def test_anonymous_set_company_customer(rf):
             basket_commands.handle_set_customer(request, basket, company, person)
         assert exc.value.code == "not_company_member"
         assert basket.customer == AnonymousContact()
+
+
+@pytest.mark.django_db
+def test_command_middleware(rf):
+    """
+    Add product to basket
+    """
+    with override_settings(**CORE_BASKET_SETTINGS):
+        with override_provides(
+            "basket_command_middleware", ["shuup.testing.basket_middleware.TestBasketCommandMiddleware"]
+        ):
+            shop = factories.get_default_shop()
+            user = factories.create_random_user()
+            product = factories.create_product("product", shop, factories.get_default_supplier(), 10)
+            request = apply_request_middleware(rf.get("/"), user=user)
+            basket = get_basket(request, "basket")
+            basket.customer = get_person_contact(user)
+
+            cmd_dispatcher = get_basket_command_dispatcher(request)
+            cmd_dispatcher.ajax = True
+            cmd_kwargs = {"product_id": product.pk}
+            response = cmd_dispatcher.handle("add", kwargs=cmd_kwargs)
+            data = json.loads(response.getvalue())
+            assert data["ok"]
+            assert data["it_works"]
+            assert data["line_id"]
+
+            basket = get_basket(request)
+            line = basket.get_basket_line(data["line_id"])
+            assert line.data["extra"]["line_options"] == "works"

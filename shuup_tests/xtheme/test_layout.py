@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -13,8 +13,14 @@ from shuup.xtheme.rendering import get_view_config, render_placeholder
 from shuup.xtheme.testing import override_current_theme_class
 from shuup_tests.utils import printable_gibberish
 from shuup_tests.xtheme.utils import (
-    close_enough, FauxTheme, get_jinja2_engine, get_request,
-    get_test_template_bits, layout_override, plugin_override
+    FauxTheme,
+    FauxView,
+    close_enough,
+    get_jinja2_engine,
+    get_request,
+    get_test_template_bits,
+    layout_override,
+    plugin_override,
 )
 
 
@@ -26,14 +32,8 @@ def test_layout_serialization():
         l.add_plugin("text", {"text": "yes"})
         serialized = l.serialize()
         expected = {
-            'name': "test",
-            'rows': [
-                {
-                    'cells': [
-                        {'config': {'text': 'yes'}, 'plugin': 'text', 'sizes': {"md": 8}}
-                    ]
-                }
-            ]
+            "name": "test",
+            "rows": [{"cells": [{"config": {"text": "yes"}, "plugin": "text", "sizes": {"md": 8}}]}],
         }
         assert serialized == expected
         assert Layout.unserialize(theme, serialized).serialize() == expected
@@ -46,7 +46,8 @@ def test_layout_rendering(rf):
             with layout_override():
                 (template, layout, gibberish, ctx) = get_test_template_bits(request)
                 result = six.text_type(render_placeholder(ctx, "test", layout, "test"))
-                expect = """
+                expect = (
+                    """
                 <div class="placeholder-edit-wrap">
                 <div class="xt-ph" id="xt-ph-test">
                 <div class="row xt-ph-row">
@@ -54,7 +55,9 @@ def test_layout_rendering(rf):
                 </div>
                 </div>
                 </div>
-                """ % gibberish
+                """
+                    % gibberish
+                )
                 assert close_enough(result, expect)
 
 
@@ -173,3 +176,34 @@ def test_layout_api():
     assert not l.move_cell_to_position(0, 100, 0, 1)
     # move to invalid cell
     assert not l.move_cell_to_position(0, 0, 100, 1)
+
+
+def test_render_custom_size_cell(rf):
+    request = get_request(edit=False)
+    with override_current_theme_class(None):
+        with plugin_override():
+            with layout_override():
+                layout = Layout(FauxTheme, "test")
+                gibberish = printable_gibberish()
+                layout.begin_column({"md": None, "xs": None, "sm": None})
+                layout.add_plugin("text", {"text": "<p>%s</p>" % gibberish})
+                jeng = get_jinja2_engine()
+                template = jeng.from_string("")
+                template.template.name = "test"
+                vars = {"view": FauxView(), "request": request}
+                ctx = template.template.new_context(vars)
+
+                result = six.text_type(render_placeholder(ctx, "test", layout, "test"))
+                expect = (
+                    """
+                <div class="placeholder-edit-wrap">
+                <div class="xt-ph" id="xt-ph-test">
+                <div class="row xt-ph-row">
+                <div class="xt-ph-cell"><p>%s</p></div>
+                </div>
+                </div>
+                </div>
+                """
+                    % gibberish
+                )
+                assert close_enough(result, expect)

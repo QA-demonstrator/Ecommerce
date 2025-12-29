@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import abc
-
 import six
 
 from shuup.core.models import Basket
@@ -35,17 +34,20 @@ class BasketStorage(six.with_metaclass(abc.ABCMeta)):
         if not stored_basket:
             return {}
         if stored_basket.shop_id != basket.shop.id:
-            msg = (
-                "Cannot load basket of a different Shop ("
-                "%s id=%r with Shop=%s, Dest. Basket Shop=%s)" % (
-                    type(stored_basket).__name__,
-                    stored_basket.id, stored_basket.shop_id, basket.shop.id))
+            msg = "Error! Cannot load basket of a different Shop (" "%s id=%r with Shop=%s, Dest. Basket Shop=%s)" % (
+                type(stored_basket).__name__,
+                stored_basket.id,
+                stored_basket.shop_id,
+                basket.shop.id,
+            )
             raise BasketCompatibilityError(msg)
         price_units_diff = _price_units_diff(stored_basket, basket.shop)
         if price_units_diff:
-            msg = "%s %r: Price unit mismatch with Shop (%s)" % (
-                type(stored_basket).__name__, stored_basket.id,
-                price_units_diff)
+            msg = "Error! %s %r: Price unit mismatch with Shop (%s)" % (
+                type(stored_basket).__name__,
+                stored_basket.id,
+                price_units_diff,
+            )
             raise BasketCompatibilityError(msg)
         return stored_basket.data or {}
 
@@ -57,7 +59,7 @@ class BasketStorage(six.with_metaclass(abc.ABCMeta)):
         The returned object should have ``id``, ``shop_id``,
         ``currency``, ``prices_include_tax`` and ``data`` attributes.
 
-        :type basket: shuup.front.basket.objects.BaseBasket
+        :type basket: shuup.core.basket.objects.BaseBasket
         :return: Stored basket or None
         """
         pass
@@ -69,6 +71,8 @@ class BasketStorage(six.with_metaclass(abc.ABCMeta)):
 
         :type basket: shuup.core.basket.objects.BaseBasket
         :type data: dict
+        :rtype str:
+        :return: The unique identifier of the basket just created
         """
         pass
 
@@ -93,7 +97,7 @@ class BasketStorage(six.with_metaclass(abc.ABCMeta)):
 
     def basket_exists(self, key, shop):
         """
-        Check if basket exists in the storage
+        Check if basket exists in the storage.
 
         For example this is used from API to check whether the basket
         actually exists for certain shop when accessed with key.
@@ -119,11 +123,16 @@ class BaseDatabaseBasketStorage(BasketStorage):
         stored_basket.taxless_total_price = basket.taxless_total_price_or_none
         stored_basket.taxful_total_price = basket.taxful_total_price_or_none
         stored_basket.product_count = basket.smart_product_count
-        stored_basket.customer = (basket.customer or None)
-        stored_basket.orderer = (basket.orderer or None)
+        stored_basket.customer = basket.customer or None
+        stored_basket.orderer = basket.orderer or None
         stored_basket.creator = real_user_or_none(basket.creator)
+        if hasattr(self.model, "supplier") and hasattr(basket, "supplier"):
+            stored_basket.supplier = basket.supplier
+
+        stored_basket.class_spec = "%s.%s" % (basket.__class__.__module__, basket.__class__.__name__)
+
         stored_basket.save()
-        stored_basket.products = set(basket.product_ids)
+        stored_basket.products.set(set(basket.product_ids))
         return stored_basket
 
     def delete(self, basket):
@@ -166,18 +175,17 @@ class DatabaseBasketStorage(BaseDatabaseBasketStorage):
 def _price_units_diff(x, y):
     diff = []
     if x.currency != y.currency:
-        diff.append('currency: %r vs %r' % (x.currency, y.currency))
+        diff.append("currency: %r vs %r" % (x.currency, y.currency))
     if x.prices_include_tax != y.prices_include_tax:
-        diff.append('includes_tax: %r vs %r' % (
-            x.prices_include_tax, y.prices_include_tax))
-    return ', '.join(diff)
+        diff.append("includes_tax: %r vs %r" % (x.prices_include_tax, y.prices_include_tax))
+    return ", ".join(diff)
 
 
 def get_storage():
     """
     Retrieve a basket storage object.
 
-    :return: A basket storage object
+    :return: A basket storage object.
     :rtype: BasketStorage
     """
     storage_class = cached_load("SHUUP_BASKET_STORAGE_CLASS_SPEC")

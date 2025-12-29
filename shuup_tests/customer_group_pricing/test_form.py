@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,26 +9,23 @@ import pytest
 from django.conf import settings
 
 from shuup.core.models import ContactGroup, Shop
-from shuup.customer_group_pricing.admin_form_part import \
-    CustomerGroupPricingForm, CustomerGroupDiscountForm
+from shuup.customer_group_pricing.admin_form_part import CustomerGroupDiscountForm, CustomerGroupPricingForm
 from shuup.customer_group_pricing.models import CgpDiscount, CgpPrice
-from shuup.testing.factories import (
-    create_product, get_default_customer_group, get_default_shop
-)
+from shuup.testing.factories import create_product, get_default_customer_group, get_default_shop
 from shuup_tests.utils.forms import get_form_data
 
-pytestmark = pytest.mark.skipif("shuup.customer_group_pricing" not in settings.INSTALLED_APPS,
-                                reason="customer_group_pricing not installed")
+pytestmark = pytest.mark.skipif(
+    "shuup.customer_group_pricing" not in settings.INSTALLED_APPS, reason="customer_group_pricing not installed"
+)
+
 
 def _get_test_product():
     shop = get_default_shop()
     product = create_product("Just-A-Pricing-Product", shop, default_price=200)
-    CgpPrice.objects.create(
-        product=product, shop=shop, group=get_default_customer_group(),
-        price_value=250)
+    CgpPrice.objects.create(product=product, shop=shop, group=get_default_customer_group(), price_value=250)
     CgpDiscount.objects.create(
-        product=product, shop=shop, group=get_default_customer_group(),
-        discount_amount_value=100)
+        product=product, shop=shop, group=get_default_customer_group(), discount_amount_value=100
+    )
     return product
 
 
@@ -40,9 +37,6 @@ def test_basic_form_sanity(form):
     product = _get_test_product()
 
     kwargs = dict(product=product, shop=shop)
-    if form == CustomerGroupPricingForm:
-        kwargs.update(dict(empty_permitted=True))
-
     frm = form(**kwargs)
 
     assert len(frm.groups) == ContactGroup.objects.count()
@@ -56,10 +50,10 @@ def test_no_changes_into_form(form):
     product = _get_test_product()
     shop = get_default_shop()
 
-    frm = form(product=product, shop=shop, empty_permitted=True)
+    frm = form(product=product, shop=shop)
     # No changes made, right?
     form_data = get_form_data(frm, prepared=True)
-    frm = form(product=product, shop=shop, data=form_data, empty_permitted=True)
+    frm = form(product=product, shop=shop, data=form_data)
     frm.full_clean()
     frm.save()
 
@@ -78,7 +72,7 @@ def test_change_shop_price(form):
     price = shop.create_price
 
     form_field = "s_%d_g_%d" % (shop.id, group.id)
-    frm = form(product=product, shop=shop, empty_permitted=True)
+    frm = form(product=product, shop=shop)
     form_data = get_form_data(frm, prepared=True)
 
     if form == CustomerGroupPricingForm:
@@ -86,7 +80,7 @@ def test_change_shop_price(form):
     else:
         form_data[form_field] = "50"
 
-    frm = form(product=product, shop=shop, data=form_data, empty_permitted=True)
+    frm = form(product=product, shop=shop, data=form_data)
     frm.full_clean()
     frm.save()
 
@@ -98,7 +92,7 @@ def test_change_shop_price(form):
     # Never mind actually, same price for all shops
     form_data[form_field] = ""
 
-    frm = form(product=product, shop=shop, data=form_data, empty_permitted=True)
+    frm = form(product=product, shop=shop, data=form_data)
     frm.full_clean()
     frm.save()
 
@@ -115,7 +109,7 @@ def test_clear_prices(form):
     shop = get_default_shop()
     # We can clear the prices out, can't we?
     form_data = {}
-    frm = form(product=product, shop=shop, data=form_data, empty_permitted=True)
+    frm = form(product=product, shop=shop, data=form_data)
     frm.full_clean()
     frm.save()
 

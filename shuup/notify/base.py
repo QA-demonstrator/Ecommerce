@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import abc
-from abc import abstractmethod
-
 import six
-from django.utils.encoding import force_text
+from abc import abstractmethod
+from collections import OrderedDict
 from django.utils.text import camel_case_to_spaces
 from jinja2.exceptions import TemplateError
 
 from shuup.apps.provides import get_identifier_to_object_map
-from shuup.notify.enums import (
-    ConstantUse, TemplateUse, UNILINGUAL_TEMPLATE_LANGUAGE
-)
-from shuup.notify.template import render_in_context, Template
+from shuup.notify.enums import UNILINGUAL_TEMPLATE_LANGUAGE, ConstantUse, TemplateUse
+from shuup.notify.template import Template, render_in_context
+from shuup.utils.django_compat import force_text
+from shuup.utils.importing import cached_load
 from shuup.utils.text import snake_case, space_case
 
 from .typology import Type
@@ -65,7 +64,22 @@ class BaseMetaclass(type):
 class Variable(object):
     _creation_counter = 0  # For sorting, incremented by `__init__`
 
-    def __init__(self, name, type=Type, required=True, help_text=""):
+    def __init__(self, name, type=Type, required=True, help_text="", attributes=()):
+        """
+        :param name: A human readable name for the variable.
+        :type name: str
+        :param type: The datatype of the variable.
+        :type type: shuup.notify.typology.Type
+        :param required: Whether the variable is required or not.
+        :type required: bool
+        :param help_text: A free-form plaintext help text for the variable.
+        :type help_text: str
+        :param attributes: A sequence of (label, accessor) pairs that will be shown
+            under the variable as guides of attributes that can be accessed from it.
+            If one would pass `[_("ID", "id")]` to this when the `name` param is "Order"
+            if would get rendered as `Order ID: {{ order.id }}` in the script editor.
+        :type attributes: typing.Sequence[tuple[str, str]]
+        """
         self.position = Variable._creation_counter
         Variable._creation_counter += 1
         if callable(type):
@@ -76,27 +90,25 @@ class Variable(object):
         self.type = type
         self.required = bool(required)
         self.help_text = help_text
+        self.attributes = attributes
 
     def get_matching_types(self, variable_dict):
         return set(
-            name
-            for name, variable
-            in six.iteritems(variable_dict)
-            if self.type.is_coercible_from(variable.type)
+            name for name, variable in six.iteritems(variable_dict) if self.type.is_coercible_from(variable.type)
         )
 
 
 class Binding(Variable):
-    def __init__(self,
-                 name, type=Type, required=False,
-                 help_text="", constant_use=ConstantUse.VARIABLE_ONLY, default=None):
+    def __init__(
+        self, name, type=Type, required=False, help_text="", constant_use=ConstantUse.VARIABLE_ONLY, default=None
+    ):
         super(Binding, self).__init__(name=name, type=type, required=required, help_text=help_text)
         self.constant_use = constant_use
         self.default = default
 
     @property
     def accepts_any_type(self):
-        return (not self.type.identifier)
+        return not self.type.identifier
 
     @property
     def allow_constant(self):
@@ -121,7 +133,7 @@ class TemplatedBinding(Binding):
     def __init__(self, *args, **kwargs):
         super(TemplatedBinding, self).__init__(*args, **kwargs)
         if self.allow_variable:
-            raise ValueError("TemplatedBindings may not allow variable binding for security reasons")
+            raise ValueError("Error! TemplatedBindings may not allow variable binding for security reasons.")
 
     def get_value(self, context, bind_data):
         value = super(TemplatedBinding, self).get_value(context, bind_data)
@@ -156,7 +168,7 @@ class Event(Base):
 
     def __init__(self, **variable_values):
         if not self.identifier:
-            raise ValueError("Attempting to instantiate identifierless event")
+            raise ValueError("Error! Attempting to instantiate identifierless event.")
         self.variable_values = {}
         self.load_variables(variable_values)
 
@@ -168,15 +180,15 @@ class Event(Base):
         for key in sorted(variable_values.keys()):
             variable = self.variables.get(key)
             if not variable:
-                raise ValueError("Unknown variable %r for event %s" % (key, self.identifier))
+                raise ValueError("Error! Unknown variable `%r` for the event `%s`." % (key, self.identifier))
             self.variable_values[key] = variable.type.unserialize(variable_values.pop(key))
 
         for name, variable in six.iteritems(self.variables):
             if variable.required and name not in self.variable_values:
-                raise ValueError("Required variable %r missing for event %s" % (name, self.identifier))
+                raise ValueError("Error! Required variable `%r` missing for the event `%s`" % (name, self.identifier))
 
     def run(self, shop):
-        from .runner import run_event
+        run_event = cached_load("SHUUP_NOTIFY_SCRIPT_RUNNER")
         run_event(event=self, shop=shop)
 
 
@@ -185,7 +197,9 @@ class ScriptItem(Base):
 
     def __init__(self, data, validate=True):
         if not self.identifier:  # pragma: no cover
-            raise ValueError("Attempting to initialize %s without identifier: %r" % (self.__class__.__name__, self))
+            raise ValueError(
+                "Error! Attempting to initialize %s without an identifier: %r." % (self.__class__.__name__, self)
+            )
         self.data = data
         if validate:
             self.verify_bindings()
@@ -196,7 +210,7 @@ class ScriptItem(Base):
             if binding.required and name not in self.data:
                 unbound.add(name)
         if unbound:
-            raise ValueError("Bindings unbound for %r: %r" % (self.identifier, unbound))
+            raise ValueError("Error! Bindings unbound for %r: %r." % (self.identifier, unbound))
 
     def get_value(self, context, binding_name):
         """
@@ -264,7 +278,7 @@ class Condition(ScriptItem):
 class Action(ScriptItem):
     provide_category = "notify_action"
     template_use = TemplateUse.NONE
-    template_fields = {}
+    template_fields = OrderedDict()
 
     @abstractmethod
     def execute(self, context):
@@ -276,15 +290,14 @@ class Action(ScriptItem):
 
     def get_template(self, context):
         """
-        Get this action's template instance, bound in the
-        context.
+        Get this action's template instance, bound in the context.
 
         :rtype: shuup.notify.template.Template
         """
 
         data = self.data.get("template_data")
         if not data:
-            raise ValueError("No template data in action")
+            raise ValueError("Error! No template data in action.")
         return Template(context, data=data)
 
     def get_template_values(self, context, language_preferences=()):
@@ -304,7 +317,7 @@ class Action(ScriptItem):
         """
 
         if self.template_use == TemplateUse.NONE:
-            raise ValueError("Attempting to `get_template_values` on an action with no template use")
+            raise ValueError("Error! Attempting to `get_template_values` on an action with no template use.")
 
         template = self.get_template(context)
         fields = self.template_fields
@@ -322,20 +335,21 @@ class ScriptTemplate(six.with_metaclass(abc.ABCMeta)):
     Subclass this, implement the methods and add a reference to the class
     in the `notify_script_template` provide category.
 
-    When `form_class` is set, a the form will be presented to the user and validated,
+    When `form_class` is set, a form will be presented to the user and validated,
     so you can extract more information to build the Script.
 
-    :ivar str identifier: a unique identifier for this ScriptTemplate with a max of 64 characters
-    :ivar shuup.notify.Event event: the event class which will be used to trigger the notification
-    :ivar str name: the name of the ScriptTemplate
-    :ivar str description: the description of the ScriptTemplate to present to the user
-    :ivar str help_text: a text to help users understand how this script will work
-    :ivar django.forms.Form|None form_class: a form class if your ScriptTemplate needs extra configuration
-    :ivar dict initial: the initial data to use in forms
-    :ivar str template_name: a template to use to render the form, if needed
-    :ivar str extra_js_template_name: a template with extra JavaScript code to use when rendering the form, if needed
-    :ivar django.http.request.HttpRequest : the http request
+    :ivar str identifier: unique identifier for this ScriptTemplate with a max of 64 characters.
+    :ivar shuup.notify.Event event: event class which will be used to trigger the notification.
+    :ivar str name: name of the ScriptTemplate.
+    :ivar str description: description of the ScriptTemplate presented to the user.
+    :ivar str help_text: text to help users understand how this script will work.
+    :ivar django.forms.Form|None form_class: form class if your ScriptTemplate needs extra configuration.
+    :ivar dict initial: initial data to use in forms.
+    :ivar str template_name: template to use to render the form, if needed.
+    :ivar str extra_js_template_name: template with extra JavaScript code to use when rendering the form, if needed.
+    :ivar django.http.request.HttpRequest : http request.
     """
+
     identifier = ""
     event = None
     name = ""
@@ -429,7 +443,7 @@ class ScriptTemplate(six.with_metaclass(abc.ABCMeta)):
         Returns the keyword arguments for instantiating the configuration form.
         """
         return {
-            'initial': self.get_initial(),
+            "initial": self.get_initial(),
         }
 
     def get_context_data(self):

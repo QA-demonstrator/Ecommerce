@@ -1,5 +1,5 @@
 {% macro link_block(b, redirect="") %}
-    <div class="row d-flex content-block link-block {{ b.css_class }}{% if b.done %}step-done{% endif %}">
+    <div class="row d-flex content-block">
         {% if b.icon_url %}
             <div class="ml-2 mr-3 d-flex align-items-center justify-content-center">
                 <div class="icon">
@@ -9,9 +9,9 @@
         {% endif %}
         <div class="content col-lg {% if b.icon_url %}content-with-logo{% endif %}">
             <div class="text">
-                <h3>{{ b.text }}</h3>
+                <h3>{{ b.text|safe }}</h3>
                 {% if b.description %}
-                    <p class="description">{{ b.description }}</p>
+                    <p class="description">{{ b.description|safe }}</p>
                 {% endif %}
             </div>
             <div class="action">

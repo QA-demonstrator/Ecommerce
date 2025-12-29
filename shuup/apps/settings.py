@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -35,8 +35,8 @@ def _declare_setting(app_name, module, name, default):
     if name in _KNOWN_SETTINGS:
         other_app = _KNOWN_SETTINGS[name].app_name
         raise ImproperlyConfigured(
-            'Apps %s and %s define same setting %s' % (
-                other_app, app_name, name))
+            "Error! Apps `%s` and `%s` define the same setting `%s`." % (other_app, app_name, name)
+        )
     _KNOWN_SETTINGS[name] = Setting(
         name=name,
         default=default,
@@ -62,12 +62,12 @@ class Setting(object):
         self.module = module
 
     def __repr__(self):
-        items = ('%s=%r' % (k, v) for (k, v) in self.__dict__.items())
-        return '%s(%s)' % (type(self).__name__, ', '.join(items))
+        items = ("%s=%r" % (k, v) for (k, v) in self.__dict__.items())
+        return "%s(%s)" % (type(self).__name__, ", ".join(items))
 
 
 def _is_valid_setting_name(name):
-    return name.isupper() and not name.startswith('_')
+    return name.isupper() and not name.startswith("_")
 
 
 def validate_templates_configuration():
@@ -85,31 +85,32 @@ def validate_templates_configuration():
         backend = template_engine["BACKEND"]
         if "DjangoTemplates" in backend:
             raise ImproperlyConfigured(
-                "The DjangoTemplates engine was encountered in your template configuration "
+                "Error! The DjangoTemplates engine was encountered in your template configuration "
                 "before Django-Jinja. This configuration will not work correctly with Shuup."
             )
         if backend == "django_jinja.backend.Jinja2":
             if not template_engine.get("APP_DIRS"):
                 raise ImproperlyConfigured(
-                    "You have the django_jinja backend configured, but it is not configured to "
-                    "take application template directories into account. Set APP_DIRS = True."
+                    "Error! You have the django_jinja backend configured, but it is not configured to "
+                    "take application template directories into account. Set `APP_DIRS = True`."
                 )
             options = template_engine.get("OPTIONS") or {}
             if options.get("match_extension") != ".jinja":
                 raise ImproperlyConfigured(
-                    "You have the django_jinja backend configured, but it is not configured to "
-                    "render `.jinja` templates. Set OPTIONS.match_extension to \".jinja\"."
+                    "Error! You have the django_jinja backend configured, but it is not configured to "
+                    'render `.jinja` templates. Set `OPTIONS.match_extension` to ".jinja".'
                 )
             return True
     raise ImproperlyConfigured(
-        "The `django_jinja` template backend was not encountered in your TEMPLATES configuration. "
-        "See the Shuup or Django-Jinja documentation on more information how to configure things correctly."
+        "Error! The `django_jinja` template backend was not encountered in your TEMPLATES configuration. "
+        "See the Shuup or Django-Jinja documentation on more information on how to configure things correctly."
     )
 
 
 def reload_apps():
     import django
     from django.contrib.staticfiles.finders import get_finder
+
     # Clear cache for any AppDirectoriesFinder instance.
     # This should be done before Django apps is reloaded.
     get_finder.cache_clear()

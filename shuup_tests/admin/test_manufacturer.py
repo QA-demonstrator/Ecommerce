@@ -1,15 +1,13 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import pytest
 from django.test.utils import override_settings
 
-from shuup.admin.modules.manufacturers.views import (
-    ManufacturerEditView, ManufacturerListView
-)
+from shuup.admin.modules.manufacturers.views import ManufacturerDeleteView, ManufacturerEditView, ManufacturerListView
 from shuup.admin.shop_provider import set_shop
 from shuup.core.models import Manufacturer
 from shuup.testing import factories
@@ -42,6 +40,24 @@ def test_manufacturer_admin_simple_shop(rf, staff_user, admin_user):
         assert Manufacturer.objects.last().shops.first() == shop1
 
 
+@pytest.mark.django_db
+def test_manufacturer_delete(rf, admin_user):
+    with override_settings(SHUUP_ENABLE_MULTIPLE_SHOPS=False):
+        shop1 = factories.get_default_shop()
+        shop1.staff_members.add(admin_user)
+        manu = Manufacturer.objects.create(name="manuf 1")
+        manu.shops.add(shop1)
+        manu.save()
+
+        assert Manufacturer.objects.count() == 1
+
+        request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop1)
+        view_func = ManufacturerDeleteView.as_view()
+        response = view_func(request, pk=manu.id)
+        assert response.status_code == 302
+        assert Manufacturer.objects.count() == 0
+
+
 @pytest.mark.parametrize("superuser", [True, False])
 def test_manufacturer_admin_multishop_shop(rf, staff_user, admin_user, superuser):
     with override_settings(SHUUP_ENABLE_MULTIPLE_SHOPS=True):
@@ -66,7 +82,7 @@ def test_manufacturer_admin_multishop_shop(rf, staff_user, admin_user, superuser
 
         for view_class in (ManufacturerEditView, ManufacturerListView):
             view_instance = view_class()
-            view_instance.request= request
+            view_instance.request = request
 
             assert view_instance.get_queryset().count() == 1
             if superuser:
@@ -88,7 +104,7 @@ def test_manufacturer_admin_multishop_shop(rf, staff_user, admin_user, superuser
 
         for view_class in (ManufacturerEditView, ManufacturerListView):
             view_instance = view_class()
-            view_instance.request= request
+            view_instance.request = request
 
             assert view_instance.get_queryset().count() == (2 if superuser else 1)
 

@@ -1,5 +1,6 @@
 {% extends "shuup/front/macros/theme/order.jinja" %}
-{% from "shuup/front/macros/general.jinja" import render_field %}
+{% from "shuup/front/macros/general.jinja" import render_field, render_supplier_info %}
+
 
 {% macro print_order_detail(order, show_attachments=False) %}
     {{ render_lines_information(order) }}
@@ -18,7 +19,7 @@
         <table class="table">
             {% for attachment in attachments %}
                 <tr>
-                    <td><a href="{{ attachment.url }}" target="_blank">{{ attachment.title }}</a></td>
+                    <td><a href="{{ attachment.url }}" target="_blank">{{ attachment.title if attachment.title else attachment.product.name }} {% if attachment.file %}({{ (attachment.file.size / 1024 / 1024)|int }} MB){% endif %}</a></td>
                     <td>
                         {% if attachment.description %}
                             {{ attachment.description|linebreaksbr }}
@@ -78,7 +79,7 @@
                     <td colspan="5" class="text-right">
                         <strong>{% trans %}Total{% endtrans %}:
                         <span class="total-price">{{ taxful_total_price|money }}</span></strong>
-                        {% if taxless_total_price != taxful_total_price %}
+                        {% if taxless_total_price.amount != taxful_total_price.amount %}
                         <br>
                         <span class="total-price text-muted">({{ taxless_total_price|money }} {{ _("excl. tax") }})</span>
                         {% endif %}
@@ -88,6 +89,7 @@
             <tbody>
                 {% for line in lines %}
                     {% set product = line.product %}
+                    {% set show_supplier_info = (line.supplier and xtheme.get("show_supplier_info")) %}
                     <tr>
                         <td>
                             {% if product %}
@@ -101,15 +103,20 @@
                                          width="70" height="70">
                                 {% else %}
                                     <img class="img-responsive"
-                                         src="{{ STATIC_URL }}shuup/front/img/no_image_thumbnail.png"
+                                         src="{{ static('shuup/front/img/no_image_thumbnail.png') }}"
                                          width="70" height="70">
                                 {% endif %}
                             {% endif %}
                         </td>
                         <td>
                             {{ line.text }}
+                            {% if show_supplier_info %}{{ render_supplier_info(line.supplier) }}{% endif %}
                             {% if show_product_package_info and product and product.is_package_parent() %}
                                 {{ render_package_children(product) }}
+                            {% endif %}
+                            {% set line_properties = shuup.basket.get_properties_from_line(line) %}
+                            {% if line_properties %}
+                                {{ render_order_line_properties(line_properties) }}
                             {% endif %}
                         </td>
                         <td class="text-right">
@@ -140,6 +147,27 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+{% endmacro %}
+
+{% macro render_order_line_properties(properties) %}
+    <div class="order-line-properties">
+        {% for property in properties %}
+            <p class="order-line-property">
+                {% if property.name %}
+                    <strong class="property-name">
+                        {% if property.value %}
+                            {{ _("{prop}:").format(prop=property.name) }}
+                        {% else %}
+                            {{ property.name }}
+                        {% endif %}
+                    </strong>
+                {% endif %}
+                {% if property.value %}
+                    <span class="property-value">{{ property.value }}</span>
+                {% endif %}
+            </p>
+        {% endfor %}
     </div>
 {% endmacro %}
 
@@ -212,18 +240,28 @@
     </table>
 {% endmacro %}
 
+{% macro render_shipping_address(order, column_class="col-sm-6") %}
+    <div class="{{ column_class }}">
+        {{ service_panel(_("Delivery"), _("Delivery method"), _("Shipping address"), order.shipping_method, order.shipping_address) }}
+    </div>
+{% endmacro %}
+
+{% macro render_billing_address(order, column_class="col-sm-6") %}
+    <div class="{{ column_class }}">
+        {{ service_panel( _("Billing"), _("Payment method"), _("Billing address"), order.payment_method, order.billing_address) }}
+    </div>
+{% endmacro %}
+
 {% macro render_service_information(order) %}
     <div class="row">
-        <div class="col-sm-6">
-            {{ service_panel(
-                _("Delivery"), _("Delivery method"), _("Shipping address"),
-                order.shipping_method, order.shipping_address) }}
-        </div>
-        <div class="col-sm-6">
-            {{ service_panel(
-                _("Billing"), _("Payment method"), _("Billing address"),
-                order.payment_method, order.billing_address) }}
-        </div>
+        {% if order.shipping_address and order.billing_address %}
+            {{ render_shipping_address(order) }}
+            {{ render_billing_address(order) }}
+        {% elif order.billing_address %}
+            {{ render_billing_address(order, "col-sm-12") }}
+        {% elif order.shipping_address %}
+            {{ render_shipping_address(order, "col-sm-12") }}
+        {% endif %}
     </div>
 {% endmacro %}
 

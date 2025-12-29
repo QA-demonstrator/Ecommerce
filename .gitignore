@@ -40,3 +40,6 @@ var/
 node_modules
 .DS_Store
 .vscode
+.sqlite
+.python-version
+.unit_tests

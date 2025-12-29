@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
 from django.db.transaction import atomic
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.utils.decorators import method_decorator
@@ -15,10 +14,9 @@ from django.views.generic import TemplateView
 
 from shuup import configuration
 from shuup.admin.form_part import FormPart, TemplatedFormDef
-from shuup.admin.utils.wizard import (
-    load_setup_wizard_pane, load_setup_wizard_panes
-)
+from shuup.admin.utils.wizard import load_setup_wizard_pane, load_setup_wizard_panes
 from shuup.core.models import Shop
+from shuup.utils.django_compat import reverse
 from shuup.utils.form_group import FormDef, FormGroup
 from shuup.utils.iterables import first
 
@@ -58,13 +56,13 @@ class WizardPane(FormPart):
 
     def visible(self):
         """
-        Returns whether this pane is visible for editing
+        Returns whether this pane is visible for editing.
         """
         return True
 
     def valid(self):
         """
-        Returns whether this pane is valid and should be included in wizard pane list
+        Returns whether this pane is valid and should be included in wizard pane list.
         """
         return True
 
@@ -80,14 +78,10 @@ class WizardView(TemplateView):
             shop=shop,
             request=self.request,
             # if the user presses "previous" then "next" again, resubmit the form
-            visible_only=self.request.method == "GET"
+            visible_only=self.request.method == "GET",
         )
         if not panes and pane_id:
-            pane = load_setup_wizard_pane(
-                shop=shop,
-                request=self.request,
-                pane_id=pane_id
-            )
+            pane = load_setup_wizard_pane(shop=shop, request=self.request, pane_id=pane_id)
             if pane:
                 panes.append(pane)
         return panes
@@ -116,10 +110,7 @@ class WizardView(TemplateView):
     def get_form_group_for_pane(self, pane):
         kwargs = {}
         if self.request.method == "POST":
-            kwargs.update({
-                "data": self.request.POST,
-                "files": self.request.FILES
-            })
+            kwargs.update({"data": self.request.POST, "files": self.request.FILES})
         fg = _WizardFormGroup(pane.identifier, pane.title, pane.text, pane.icon, pane.can_skip, **kwargs)
         for form_def in pane.get_form_defs():
             fg.form_defs[form_def.name] = form_def

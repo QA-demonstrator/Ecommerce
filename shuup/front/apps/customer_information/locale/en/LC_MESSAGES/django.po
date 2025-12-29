@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-19 05:25+0000\n"
+"POT-Creation-Date: 2021-05-10 20:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -37,7 +37,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-msgid "Will become default user email when linked"
+msgid "Will become default user email when linked."
 msgstr ""
 
 msgid "Given Tax Number already exists. Please contact support."
@@ -50,6 +50,17 @@ msgid "Address Type"
 msgstr ""
 
 msgid "Address Status"
+msgstr ""
+
+msgid "Company information was saved."
+msgstr ""
+
+msgid ""
+"Company information was saved. Please follow the instructions sent to your "
+"email address."
+msgstr ""
+
+msgid "Customer Email"
 msgstr ""
 
 msgid "Home"
@@ -146,9 +157,6 @@ msgid ""
 "You have already linked your account to a company and it is pending approval."
 msgstr ""
 
-msgid "User account information"
-msgstr ""
-
 msgid "Not specified"
 msgstr ""
 
@@ -176,7 +184,7 @@ msgstr ""
 msgid "Copy to billing information"
 msgstr ""
 
-msgid "Edit user account information"
+msgid "Edit customer information"
 msgstr ""
 
 msgid "Save password"
@@ -194,25 +202,14 @@ msgstr ""
 msgid "Company information"
 msgstr ""
 
-msgid "User information"
+msgid "Password changed."
 msgstr ""
 
-msgid "Password successfully changed."
+msgid "Account information was saved."
 msgstr ""
 
-msgid "Account information saved successfully."
+msgid "Address information was saved."
 msgstr ""
 
-msgid "Company information saved successfully."
-msgstr ""
-
-msgid ""
-"Company information saved successfully. Please follow the instructions sent "
-"to your email address."
-msgstr ""
-
-msgid "Address information saved successfully."
-msgstr ""
-
-msgid "Cannot remove address"
+msgid "Cannot remove address because it doesn't exist."
 msgstr ""

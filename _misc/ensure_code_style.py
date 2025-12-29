@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import print_function
 
 import ast
+import click
 import sys
 from itertools import chain
-
-import click
-
-from sanity_utils import (
-    dotify_ast_name, find_files, get_assign_first_target, IGNORED_DIRS,
-    XNodeVisitor
-)
+from sanity_utils import IGNORED_DIRS, XNodeVisitor, dotify_ast_name, find_files, get_assign_first_target
 
 KNOWN_ACRONYMS = ("SKU", "GTIN", "URL", "IP")
 
@@ -30,7 +25,7 @@ class ForeignKeyVisitor(XNodeVisitor):
         if any(name.endswith(suffix) for suffix in ("ForeignKey", "FilerFileField", "FilerImageField")):
             kwmap = dict((kw.arg, kw.value) for kw in node.keywords)
             if "on_delete" not in kwmap:
-                self.errors.append("%d: %s call missing explicit `on_delete`" % (node.lineno, name))
+                self.errors.append("Error! %d: %s call missing explicit `on_delete`." % (node.lineno, name))
 
 
 class VerboseNameVisitor(XNodeVisitor):
@@ -67,7 +62,9 @@ class VerboseNameVisitor(XNodeVisitor):
         if not kw_value:
             if node.kwargs:  # Assume dynamic use (has **kwargs)
                 return
-            self.errors.append("%d: %s call missing verbose_name or label (ctx: %s)" % (node.lineno, name, context))
+            self.errors.append(
+                "Error! %d: %s call missing verbose_name or label (ctx: %s)." % (node.lineno, name, context)
+            )
             return
 
         if isinstance(kw_value, ast.BinOp) and isinstance(kw_value.op, ast.Mod):
@@ -78,8 +75,9 @@ class VerboseNameVisitor(XNodeVisitor):
             arg = kw_value.args[0]
             if isinstance(arg, ast.Str) and needle == "verbose_name":
                 if not arg.s[0].islower() and not any(arg.s.startswith(acronym) for acronym in KNOWN_ACRONYMS):
-                    self.errors.append("%d: %s `%s` not lower-case (value: %r) (ctx: %s)" % (
-                        node.lineno, name, needle, arg.s, context)
+                    self.errors.append(
+                        "Error! %d: %s `%s` not lower-case (value: %r) (ctx: %s)."
+                        % (node.lineno, name, needle, arg.s, context)
                     )
             return
 
@@ -87,7 +85,8 @@ class VerboseNameVisitor(XNodeVisitor):
             return
 
         self.errors.append(
-            "%d: %s `%s` present but not translatable (ctx: %s)" % (node.lineno, name, needle, context))
+            "Error! %d: %s `%s` present but not translatable (ctx: %s)." % (node.lineno, name, needle, context)
+        )
 
 
 def process_file(path, checkers):
@@ -101,22 +100,23 @@ def process_file(path, checkers):
 
 
 def add_checker(ctx, param, value):
-    ctx.params.setdefault('checkers', set()).add(param.name)
+    ctx.params.setdefault("checkers", set()).add(param.name)
 
 
 @click.command()
-@click.option("--fks", "ForeignKeyVisitor", help="check foreign keys", callback=add_checker, is_flag=True,
-              expose_value=False)
-@click.option("--vns", "VerboseNameVisitor", help="check verbose names", callback=add_checker, is_flag=True,
-              expose_value=False)
+@click.option(
+    "--fks", "ForeignKeyVisitor", help="check foreign keys", callback=add_checker, is_flag=True, expose_value=False
+)
+@click.option(
+    "--vns", "VerboseNameVisitor", help="check verbose names", callback=add_checker, is_flag=True, expose_value=False
+)
 @click.option("-f", "--file", "filenames", type=click.Path(exists=True, dir_okay=False), multiple=True)
 @click.option("-d", "--dir", "dirnames", type=click.Path(exists=True, file_okay=False), multiple=True)
 @click.option("-g", "--group/--no-group")
 def command(filenames, dirnames, checkers, group=False):
     error_count = 0
     all_filenames = chain(
-        find_files(dirnames, allowed_extensions=(".py",), ignored_dirs=IGNORED_DIRS + ["migrations"]),
-        filenames
+        find_files(dirnames, allowed_extensions=(".py",), ignored_dirs=IGNORED_DIRS + ["migrations"]), filenames
     )
     checkers = [globals()[name] for name in checkers]
     for filename in all_filenames:

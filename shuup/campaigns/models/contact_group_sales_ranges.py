@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -28,7 +28,7 @@ class SalesRangeQuerySet(models.QuerySet):
 
 class ContactGroupSalesRange(models.Model):
     group = models.ForeignKey(ContactGroup, related_name="+", on_delete=models.CASCADE, verbose_name=_("group"))
-    shop = models.ForeignKey(Shop, related_name="+", verbose_name=_("shop"))
+    shop = models.ForeignKey(on_delete=models.CASCADE, to=Shop, related_name="+", verbose_name=_("shop"))
     min_value = MoneyValueField(verbose_name=_("min amount"), blank=True, null=True)
     max_value = MoneyValueField(verbose_name=_("max amount"), blank=True, null=True)
 
@@ -42,12 +42,12 @@ class ContactGroupSalesRange(models.Model):
         super(ContactGroupSalesRange, self).save(*args, **kwargs)
         if self.is_active():  # Update group members only if the range is still active
             contact_ids = get_contacts_in_sales_range(self.shop, self.min_value, self.max_value)
-            self.group.members = contact_ids
+            self.group.members.set(contact_ids)
 
     def clean(self):
         super(ContactGroupSalesRange, self).clean()
         if self.group.is_protected:
-            raise ValidationError(_("Can not add sales limits for default contact groups"))
+            raise ValidationError(_("Can not add sales limits for default contact groups."))
 
     def is_active(self):
         return bool(self.min_value is not None and (self.max_value is None or self.max_value > 0))

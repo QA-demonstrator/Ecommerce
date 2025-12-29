@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,7 +55,18 @@ export function contentBlock(icon, title, view, header = "h2") {
     return m("div.content-block",
         m("div.title",
             m(header + ".block-title.d-flex.align-items-center", m(icon), " " + title),
-            m("a.toggle-contents", m("i.fa.fa-chevron-right"))
+            m("a.toggle-contents", {
+                onclick: (event) => {
+                    const $collapseElement = $(event.target).closest(".content-block").find(".content-wrap");
+                    event.preventDefault();
+
+                    // Checks if the bootstrap collapse animation is not ongoing
+                    if (!$collapseElement.hasClass("collapsing")) {
+                        $collapseElement.collapse("toggle");
+                        $(this).closest(".title").toggleClass("open");
+                    }
+                }
+            }, m("i.fa.fa-chevron-right"))
         ),
         m("div.content-wrap.collapse",
             m("div.content", view)
@@ -147,7 +158,7 @@ export const Select2 = {
                 }
 
             } else {
-                alert(gettext("Missing JavaScript dependencies detected"));
+                alert(gettext("Warning! Missing JavaScript dependencies detected."));
             }
         };
     }

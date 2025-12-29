@@ -1,31 +1,25 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django import forms
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from shuup.apps.provides import get_provide_objects
-from shuup.core.models import StockBehavior
-from shuup.front.providers import (
-    FormDefinition, FormDefProvider, FormFieldDefinition, FormFieldProvider
-)
+from shuup.front.providers import FormDefinition, FormDefProvider, FormFieldDefinition, FormFieldProvider
 from shuup.testing.factories import create_package_product
 
 
 def get_unstocked_package_product_and_stocked_child(shop, supplier, child_logical_quantity=1):
     package_product = create_package_product("Package-Product-Test", shop=shop, supplier=supplier, children=1)
-    assert package_product.stock_behavior == StockBehavior.UNSTOCKED
 
     quantity_map = package_product.get_package_child_to_quantity_map()
     assert len(quantity_map.keys()) == 1
 
     child_product = list(quantity_map.keys())[0]
-    child_product.stock_behavior = StockBehavior.STOCKED
-    child_product.save()
 
     assert quantity_map[child_product] == 1
 
@@ -41,13 +35,10 @@ class FieldTestProvider(FormFieldProvider):
     # these are for test validation purposes only
     key = "accept_test_terms"
     label = "I have read and accept the test terms"
-    error_msg = "You must accept to this to register or authenticate."
+    error_msg = "Error! You must accept this in order to register or authenticate."
 
     def get_fields(self, **kwargs):
-        field = forms.BooleanField(
-            label=_(self.label),
-            error_messages=dict(required=_(self.error_msg))
-        )
+        field = forms.BooleanField(label=_(self.label), error_messages=dict(required=_(self.error_msg)))
         definition = FormFieldDefinition(name=self.key, field=field)
         return [definition]
 
@@ -86,7 +77,7 @@ def change_company_signal(sender, request, user, company, *args, **kwargs):
 def login_allowed_signal(sender, request, user, *args, **kwargs):
     raise forms.ValidationError(
         "nope",
-        code='login_allowed_signal',
+        code="login_allowed_signal",
     )
 
 

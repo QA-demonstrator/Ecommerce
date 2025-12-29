@@ -1,29 +1,39 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-import random
+import hashlib
+import json
+import six
 from collections import Counter
 from decimal import Decimal
-
-import six
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from uuid import uuid4
 
 from shuup.core.basket.storage import BasketCompatibilityError, get_storage
+from shuup.core.fields.tagged_json import TaggedJSONEncoder
 from shuup.core.models import (
-    AnonymousContact, Contact, MutableAddress, OrderLineType, PaymentMethod,
-    PersonContact, ShippingMethod, ShopProduct
+    AnonymousContact,
+    Contact,
+    MutableAddress,
+    OrderLineType,
+    PaymentMethod,
+    PersonContact,
+    ShippingMethod,
+    ShopProduct,
 )
 from shuup.core.order_creator import OrderSource, SourceLine
 from shuup.core.order_creator._source import LineSource
 from shuup.core.pricing._context import PricingContext
+from shuup.utils.analog import LogEntryKind
+from shuup.utils.http import get_client_ip
 from shuup.utils.numbers import parse_decimal_string
 from shuup.utils.objects import compare_partial_dicts
 
@@ -69,7 +79,7 @@ class BasketLine(SourceLine):
         if self.product:
             return OrderLineType.PRODUCT
         else:
-            return (self.__dict__.get("type") or OrderLineType.OTHER)
+            return self.__dict__.get("type") or OrderLineType.OTHER
 
     @type.setter
     def type(self, type):
@@ -78,33 +88,30 @@ class BasketLine(SourceLine):
             return
 
         if self.product and type != OrderLineType.PRODUCT:
-            raise ValueError("Can not set a line type for a basket line when it has a product set")
+            raise ValueError("Error! Can't set a line type for a basket line when it has a product set.")
         if type not in OrderLineType.as_dict():
-            raise ValueError("Invalid basket line type. Only values of OrderLineType are allowed.")
+            raise ValueError("Error! Invalid basket line type. Only values of `OrderLineType` are allowed.")
         self.__dict__["type"] = type
 
     def set_quantity(self, quantity):
-        cls = Decimal if self.product.sales_unit.allow_fractions else int
+        cls = Decimal if self.product and self.product.sales_unit.allow_fractions else int
         self.quantity = cls(max(0, quantity))
 
     @property
     def can_delete(self):
-        return (self.type == OrderLineType.PRODUCT and self.line_source != LineSource.DISCOUNT_MODULE)
+        return self.type == OrderLineType.PRODUCT and self.line_source != LineSource.DISCOUNT_MODULE
 
     @property
     def can_change_quantity(self):
-        return (self.type == OrderLineType.PRODUCT and self.line_source != LineSource.DISCOUNT_MODULE)
+        return self.type == OrderLineType.PRODUCT and self.line_source != LineSource.DISCOUNT_MODULE
 
 
-class _DataValueProperty(object):
-    def __init__(self, name, default=None):
+class _ExtraDataContainerProperty(object):
+    def __init__(self, name):
         self.name = name
-        self.default = default
 
-    def __get__(self, instance, type=None):
-        if instance is None:
-            return self
-        return instance._get_value_from_data(self.name) or self.default
+    def __get__(self, instance: "BaseBasket", *args, **kwargs):
+        return instance._get_value_from_data(self.name, initialize_with={})
 
     def __set__(self, instance, value):
         instance._set_value_to_data(self.name, value)
@@ -117,12 +124,16 @@ class BaseBasket(OrderSource):
         self.basket_name = basket_name
         self.key = basket_name
         if request:
-            self.ip_address = request.META.get("REMOTE_ADDR")
+            self.ip_address = get_client_ip(request)
+
         self.storage = get_storage()
         self._data = None
+
         self._shipping_address = None
         self._billing_address = None
-        self._customer_comment = u""
+        self._shipping_method = None
+        self._payment_method = None
+        self._customer_comment = ""
         self.creator = getattr(request, "user", None)
 
         # {Note: Being "dirty" means "not saved".  It's independent of
@@ -131,6 +142,10 @@ class BaseBasket(OrderSource):
         # not cached.
         self.dirty = False
         self.uncache()  # Set empty values for cache variables
+
+    def get_cache_key(self):
+        self._load()
+        return hashlib.md5(json.dumps(self._data, cls=TaggedJSONEncoder, sort_keys=True).encode("utf-8")).hexdigest()
 
     def uncache(self):
         super(BaseBasket, self).uncache()
@@ -143,14 +158,22 @@ class BaseBasket(OrderSource):
         Get the currently persisted data for this basket.
         This will only access the storage once per request in usual
         circumstances.
+
         :return: Data dict.
         :rtype: dict
         """
+
+        # This can happen when the object is not loaded yet
+        # Usually when __init__ calls super().__init__()
+        # and OrderSource starts initializing the instance attributes
+        if not hasattr(self, "_data"):
+            return
+
         if self._data is None:
             try:
                 self._data = self.storage.load(basket=self)
             except BasketCompatibilityError as error:
-                msg = _("Basket loading failed: Incompatible basket (%s)")
+                msg = _("Basket loading failed: Incompatible basket (%s).")
                 messages.error(self.request, msg % error)
                 self.storage.delete(basket=self)
                 self._data = self.storage.load(basket=self)
@@ -203,25 +226,42 @@ class BaseBasket(OrderSource):
         self.customer_comment = ""
 
     def _set_value_to_data(self, field_attr, value):
-        if hasattr(self, "_data"):
-            self._load()[field_attr] = value
+        self._load()
 
-    def _get_value_from_data(self, field_attr):
-        if hasattr(self, "_data") and self._load().get(field_attr):
-            return self._load()[field_attr]
+        # Check _load() comments to see why this can happen
+        if not hasattr(self, "_data"):
+            return
+
+        self._data[field_attr] = value
+
+    def _get_value_from_data(self, field_attr, initialize_with=None):
+        self._load()
+
+        # Check _load() comments to see why this can happen
+        if not hasattr(self, "_data"):
+            return
+
+        if field_attr not in self._data and initialize_with is not None:
+            self._data[field_attr] = initialize_with
+
+        return self._data.get(field_attr)
 
     @property
     def customer(self):
         if self._customer or isinstance(self._customer, AnonymousContact):
             return self._customer
 
+        customer = None
         customer_id = self._get_value_from_data("customer_id")
-        if customer_id:
-            if customer_id == ANONYMOUS_ID:
-                return AnonymousContact()
-            return Contact.objects.get(pk=customer_id)
+        if customer_id and customer_id == ANONYMOUS_ID:
+            customer = AnonymousContact()
+        elif customer_id:
+            customer = Contact.objects.get(pk=customer_id)
+        else:
+            customer = getattr(self.request, "customer", AnonymousContact())
 
-        return getattr(self.request, "customer", AnonymousContact())
+        self._customer = customer
+        return self._customer
 
     @customer.setter
     def customer(self, value):
@@ -237,13 +277,17 @@ class BaseBasket(OrderSource):
         if self._orderer or isinstance(self._orderer, AnonymousContact):
             return self._orderer
 
+        orderer = None
         orderer_id = self._get_value_from_data("orderer_id")
-        if orderer_id:
-            if orderer_id == ANONYMOUS_ID:
-                return AnonymousContact()
-            return PersonContact.objects.get(pk=orderer_id)
+        if orderer_id and orderer_id == ANONYMOUS_ID:
+            orderer = AnonymousContact()
+        elif orderer_id:
+            orderer = PersonContact.objects.get(pk=orderer_id)
+        else:
+            orderer = getattr(self.request, "person", AnonymousContact())
 
-        return getattr(self.request, "person", AnonymousContact())
+        self._orderer = orderer
+        return self._orderer
 
     @orderer.setter
     def orderer(self, value):
@@ -258,53 +302,103 @@ class BaseBasket(OrderSource):
         if self._shipping_address:
             return self._shipping_address
 
+        shipping_address = None
         shipping_address_id = self._get_value_from_data("shipping_address_id")
         if shipping_address_id:
-            return MutableAddress.objects.get(pk=shipping_address_id)
+            shipping_address = MutableAddress.objects.get(pk=shipping_address_id)
+
+        if not shipping_address:
+            shipping_address_data = self._get_value_from_data("shipping_address_data")
+            if shipping_address_data:
+                shipping_address = MutableAddress.from_data(shipping_address_data)
+
+        self._shipping_address = shipping_address
+        return shipping_address
 
     @shipping_address.setter
     def shipping_address(self, value):
         self._shipping_address = value
-        self._set_value_to_data("shipping_address_id", getattr(value, "id", None))
+
+        if value:
+            if value.id:
+                self._set_value_to_data("shipping_address_id", value.id)
+                self._set_value_to_data("shipping_address_data", None)
+            else:
+                from shuup.utils.models import get_data_dict
+
+                self._set_value_to_data("shipping_address_data", get_data_dict(value))
 
     @property
     def billing_address(self):
         if self._billing_address:
             return self._billing_address
 
+        billing_address = None
         billing_address_id = self._get_value_from_data("billing_address_id")
         if billing_address_id:
-            return MutableAddress.objects.get(pk=billing_address_id)
+            billing_address = MutableAddress.objects.get(pk=billing_address_id)
+
+        if not billing_address:
+            billing_address_data = self._get_value_from_data("billing_address_data")
+            if billing_address_data:
+                billing_address = MutableAddress.from_data(billing_address_data)
+
+        self._billing_address = billing_address
+        return self._billing_address
 
     @billing_address.setter
     def billing_address(self, value):
         self._billing_address = value
-        self._set_value_to_data("billing_address_id", getattr(value, "id", None))
+
+        if value:
+            if value.id:
+                self._set_value_to_data("billing_address_id", value.id)
+                self._set_value_to_data("billing_address_data", None)
+            else:
+                from shuup.utils.models import get_data_dict
+
+                self._set_value_to_data("billing_address_data", get_data_dict(value))
 
     @property
     def shipping_method(self):
+        if (
+            self._shipping_method
+            and self.shipping_method_id
+            and self._shipping_method.pk == int(self.shipping_method_id)
+        ):
+            return self._shipping_method
+
         if not self.shipping_method_id:
             self.shipping_method_id = self._get_value_from_data("shipping_method_id")
 
+        shipping_method = None
         if self.shipping_method_id:
-            return ShippingMethod.objects.filter(pk=self.shipping_method_id).first()
+            shipping_method = ShippingMethod.objects.filter(pk=self.shipping_method_id).first()
+            self._shipping_method = shipping_method
+        return shipping_method
 
     @shipping_method.setter
     def shipping_method(self, shipping_method):
-        self.shipping_method_id = (shipping_method.id if shipping_method else None)
+        self.shipping_method_id = shipping_method.id if shipping_method else None
         self._set_value_to_data("shipping_method_id", self.shipping_method_id)
 
     @property
     def payment_method(self):
+        if self._payment_method and self.payment_method_id and self._payment_method.pk == int(self.payment_method_id):
+            return self._payment_method
+
         if not self.payment_method_id:
             self.payment_method_id = self._get_value_from_data("payment_method_id")
 
+        payment_method = None
         if self.payment_method_id:
-            return PaymentMethod.objects.filter(pk=self.payment_method_id).first()
+            payment_method = PaymentMethod.objects.filter(pk=self.payment_method_id).first()
+            self._payment_method = payment_method
+        return payment_method
 
     @payment_method.setter
     def payment_method(self, payment_method):
-        self.payment_method_id = (payment_method.id if payment_method else None)
+        self.payment_method_id = payment_method.id if payment_method else None
         self._set_value_to_data("payment_method_id", self.payment_method_id)
 
     @property
@@ -312,16 +406,18 @@ class BaseBasket(OrderSource):
         if self._customer_comment:
             return self._customer_comment
 
-        return self._get_value_from_data("customer_comment")
+        customer_comment = self._get_value_from_data("customer_comment")
+        self._customer_comment = customer_comment
+        return self._customer_comment
 
     @customer_comment.setter
     def customer_comment(self, value):
         self._customer_comment = value or ""
         self._set_value_to_data("customer_comment", value or "")
 
-    extra_data = _DataValueProperty('extra_data', {})
-    shipping_data = _DataValueProperty('shipping_data', {})
-    payment_data = _DataValueProperty('payment_data', {})
+    extra_data = _ExtraDataContainerProperty("extra_data")
+    shipping_data = _ExtraDataContainerProperty("shipping_data")
+    payment_data = _ExtraDataContainerProperty("payment_data")
 
     @property
     def _data_lines(self):
@@ -332,10 +428,11 @@ class BaseBasket(OrderSource):
         to ``self._data_lines`` to ensure the `dirty`
         flag gets set.
 
-        :return: List of data dicts
+        :return: List of data dicts.
         :rtype: list[dict]
         """
-        return self._load().setdefault("lines", [])
+        self._load()
+        return self._data.setdefault("lines", [])
 
     @_data_lines.setter
     def _data_lines(self, new_lines):
@@ -349,7 +446,13 @@ class BaseBasket(OrderSource):
         :param new_lines: New list of lines.
         :type new_lines: list[dict]
         """
-        self._load()["lines"] = new_lines
+        self._load()
+
+        # Check _load() comments to see why this can happen
+        if not hasattr(self, "_data"):
+            return
+
+        self._data["lines"] = new_lines
         self.dirty = True
         self.uncache()
 
@@ -363,12 +466,18 @@ class BaseBasket(OrderSource):
 
     @property
     def _codes(self):
-        return self._load().setdefault("codes", [])
+        self._load()
+        return self._data.setdefault("codes", [])
 
     @_codes.setter
     def _codes(self, value):
-        if hasattr(self, "_data"):  # Check that we're initialized
-            self._load()["codes"] = value
+        self._load()
+
+        # Check _load() comments to see why this can happen
+        if not hasattr(self, "_data"):
+            return
+
+        self._data["codes"] = value
 
     def add_code(self, code):
         modified = super(BaseBasket, self).add_code(code)
@@ -385,7 +494,7 @@ class BaseBasket(OrderSource):
         self.dirty = bool(self.dirty or modified)
         return modified
 
-    def _cache_lines(self):     # noqa (C901)
+    def _cache_lines(self):  # noqa (C901)
         lines = [BasketLine.from_dict(self, line) for line in self._data_lines]
         lines_by_line_id = {}
         orderable_counter = Counter()
@@ -410,14 +519,13 @@ class BaseBasket(OrderSource):
                         for child_product, child_quantity in six.iteritems(quantity_map):
                             sp = child_product.get_shop_instance(shop=self.shop)
                             in_basket_child_qty = orderable_counter[child_product.id]
-                            total_child_qty = ((quantity * child_quantity) + in_basket_child_qty)
-                            if not sp.is_orderable(
-                                    line.supplier, self.customer, total_child_qty, allow_cache=False):
+                            total_child_qty = (quantity * child_quantity) + in_basket_child_qty
+                            if not sp.is_orderable(line.supplier, self.customer, total_child_qty, allow_cache=False):
                                 orderable = False
                                 break
                         if orderable:
                             orderable_lines.append(line)
-                            orderable_counter[product.id] += quantity
+                            orderable_counter[product.id] = quantity
                             for child_product, child_quantity in six.iteritems(quantity_map):
                                 orderable_counter[child_product.id] += child_quantity * line.quantity
                     else:
@@ -443,12 +551,11 @@ class BaseBasket(OrderSource):
         return self._orderable_lines_cache
 
     def _initialize_product_line_data(self, product, supplier, shop, quantity=0):
-        if product.variation_children.count():
-            raise ValueError("Attempting to add variation parent to basket")
+        if product.variation_children.filter(deleted=False).exists():
+            raise ValueError("Error! Add a variation parent to the basket is not allowed.")
 
         return {
-            # TODO: FIXME: Make sure line_id's are unique (not random)
-            "line_id": str(random.randint(0, 0x7FFFFFFF)),
+            "line_id": uuid4().hex,
             "product": product,
             "supplier": supplier,
             "shop": shop,
@@ -456,7 +563,7 @@ class BaseBasket(OrderSource):
         }
 
     def clean_empty_lines(self):
-        new_lines = [l for l in self._data_lines if l["quantity"] > 0]
+        new_lines = [line for line in self._data_lines if line["quantity"] > 0]
         if len(new_lines) != len(self._data_lines):
             self._data_lines = new_lines
 
@@ -464,10 +571,10 @@ class BaseBasket(OrderSource):
         """
         Compare raw line data for coalescing.
 
-        That is, figure out whether the given raw line data is similar enough to product_id
+        That is, figure out whether the given raw line data is similar enough to `product_id`
         and extra to coalesce quantity additions.
 
-        This is nice to override in a project-specific basket class.
+        This is good to override in a project-specific basket class.
 
         :type current_line_data: dict
         :type product: int
@@ -481,7 +588,7 @@ class BaseBasket(OrderSource):
         if current_line_data.get("shop_id") != shop.id:
             return False
 
-        if isinstance(extra, dict):  # We have extra data, so compare it to that in this line
+        if isinstance(extra, dict):  # If we have extra data, compare it to that in this line
             if not compare_partial_dicts(extra, current_line_data):  # Extra data not similar? Okay then. :(
                 return False
         return True
@@ -491,9 +598,9 @@ class BaseBasket(OrderSource):
         Find the underlying basket data dict for a given product and line-specific extra data.
         This uses _compare_line_for_addition internally, which is nice to override in a project-specific basket class.
 
-        :param product: Product object
-        :param extra: optional dict of extra data
-        :return: dict of line or None
+        :param product: Product object.
+        :param extra: optional dict of extra data.
+        :return: dict of line or None.
         """
         for line_data in self._data_lines:
             if self._compare_line_for_addition(line_data, product, supplier, shop, extra):
@@ -518,7 +625,7 @@ class BaseBasket(OrderSource):
             extra = {}
 
         if quantity <= 0:
-            raise ValueError("Invalid quantity!")
+            raise ValueError("Error! Invalid quantity!")
 
         data = None
         if not force_new_line:
@@ -536,11 +643,11 @@ class BaseBasket(OrderSource):
 
     def refresh_lines(self):
         """
-        Refresh lines recalculating prices
+        Refresh lines and recalculating prices.
         """
-        pricing_context = PricingContext(shop=self.shop, customer=self.customer)
         for line_data in self._data_lines:
             line = BasketLine.from_dict(self, line_data)
+            pricing_context = PricingContext(shop=self.shop, customer=self.customer, supplier=line.supplier)
             line.cache_info(pricing_context)
             self._add_or_replace_line(line)
 
@@ -550,17 +657,13 @@ class BaseBasket(OrderSource):
         if new_quantity is not None:
             line.set_quantity(new_quantity)
         line.update(**kwargs)
-        line.cache_info(PricingContext(shop=self.shop, customer=self.customer))
+        line.cache_info(PricingContext(shop=self.shop, customer=self.customer, supplier=line.supplier))
         self._add_or_replace_line(line)
         return line
 
     def add_product_with_child_product(self, supplier, shop, product, child_product, quantity):
         parent_line = self.add_product(
-            supplier=supplier,
-            shop=shop,
-            product=product,
-            quantity=quantity,
-            force_new_line=True
+            supplier=supplier, shop=shop, product=product, quantity=quantity, force_new_line=True
         )
         child_line = self.add_product(
             supplier=supplier,
@@ -568,7 +671,7 @@ class BaseBasket(OrderSource):
             product=child_product,
             quantity=quantity,
             parent_line=parent_line,
-            force_new_line=True
+            force_new_line=True,
         )
         return (parent_line, child_line)
 
@@ -615,7 +718,7 @@ class BaseBasket(OrderSource):
                 yield line
 
     def _get_orderable(self):
-        return (sum(l.quantity for l in self.get_lines()) > 0)
+        return sum(line.quantity for line in self.get_lines()) > 0
 
     orderable = property(_get_orderable)
 
@@ -623,12 +726,10 @@ class BaseBasket(OrderSource):
         shipping_methods = self.get_available_shipping_methods()
         payment_methods = self.get_available_payment_methods()
 
-        advice = _(
-            "Try to remove some products from the basket "
-            "and order them separately.")
+        advice = _("Try to remove some products from the basket " "and order them separately.")
 
         if self.has_shippable_lines() and not shipping_methods:
-            msg = _("Products in basket cannot be shipped together. %s")
+            msg = _("Products in basket can't be shipped together. %s")
             yield ValidationError(msg % advice, code="no_common_shipping")
 
         if not payment_methods:
@@ -660,8 +761,8 @@ class BaseBasket(OrderSource):
         :rtype: list[ShippingMethod]
         """
         return [
-            m for m
-            in ShippingMethod.objects.available(shop=self.shop, products=self.product_ids)
+            m
+            for m in ShippingMethod.objects.available(shop=self.shop, products=self.product_ids)
             if m.is_available_for(self)
         ]
 
@@ -672,10 +773,26 @@ class BaseBasket(OrderSource):
         :rtype: list[PaymentMethod]
         """
         return [
-            m for m
-            in PaymentMethod.objects.available(shop=self.shop, products=self.product_ids)
+            m
+            for m in PaymentMethod.objects.available(shop=self.shop, products=self.product_ids)
             if m.is_available_for(self)
         ]
+
+    def add_log_entry(self, message, extra={}, kind=LogEntryKind.NOTE):
+        """
+        Log errors to basket storage
+
+        :type message: str
+        :type extra: dict
+        :type kind: shuup.utils.analog.LogEntryKind
+        """
+        if hasattr(self.storage, "add_log_entry"):
+            self.storage.add_log_entry(self, message, extra, kind)
+
+    def get_log_entries(self):
+        if hasattr(self.storage, "get_log_entries"):
+            return self.storage.get_log_entries(self)
+        return []
 
 
 class Basket(BaseBasket):

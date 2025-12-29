@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -48,13 +48,25 @@ $(function() {
 
     function addMediaPanel($section, file) {
         const section = $section.attr("id");
-        const panelCount = $("#" + section + " .panel").length;
+        const maxPanelId = $("#" + section + " .panel")
+            .map((v, el) => $(el).data("idx")).toArray()
+            .filter(value => value !== "__prefix_name__");
+        const panelCount = maxPanelId.length ? Math.max(...maxPanelId) : 0;
         const $source = $("#" + section + "-placeholder-panel");
-        const $html = $($source.html().replace(/__prefix__/g, panelCount - 1).replace(/__prefix_name__/g, panelCount));
+
+        let html = $source.html().replace(/__prefix__/g, panelCount).replace(/__prefix_name__/g, panelCount + 1);
+        if (file) {
+            html = html.replace(/__file_id__/g, file.id);
+        }
+        const $html = $(html);
+
         let targetId = "id_images";
         if (section.indexOf("media") > 0) {
             targetId = "id_media";
         }
+
+        $("#" + targetId + "-TOTAL_FORMS").val($("#" + section + " .panel").length);
+        $("#" + targetId + "-INITIAL_FORMS").val($("#" + section + " .panel").length);
         if (file) {
             let $contents = $("<a class='thumbnail-image' href='" + file.url + "' target='_blank'></a>");
             let $name = "<h4>" + file.name + "</h4>";
@@ -70,24 +82,43 @@ $(function() {
         $html.insertBefore($source);
     }
 
-    function onDropzoneQueueComplete(dropzone, kind) {
-        if(location.pathname.indexOf("new") > 0) {
-            // save product media the traditional way via the save button when creating a new product
-            return;
-        }
-        const productId = $("#product-" + kind + "-section-dropzone").data().product_id;
+    function getFileIds(kind) {
         const $fileInputs = $("#product-" + kind + "-section").find(".file-control input");
         var fileIds = [];
-
         for(var i = 0; i < $fileInputs.length; i++){
             let fileId = parseInt($($fileInputs[i]).val());
             if(!isNaN(fileId)) {
                 fileIds.push(parseInt($($fileInputs[i]).val()));
             }
         }
+        return fileIds
+    }
+
+    function getFileCount(kind) {
+        return $("#product-" + kind + "-section").data("saved_file_count") || 0;
+    }
+
+    function setFileCount(kind, count) {
+        $("#product-" + kind + "-section").data("saved_file_count", count);
+    }
+
+    function onDropzoneQueueComplete(dropzone, kind) {
+        if(location.pathname.indexOf("new") > 0) {
+            // save product media the traditional way via the save button when creating a new product
+            return;
+        }
+        const productId = $("#product-" + kind + "-section-dropzone").data().product_id;
+        if (!productId) {
+            return;
+        }
+
+        let fileIds = getFileIds(kind);
+        if (getFileCount(kind) === fileIds.length) {  // Skip add media if file count has not changed
+            return;
+        }
 
         $.ajax({
-            url: "/sa/products/" + productId + "/media/add/",
+            url: window.ShuupAdminConfig.browserUrls.add_media.replace("/99999/", "/" + productId + "/"),
             method: "POST",
             data: {
                 csrfmiddlewaretoken: ShuupAdminConfig.csrf,
@@ -97,10 +128,21 @@ $(function() {
             },
             traditional: true,
             success: function(data) {
-                window.Messages.enqueue({tags: "success", text: data.message});
+                if (data.added) {
+                    data.added.forEach((addedMedia) => {
+                        const filePanel = $(".panel[data-file='" + addedMedia.file + "']");
+                        const idx = parseInt(filePanel.data("idx"), 10) - 1;
+                        $("#id_" + kind + "-" + idx + "-file").prop("value", addedMedia.file);
+                        $("#id_" + kind + "-" + idx + "-id").prop("value", addedMedia.product_media);
+                    });
+                }
+                window.Messages.enqueue({
+                    tags: "success",
+                    text: data.message
+                });
             },
             error: function(data) {
-                alert("ERROR");
+                alert("Error!");
             }
         });
     }
@@ -129,9 +171,11 @@ $(function() {
     dropzones.forEach(function(zoneData) {
         var fieldId = "#" + zoneData.field + "-dropzone";
         if ($(fieldId).length) {
-            const mediaUrl = window.ShuupAdminConfig.browserUrls.media;
+            // Save file count so we can prevent saving product media
+            // if file count has not changed
+            setFileCount(zoneData.queueComplete, getFileIds(zoneData.queueComplete).length);
             activateDropzone($(fieldId), {
-                url: mediaUrl + "?action=upload&path=" + zoneData.targetPath,
+                uploadPath: zoneData.targetPath,
                 maxFiles: zoneData.maxFiles,
                 onSuccess: function(file) {
                     onDropzoneSuccess($("#" + zoneData.field), file);

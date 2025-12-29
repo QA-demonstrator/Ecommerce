@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from django.utils.encoding import force_text
-
+from shuup.utils.django_compat import force_text
 from shuup.xtheme import XTHEME_GLOBAL_VIEW_NAME
 from shuup.xtheme.layout import Layout
 from shuup.xtheme.layout.utils import get_layout_data_key, get_provided_layouts
@@ -27,20 +26,20 @@ class ViewConfig(object):
         """
         Initialize a view configuration.
 
-        :param theme: Theme object (could be None to not touch the database)
+        :param theme: Theme object (could be None to not touch the database).
         :type theme: shuup.xtheme.Theme|None
-        :param shop: Shop object
+        :param shop: Shop object.
         :type shop: shuup.core.models.Shop
-        :param view_name: View name (the class name of the view)
+        :param view_name: View name (the class name of the view).
         :type view_name: str
         :param draft: Load in draft mode?
         :type draft: bool
-        :param global_type: Boolean indicating whether this is a global config
+        :param global_type: Boolean indicating whether this is a global config.
         :type global_type: bool|False
         """
         self.theme = theme
         self.shop = shop
-        self.view_name = (XTHEME_GLOBAL_VIEW_NAME if global_type else force_text(view_name))
+        self.view_name = XTHEME_GLOBAL_VIEW_NAME if global_type else force_text(view_name)
         self.draft = bool(draft)
         self._saved_view_config = None
 
@@ -49,7 +48,7 @@ class ViewConfig(object):
         """
         Get a saved view config model depending on the current parameters.
 
-        :return: A SavedViewConfig object for the current theme/view/draft mode, or None
+        :return: A SavedViewConfig object for the current theme/view/draft mode, or None.
         :rtype: shuup.xtheme.models.SavedViewConfig|None
         """
         if not self.theme or not self.theme.identifier or not self.shop:
@@ -57,10 +56,7 @@ class ViewConfig(object):
 
         if self._saved_view_config is None:
             self._saved_view_config = SavedViewConfig.objects.appropriate(
-                theme=self.theme,
-                shop=self.shop,
-                view_name=self.view_name,
-                draft=self.draft
+                theme=self.theme, shop=self.shop, view_name=self.view_name, draft=self.draft
             )
             self.draft = self._saved_view_config.draft
         return self._saved_view_config
@@ -69,18 +65,18 @@ class ViewConfig(object):
         """
         Get a layout objects for the given placeholder and context.
 
-        :param context: Rendering context
+        :param context: Rendering context.
         :type context: jinja2.runtime.Context
         :param placeholder_name: The name of the placeholder to load.
         :type placeholder_name: str
-        :param default_layout: Default layout configuration (either a dict or an actual Layout)
+        :param default_layout: Default layout configuration (either a dict or an actual Layout).
         :type default_layout: dict|Layout
-        :return: List of layouts available for current placeholder and context
+        :return: List of layouts available for current placeholder and context.
         :rtype: list
         """
         layouts = [
-            self.get_placeholder_layout(
-                Layout, placeholder_name, default_layout=default_layout, context=context)]
+            self.get_placeholder_layout(Layout, placeholder_name, default_layout=default_layout, context=context)
+        ]
 
         for layout_cls in get_provided_layouts():
             layout = self.get_placeholder_layout(layout_cls, placeholder_name, context=context)
@@ -90,7 +86,8 @@ class ViewConfig(object):
         return layouts
 
     def get_placeholder_layout(
-            self, layout_cls, placeholder_name, default_layout={}, context=None, layout_data_key=None):
+        self, layout_cls, placeholder_name, default_layout={}, context=None, layout_data_key=None
+    ):
         """
         Get a layout object for the given placeholder.
 
@@ -98,13 +95,13 @@ class ViewConfig(object):
         :type layout_cls:
         :param placeholder_name: The name of the placeholder to load.
         :type placeholder_name: str
-        :param default_layout: Default layout configuration (either a dict or an actual Layout)
+        :param default_layout: Default layout configuration (either a dict or an actual Layout).
         :type default_layout: dict|Layout
-        :param context: Rendering context
+        :param context: Rendering context.
         :type context: jinja2.runtime.Context
         :param layout_data_key: layout data key used for saving the layout data.
         :type layout_data_key: str
-        :return: Layout
+        :return: Layout.
         :rtype: Layout
         """
         svc = self.saved_view_config
@@ -131,11 +128,11 @@ class ViewConfig(object):
         Save a default placeholder layout (only if no data for the PH already
         exists).
 
-        :param placeholder_name: Placeholder name
+        :param placeholder_name: Placeholder name.
         :type placeholder_name: str
-        :param layout: Layout or layout data
+        :param layout: Layout or layout data.
         :type layout: Layout|dict
-        :return: True if saved
+        :return: True if saved.
         :rtype: bool
         """
         if not self.draft:
@@ -149,12 +146,12 @@ class ViewConfig(object):
         """
         Publish this revision of the view configuration as the currently public one.
 
-        :return: Success flag
+        :return: Success flag.
         :rtype: bool
         """
         svc = self.saved_view_config
         if not svc:
-            raise ValueError("Unable to publish view config. Is a theme set?")
+            raise ValueError("Error! Unable to publish view config. Is a theme set properly?")
         svc.publish()
         self.draft = svc.draft
         return True
@@ -163,12 +160,12 @@ class ViewConfig(object):
         """
         Revert this revision of the view configuration, if it's a draft.
 
-        :return: Success flag
+        :return: Success flag.
         :rtype: bool
         """
         svc = self.saved_view_config
         if not svc:
-            raise ValueError("Unable to revert view config. Is a theme set?")
+            raise ValueError("Error! Unable to revert view config. Is a theme set properly?")
         svc.revert()
         self.draft = True
         self._saved_view_config = None
@@ -180,11 +177,11 @@ class ViewConfig(object):
 
         :param placeholder_name: The placeholder name.
         :type placeholder_name: str
-        :param layout: Layout object (or dict)
+        :param layout: Layout object (or dict).
         :type layout: Layout|dict
         """
         svc = self.saved_view_config
         if not svc:
-            raise ValueError("Unable to retrieve view config; unable to save data. Is a theme set?")
+            raise ValueError("Error! Unable to retrieve view config; unable to save data. Is a theme set properly?")
         svc.set_layout_data(layout_data_key, layout)
         svc.save()

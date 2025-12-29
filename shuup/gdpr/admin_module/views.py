@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import json
-
 from django.conf import settings
 from django.contrib import messages
-from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.transaction import atomic
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.timezone import now
@@ -21,16 +19,13 @@ from shuup.admin.form_part import FormPartsViewMixin, SaveFormPartsMixin
 from shuup.admin.shop_provider import get_shop
 from shuup.admin.toolbar import PostActionButton, Toolbar
 from shuup.admin.utils.views import CreateOrUpdateView
-from shuup.core.models import CompanyContact, Contact, PersonContact
-from shuup.gdpr.admin_module.forms import (
-    GDPRBaseFormPart, GDPRCookieCategoryFormPart
-)
-from shuup.gdpr.anonymizer import Anonymizer
+from shuup.core.models import Contact
+from shuup.core.tasks import run_task
+from shuup.gdpr.admin_module.forms import GDPRBaseFormPart, GDPRCookieCategoryFormPart
 from shuup.gdpr.models import GDPRCookieCategory, GDPRSettings
-from shuup.gdpr.utils import (
-    create_initial_required_cookie_category, ensure_gdpr_privacy_policy
-)
+from shuup.gdpr.utils import create_initial_required_cookie_category, ensure_gdpr_privacy_policy
 from shuup.utils.analog import LogEntryKind
+from shuup.utils.django_compat import reverse, reverse_lazy
 
 
 class GDPRView(SaveFormPartsMixin, FormPartsViewMixin, CreateOrUpdateView):
@@ -40,14 +35,17 @@ class GDPRView(SaveFormPartsMixin, FormPartsViewMixin, CreateOrUpdateView):
     success_url = reverse_lazy("shuup_admin:gdpr.settings")
 
     def get_toolbar(self):
-        toobar = Toolbar([
-            PostActionButton(
-                icon="fa fa-check-circle",
-                form_id="gdpr_form",
-                text=_("Save"),
-                extra_css_class="btn-success",
-            )
-        ], view=self)
+        toobar = Toolbar(
+            [
+                PostActionButton(
+                    icon="fa fa-check-circle",
+                    form_id="gdpr_form",
+                    text=_("Save"),
+                    extra_css_class="btn-success",
+                )
+            ],
+            view=self,
+        )
         return toobar
 
     def get_queryset(self):
@@ -77,8 +75,11 @@ class BaseContactView(SingleObjectMixin, View):
     def get_queryset(self):
         queryset = Contact.objects.all()
 
-        limited = (settings.SHUUP_ENABLE_MULTIPLE_SHOPS and settings.SHUUP_MANAGE_CONTACTS_PER_SHOP and
-                   not self.request.user.is_superuser)
+        limited = (
+            settings.SHUUP_ENABLE_MULTIPLE_SHOPS
+            and settings.SHUUP_MANAGE_CONTACTS_PER_SHOP
+            and not self.request.user.is_superuser
+        )
         if limited:
             queryset = queryset.filter(shops=get_shop(self.request))
 
@@ -88,9 +89,12 @@ class BaseContactView(SingleObjectMixin, View):
 class GDPRDownloadDataView(BaseContactView):
     def post(self, request, *args, **kwargs):
         contact = self.get_object()
-        contact.add_log_entry("User personal data download requested", kind=LogEntryKind.NOTE, user=self.request.user)
+        contact.add_log_entry(
+            "Info! User personal data download requested.", kind=LogEntryKind.NOTE, user=self.request.user
+        )
         from shuup.gdpr.utils import get_all_contact_data
-        data = json.dumps(get_all_contact_data(contact))
+
+        data = json.dumps(get_all_contact_data(self.request.shop, contact))
         response = HttpResponse(data, content_type="application/json")
         filename = "attachment; filename=user_data_{}.json".format(now().strftime("%Y-%m-%d_%H:%M:%S"))
         response["Content-Disposition"] = filename
@@ -100,13 +104,15 @@ class GDPRDownloadDataView(BaseContactView):
 class GDPRAnonymizeView(BaseContactView):
     def post(self, request, *args, **kwargs):
         contact = self.get_object()
-        contact.add_log_entry("User anonymization requested", kind=LogEntryKind.NOTE, user=self.request.user)
+        contact.add_log_entry("Info! User anonymization requested.", kind=LogEntryKind.NOTE, user=self.request.user)
         with atomic():
-            anonymizer = Anonymizer()
-            if isinstance(contact, PersonContact):
-                anonymizer.anonymize_person(contact)
-            elif isinstance(contact, CompanyContact):
-                anonymizer.anonymize_company(contact)
+            user_id = self.request.user.pk if self.request.user.pk else None
+            run_task(
+                "shuup.gdpr.tasks.anonymize",
+                shop_id=self.request.shop.pk,
+                contact_id=contact.pk,
+                user_id=user_id,
+            )
 
-        messages.success(request, _("Contact anonymized!"))
+        messages.success(request, _("Contact was anonymized."))
         return HttpResponseRedirect(reverse("shuup_admin:contact.detail", kwargs=dict(pk=contact.pk)))

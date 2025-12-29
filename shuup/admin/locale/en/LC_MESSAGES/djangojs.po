@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-12 13:08+0000\n"
+"POT-Creation-Date: 2021-05-11 12:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -19,10 +19,10 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "Generated-By: Babel 2.1.1\n"
 
-msgid "Unexpected error while uploading files."
+msgid "Error! Unexpected error while uploading files."
 msgstr ""
 
-msgid "Error:"
+msgid "Error!"
 msgstr ""
 
 msgid "Uploaded:"
@@ -43,9 +43,6 @@ msgid "Are you sure you want to delete the %s folder?"
 msgstr ""
 
 msgid "New folder"
-msgstr ""
-
-msgid "current"
 msgstr ""
 
 msgid "Oldest first"
@@ -95,11 +92,14 @@ msgstr ""
 msgid "Delete folder"
 msgstr ""
 
-#, javascript-format
-msgid "Order %s created."
+msgid "Edit folder access"
 msgstr ""
 
-msgid "An unspecified error occurred.\n"
+#, javascript-format
+msgid "Success! Order %s was created."
+msgstr ""
+
+msgid "Error! An unspecified error occurred.\n"
 msgstr ""
 
 msgid "SKU"
@@ -163,7 +163,7 @@ msgstr ""
 msgid "Order for company"
 msgstr ""
 
-msgid "Check this if the order is for a company or business with a tax ID."
+msgid "Enable this if the order is for a company or business with a tax ID."
 msgstr ""
 
 msgid "Billing Address"
@@ -479,44 +479,7 @@ msgstr ""
 msgid "No records found."
 msgstr ""
 
-msgid "Missing JavaScript dependencies detected"
-msgstr ""
-
-msgid "Identifier"
-msgstr ""
-
-#, javascript-format
-msgid "Value %s Name"
-msgstr ""
-
-msgid "Delete value"
-msgstr ""
-
-msgid "Are you sure?"
-msgstr ""
-
-msgid "Delete Variable"
-msgstr ""
-
-msgid "Add new value"
-msgstr ""
-
-msgid "Variable Name"
-msgstr ""
-
-msgid "Variable"
-msgstr ""
-
-msgid "Identifer"
-msgstr ""
-
-msgid "Show identifier fields (for advanced users)"
-msgstr ""
-
-msgid "There are no variables defined."
-msgstr ""
-
-msgid "Add new variable"
+msgid "Warning! Missing JavaScript dependencies detected."
 msgstr ""
 
 msgid "No browser URL for kind:"
@@ -529,6 +492,16 @@ msgid "Drop files here or click to browse."
 msgstr ""
 
 msgid "only images can be uploaded!"
+msgstr ""
+
+msgid "Error happened while uploading file."
+msgstr ""
+
+msgid "Browse media"
+msgstr ""
+
+#, javascript-format
+msgid "Error! For images greater than %s kb, use the media browser instead."
 msgstr ""
 
 msgid "No results."
@@ -672,6 +645,15 @@ msgstr ""
 msgid "Learn more at the Shuup Help Center"
 msgstr ""
 
+msgid "Previous"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
 msgid "Mass actions"
 msgstr ""
 
@@ -693,6 +675,9 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
+msgid "Apply filters"
+msgstr ""
+
 msgid "Sort by"
 msgstr ""
 
@@ -705,14 +690,11 @@ msgstr ""
 msgid "Default sorting"
 msgstr ""
 
-msgid "Previous"
-msgstr ""
-
-msgid "Next"
-msgstr ""
-
 #, javascript-format
 msgid "Filter by %s"
+msgstr ""
+
+msgid " Select"
 msgstr ""
 
 msgid "Filters"
@@ -747,17 +729,17 @@ msgstr ""
 msgid "How about creating a new entry?"
 msgstr ""
 
-msgid "Mass Action complete."
+msgid "Success! Mass Action was completed."
 msgstr ""
 
-msgid "Something went wrong."
+msgid "Error! Something went wrong with the Mass Action."
 msgstr ""
 
 #, javascript-format
 msgid "All %s Items Selected"
 msgstr ""
 
-msgid "You haven't selected anything"
+msgid "Warning! You didn't select anything."
 msgstr ""
 
 msgid "Confirm action by clicking OK!"

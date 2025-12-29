@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,18 +9,11 @@ import pytest
 
 from shuup.campaigns.exceptions import CampaignsInvalidInstanceForCacheUpdate
 from shuup.campaigns.models import BasketCampaign
-from shuup.campaigns.models.basket_conditions import (
-    CategoryProductsBasketCondition, ComparisonOperator
-)
-from shuup.campaigns.models.basket_line_effects import (
-    DiscountFromCategoryProducts
-)
+from shuup.campaigns.models.basket_conditions import CategoryProductsBasketCondition, ComparisonOperator
+from shuup.campaigns.models.basket_line_effects import DiscountFromCategoryProducts
 from shuup.campaigns.signal_handlers import update_filter_cache
 from shuup.front.basket import get_basket
-from shuup.testing.factories import (
-    create_product, get_default_supplier, get_default_category,
-    get_shipping_method
-)
+from shuup.testing.factories import create_product, get_default_category, get_default_supplier, get_shipping_method
 from shuup_tests.campaigns import initialize_test
 
 
@@ -28,7 +21,7 @@ from shuup_tests.campaigns import initialize_test
 def test_category_product_in_basket_condition(rf):
     request, shop, group = initialize_test(rf, False)
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
     category = get_default_category()
     product = create_product("The Product", shop=shop, default_price="200", supplier=supplier)
     basket.add_product(supplier=supplier, shop=shop, product=product, quantity=1)
@@ -67,7 +60,7 @@ def test_category_products_effect_with_amount(rf):
 
     basket = get_basket(request)
     category = get_default_category()
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     discount_amount_value = "10"
@@ -88,7 +81,8 @@ def test_category_products_effect_with_amount(rf):
     campaign.conditions.add(rule)
 
     DiscountFromCategoryProducts.objects.create(
-        campaign=campaign, category=category, discount_amount=discount_amount_value)
+        campaign=campaign, category=category, discount_amount=discount_amount_value
+    )
 
     assert rule.matches(basket, [])
     basket.uncache()
@@ -108,7 +102,7 @@ def test_category_products_effect_with_percentage(rf):
 
     basket = get_basket(request)
     category = get_default_category()
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     discount_percentage = decimal.Decimal("0.10")
@@ -129,7 +123,8 @@ def test_category_products_effect_with_percentage(rf):
     campaign.conditions.add(rule)
 
     DiscountFromCategoryProducts.objects.create(
-        campaign=campaign, category=category, discount_percentage=discount_percentage)
+        campaign=campaign, category=category, discount_percentage=discount_percentage
+    )
 
     assert rule.matches(basket, [])
     basket.uncache()

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from django.core.urlresolvers import reverse
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from enumfields import Enum
+
+from shuup.utils.django_compat import reverse
 
 
 class DashboardItemSize(Enum):
@@ -26,6 +27,11 @@ class DashboardItem(object):
     Title shown in dashboard menu and in dashboard
     """
     title = _("Dashboard")
+
+    """
+    Sequence number of dashboard item
+    """
+    ordering = 0
 
     """
     The size of dashboard item block

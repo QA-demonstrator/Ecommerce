@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import warnings
-
-from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from shuup.admin.toolbar import (
-    DropdownActionButton, DropdownItem, PostActionButton,
-    PostActionDropdownItem, Toolbar, URLActionButton
+    DropdownActionButton,
+    DropdownItem,
+    PostActionButton,
+    PostActionDropdownItem,
+    Toolbar,
+    URLActionButton,
 )
 from shuup.apps.provides import get_provide_objects
 from shuup.core.models import OrderStatus
 from shuup.utils.deprecation import RemovedFromShuupWarning
+from shuup.utils.django_compat import reverse
 
 
 class OrderDetailToolbar(Toolbar):
@@ -45,14 +48,14 @@ class OrderDetailToolbar(Toolbar):
                 DropdownActionButton(
                     action_menu_items,
                     icon="fa fa-star",
-                    text=_(u"Actions"),
+                    text=_("Actions"),
                     extra_css_class="btn-inverse",
                 )
             )
 
     def _build_order_set_state_button(self):
         set_status_menu_items = []
-        for status in OrderStatus.objects.filter(is_active=True).exclude(pk=self.order.status.pk).order_by("ordering"):
+        for status in self.order.status.allowed_next_statuses.all().order_by("ordering"):
             btn = PostActionDropdownItem(
                 post_url=reverse("shuup_admin:order.set-status", kwargs={"pk": self.order.pk}),
                 name="status",
@@ -72,49 +75,57 @@ class OrderDetailToolbar(Toolbar):
             )
 
     def _build_set_complete_button(self):
-        self.append(PostActionButton(
-            post_url=reverse("shuup_admin:order.set-status", kwargs={"pk": self.order.pk}),
-            name="status",
-            value=OrderStatus.objects.get_default_complete().pk,
-            text=_("Set Complete"),
-            icon="fa fa-check-circle",
-            disable_reason=(
-                _("This order can not be set as complete at this point")
-                if not self.order.can_set_complete()
-                else None
-            ),
-            extra_css_class="btn-success"
-        ))
+        self.append(
+            PostActionButton(
+                post_url=reverse("shuup_admin:order.set-status", kwargs={"pk": self.order.pk}),
+                name="status",
+                value=OrderStatus.objects.get_default_complete().pk,
+                text=_("Set Complete"),
+                icon="fa fa-check-circle",
+                disable_reason=(
+                    _("This order can not be set as complete at this point")
+                    if not self.order.can_set_complete()
+                    else None
+                ),
+                extra_css_class="btn-success",
+            )
+        )
 
     def _build_cancel_button(self):
-        self.append(PostActionButton(
-            post_url=reverse("shuup_admin:order.set-status", kwargs={"pk": self.order.pk}),
-            name="status",
-            value=OrderStatus.objects.get_default_canceled().pk,
-            text=_("Cancel Order"),
-            icon="fa fa-trash",
-            disable_reason=(
-                _("Paid, shipped, or canceled orders cannot be canceled")
-                if not self.order.can_set_canceled()
-                else None
-            ),
-            extra_css_class="btn-danger btn-inverse"
-        ))
+        self.append(
+            PostActionButton(
+                post_url=reverse("shuup_admin:order.set-status", kwargs={"pk": self.order.pk}),
+                name="status",
+                value=OrderStatus.objects.get_default_canceled().pk,
+                text=_("Cancel Order"),
+                icon="fa fa-trash",
+                disable_reason=(
+                    _("Paid, shipped, or canceled orders cannot be canceled")
+                    if not self.order.can_set_canceled()
+                    else None
+                ),
+                extra_css_class="btn-danger btn-inverse",
+            )
+        )
 
     def _build_edit_button(self):
-        self.append(URLActionButton(
-            text=_("Edit order"),
-            icon="fa fa-money",
-            disable_reason=_("This order cannot modified at this point") if not self.order.can_edit() else None,
-            url=reverse("shuup_admin:order.edit", kwargs={"pk": self.order.pk}),
-            extra_css_class="btn-info"
-        ))
+        self.append(
+            URLActionButton(
+                text=_("Edit order"),
+                icon="fa fa-money",
+                disable_reason=_("This order cannot modified at this point") if not self.order.can_edit() else None,
+                url=reverse("shuup_admin:order.edit", kwargs={"pk": self.order.pk}),
+                extra_css_class="btn-info",
+            )
+        )
 
     def _build_provided_toolbar_buttons(self):
         for button in get_provide_objects("admin_order_toolbar_button"):
             warnings.warn(
-                "admin_order_toolbar_button provider is deprecated, use admin_order_toolbar_action_item instead",
-                RemovedFromShuupWarning)
+                "Warning! `admin_order_toolbar_button` provider is deprecated, "
+                "use `admin_order_toolbar_action_item` instead.",
+                RemovedFromShuupWarning,
+            )
             self.append(button(self.order))
 
 
@@ -127,8 +138,9 @@ class CreatePaymentAction(DropdownItem):
 
     @staticmethod
     def visible_for_object(object):
-        return (object.can_create_payment() and not (
-            (object.is_not_paid() or object.is_deferred()) and not object.taxful_total_price))
+        return object.can_create_payment() and not (
+            (object.is_not_paid() or object.is_deferred()) and not object.taxful_total_price
+        )
 
 
 class SetPaidAction(PostActionDropdownItem):
@@ -140,19 +152,7 @@ class SetPaidAction(PostActionDropdownItem):
 
     @staticmethod
     def visible_for_object(object):
-        return ((object.is_not_paid() or object.is_deferred()) and not object.taxful_total_price)
-
-
-class CreateShipmentAction(DropdownItem):
-    def __init__(self, object, **kwargs):
-        kwargs["url"] = reverse("shuup_admin:order.create-shipment", kwargs={"pk": object.pk})
-        kwargs["icon"] = "fa fa-truck"
-        kwargs["text"] = _("Create Shipment")
-        super(CreateShipmentAction, self).__init__(**kwargs)
-
-    @staticmethod
-    def visible_for_object(object):
-        return object.can_create_shipment()
+        return (object.is_not_paid() or object.is_deferred()) and not object.taxful_total_price
 
 
 class CreateRefundAction(DropdownItem):

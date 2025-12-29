@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import six
 from collections import OrderedDict
 from copy import deepcopy
-
-import six
 from django import forms
 from django.conf import settings
 
@@ -102,7 +101,7 @@ class PluginForm(forms.Form):
 
     def get_languages(self):
         default_language = settings.PARLER_DEFAULT_LANGUAGE_CODE
-        languages = [l[0] for l in settings.LANGUAGES]
+        languages = [language[0] for language in settings.LANGUAGES]
 
         if default_language in languages:
             languages.remove(default_language)

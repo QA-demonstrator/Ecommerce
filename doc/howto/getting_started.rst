@@ -10,11 +10,29 @@ Installing Shuup
 Requirements
 ------------
 
-* Python 2.7.9+/3.4+. https://www.python.org/download/.
-* Any database supported by Django.
+* Python 3.6+. https://www.python.org/download/.
+* Django's minimum supported version is 2.2 LTS.
+* Any database supported by Django. https://docs.djangoproject.com/en/3.0/ref/databases/ .
 
 Installation
 ------------
+
+Docker
+######
+
+Fastest way to get Shuup up and running is to use `Docker <https://www.docker.com>`_.
+
+1. Run:
+
+   .. code-block:: shell
+
+      docker-compose up
+
+2. Open `localhost:8000/sa <http://localhost:8000/sa>`_ in a browser,
+   log in with username: ``admin`` password: ``admin``
+
+Locally
+#######
 
 This guide assumes familiarity with the PyPA tools for Python packaging,
 including ``pip`` and ``virtualenv``.
@@ -38,7 +56,6 @@ including ``pip`` and ``virtualenv``.
    .. code-block:: shell
 
       pip install shuup
-
 
 4. Once installed, you can begin setting up a Django project using whichever
    standards you fancy. Refer to the top-level `settings
@@ -121,9 +138,6 @@ several sub-applications that may be used to toggle functionality on and off.
 ``shuup.admin`` provides a fully featured administration dashboard.
 
 ``shuup.addons`` can be used to install and manage Shuup addons.
-
-``shuup.api`` exposes SHUUP APIs as RESTful url endpoints. See the
-:doc:`web API documentation <../web_api>` for details.
 
 ``shuup.campaigns`` provides a highly customizable promotion and discount
 management system.

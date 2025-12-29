@@ -1,7 +1,8 @@
-*.pyc
-*.pyd
-*.pyo
-*__pycache__*
-*node_modules*
+**/*.pyc
+**/*.pyd
+**/*.pyo
+**/__pycache__
+**/node_modules
 .dockerignore
 Dockerfile
+docker-compose*

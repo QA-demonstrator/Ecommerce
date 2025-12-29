@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import pytest
-from django.core.urlresolvers import reverse
 from django.template import loader
 from django.utils import translation
 from django.utils.encoding import force_text
 
 from shuup import configuration
-from shuup.admin.modules.content import data
-from shuup.admin.modules.content.forms import (
-    BEHAVIOR_ORDER_CONFIRM_KEY, BehaviorWizardForm, CONTENT_FOOTER_KEY,
-    ContentWizardForm
-)
 from shuup.admin.utils import wizard
 from shuup.admin.views.wizard import WizardView
 from shuup.notify.actions.email import SendEmail
@@ -24,7 +18,15 @@ from shuup.notify.models import Script
 from shuup.notify.script import StepNext
 from shuup.simple_cms.models import Page
 from shuup.testing.factories import get_default_shop
+from shuup.testing.modules.content import data
+from shuup.testing.modules.content.forms import (
+    BEHAVIOR_ORDER_CONFIRM_KEY,
+    CONTENT_FOOTER_KEY,
+    BehaviorWizardForm,
+    ContentWizardForm,
+)
 from shuup.testing.utils import apply_request_middleware
+from shuup.utils.django_compat import reverse
 from shuup.xtheme import XTHEME_GLOBAL_VIEW_NAME
 from shuup.xtheme.models import SavedViewConfig, SavedViewConfigStatus
 
@@ -177,20 +179,17 @@ def test_content_form(settings):
 
 @pytest.mark.django_db
 def test_content_wizard_pane(rf, admin_user, settings):
-    settings.SHUUP_SETUP_WIZARD_PANE_SPEC = [
-        "shuup.admin.modules.content.views.ContentWizardPane"
-    ]
-
+    settings.SHUUP_SETUP_WIZARD_PANE_SPEC = ["shuup.testing.modules.content.views.ContentWizardPane"]
     shop = get_default_shop()
 
     pane_data = {
-        'pane_id': 'content',
-        'content-privacy_policy': False,
-        'content-terms_conditions': False,
-        'content-refund_policy': False,
-        'content-about_us': False,
-        'content-configure_footer': False,
-        'behaviors-order_confirm_notification': False
+        "pane_id": "content",
+        "content-privacy_policy": False,
+        "content-terms_conditions": False,
+        "content-refund_policy": False,
+        "content-about_us": False,
+        "content-configure_footer": False,
+        "behaviors-order_confirm_notification": False,
     }
 
     # all false, does not create anything
@@ -202,7 +201,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create privacy policy
-    pane_data['content-privacy_policy'] = True
+    pane_data["content-privacy_policy"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -211,7 +210,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create terms
-    pane_data['content-terms_conditions'] = True
+    pane_data["content-terms_conditions"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -220,7 +219,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create refund
-    pane_data['content-refund_policy'] = True
+    pane_data["content-refund_policy"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -229,7 +228,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create about_us
-    pane_data['content-about_us'] = True
+    pane_data["content-about_us"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -238,7 +237,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create footer
-    pane_data['content-configure_footer'] = True
+    pane_data["content-configure_footer"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -247,7 +246,7 @@ def test_content_wizard_pane(rf, admin_user, settings):
     assert Script.objects.count() == 0
 
     # create order_confirm_notification
-    pane_data['behaviors-order_confirm_notification'] = True
+    pane_data["behaviors-order_confirm_notification"] = True
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -263,27 +262,26 @@ def test_content_wizard_pane(rf, admin_user, settings):
 
 @pytest.mark.django_db
 def test_content_wizard_pane2(rf, admin_user, settings):
-    settings.SHUUP_SETUP_WIZARD_PANE_SPEC = [
-        "shuup.admin.modules.content.views.ContentWizardPane"
-    ]
+    settings.SHUUP_SETUP_WIZARD_PANE_SPEC = ["shuup.testing.modules.content.views.ContentWizardPane"]
 
     shop = get_default_shop()
+    request = apply_request_middleware(rf.get("/"), user=admin_user)
 
     settings.INSTALLED_APPS.remove("shuup.simple_cms")
     settings.INSTALLED_APPS.remove("shuup.xtheme")
     settings.INSTALLED_APPS.remove("shuup.notify")
 
     # no pane, because ContentWizardPane is invalid (no necessary app installed)
-    assert wizard.load_setup_wizard_panes(shop) == []
-    assert wizard.load_setup_wizard_panes(shop, visible_only=False) == []
+    assert wizard.load_setup_wizard_panes(shop, request) == []
+    assert wizard.load_setup_wizard_panes(shop, request, visible_only=False) == []
     pane_data = {
-        'pane_id': 'content',
-        'content-privacy_policy': True,
-        'content-terms_conditions': True,
-        'content-refund_policy': True,
-        'content-about_us': True,
-        'content-configure_footer': True,
-        'behaviors-order_confirm_notification': True
+        "pane_id": "content",
+        "content-privacy_policy": True,
+        "content-terms_conditions": True,
+        "content-refund_policy": True,
+        "content-about_us": True,
+        "content-configure_footer": True,
+        "behaviors-order_confirm_notification": True,
     }
 
     request = apply_request_middleware(rf.get("/"), skip_session=True)
@@ -292,8 +290,9 @@ def test_content_wizard_pane2(rf, admin_user, settings):
     assert response["Location"].startswith(reverse("shuup:login"))
 
     # add the simple cms - create only the pages and footer
+    request = apply_request_middleware(rf.get("/"), user=admin_user, skip_session=True)
     settings.INSTALLED_APPS.append("shuup.simple_cms")
-    assert len(wizard.load_setup_wizard_panes(shop, visible_only=False)) == 1
+    assert len(wizard.load_setup_wizard_panes(shop, request, visible_only=False)) == 1
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -305,7 +304,7 @@ def test_content_wizard_pane2(rf, admin_user, settings):
 
     # add the xtheme - create the footer
     settings.INSTALLED_APPS.append("shuup.xtheme")
-    assert len(wizard.load_setup_wizard_panes(shop, visible_only=False)) == 1
+    assert len(wizard.load_setup_wizard_panes(shop, request, visible_only=False)) == 1
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200
@@ -317,7 +316,7 @@ def test_content_wizard_pane2(rf, admin_user, settings):
 
     # add the notify - create only the notification
     settings.INSTALLED_APPS.append("shuup.notify")
-    assert len(wizard.load_setup_wizard_panes(shop, visible_only=False)) == 1
+    assert len(wizard.load_setup_wizard_panes(shop, request, visible_only=False)) == 1
     request = apply_request_middleware(rf.post("/", data=pane_data), user=admin_user)
     response = WizardView.as_view()(request)
     assert response.status_code == 200

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -12,10 +12,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from shuup.admin.form_part import FormPartsViewMixin, SaveFormPartsMixin
 from shuup.admin.modules.contacts.form_parts import (
-    CompanyContactBaseFormPart, ContactAddressesFormPart,
-    PersonContactBaseFormPart
+    CompanyContactBaseFormPart,
+    ContactAddressesFormPart,
+    PersonContactBaseFormPart,
 )
-from shuup.admin.modules.contacts.utils import check_contact_permission
+from shuup.admin.modules.contacts.utils import check_contact_permission, request_limited
 from shuup.admin.shop_provider import get_shop
 from shuup.admin.toolbar import get_default_edit_toolbar
 from shuup.admin.utils.urls import get_model_url
@@ -46,6 +47,18 @@ class ContactEditView(SaveFormPartsMixin, FormPartsViewMixin, CreateOrUpdateView
                 contact_type = "company"
         return contact_type
 
+    def get_queryset(self):
+        qs = super(ContactEditView, self).get_queryset()
+
+        if request_limited(self.request):
+            qs = qs.filter(shops=get_shop(self.request))
+
+        # non superusers can't see superusers contacts
+        if not self.request.user.is_superuser:
+            qs = qs.exclude(PersonContact___user__is_superuser=True)
+
+        return qs
+
     def get_form_part_classes(self):
         form_part_classes = []
         contact_type = self.get_contact_type()
@@ -66,9 +79,7 @@ class ContactEditView(SaveFormPartsMixin, FormPartsViewMixin, CreateOrUpdateView
 
     def get_toolbar(self):
         toolbar = get_default_edit_toolbar(
-            self,
-            self.get_save_form_id(),
-            discard_url=(get_model_url(self.object) if self.object.pk else None)
+            self, self.get_save_form_id(), discard_url=(get_model_url(self.object) if self.object.pk else None)
         )
 
         for button in get_provide_objects("admin_contact_edit_toolbar_button"):

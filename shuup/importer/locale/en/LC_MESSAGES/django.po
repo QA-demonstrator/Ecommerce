@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-07-25 12:09+0000\n"
+"POT-Creation-Date: 2021-07-06 22:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,54 +20,83 @@ msgstr ""
 msgid "Data Import"
 msgstr ""
 
+msgid "Allow the user to see the imports from all shops and suppliers."
+msgstr ""
+
+msgid "Allow the user to run importers."
+msgstr ""
+
+msgid "Allow the user to list imports."
+msgstr ""
+
+msgid "Allow the user to import a file."
+msgstr ""
+
+msgid "Allow the user to download sample files."
+msgstr ""
+
+#, python-brace-format
+msgid "Allow the user to use the {importer_name} importer."
+msgstr ""
+
 msgid "Import mode"
 msgstr ""
 
 msgid "Importing language"
 msgstr ""
 
-msgid "The language of the data you would like to import."
-msgstr ""
-
-msgid "Shop"
-msgstr ""
-
-msgid "Select a shop you want import into"
+msgid "The language of the data you want to import."
 msgstr ""
 
 msgid "Importer"
 msgstr ""
 
-msgid "Select a importer type matching the data you would like to import"
+msgid "Select a importer type matching the data you want to import"
 msgstr ""
 
 msgid "File"
 msgstr ""
 
-#, python-format
-msgid "%s is not a file"
+msgid "Data imports"
 msgstr ""
 
-msgid "File missing."
+msgid "Invalid importer."
 msgstr ""
 
-msgid "Failed to import the file."
+msgid "File is missing."
 msgstr ""
 
-#, python-format
-msgid "Failed while preparing the file: %s."
+msgid "The import was queued!"
 msgstr ""
 
-msgid "Invalid parameters"
+msgid "Failed to process the file."
 msgstr ""
 
-msgid "Invalid importer"
+msgid "Invalid parameters."
 msgstr ""
 
-msgid "Invalid file name"
+msgid "Invalid file name."
 msgstr ""
 
-msgid "File not found"
+msgid "File was not found."
+msgstr ""
+
+msgid "Import date"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Import file"
+msgstr ""
+
+msgid "Importdate"
+msgstr ""
+
+msgid "Mode"
 msgstr ""
 
 msgid "Import"
@@ -82,7 +111,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Error setting value for field %(field_name)s. (%(exception)s)"
+msgid "Failed while setting value for field %(field_name)s. (%(exception)s)"
 msgstr ""
 
 #, python-format
@@ -93,7 +122,17 @@ msgstr ""
 msgid "Row import failed (%s)."
 msgstr ""
 
+msgid "Unexpected error while trying to import the file."
+msgstr ""
+
 msgid "Example files"
+msgstr ""
+
+msgid ""
+"If there is a 'Ignore' column in the example file you are using,\n"
+"                    make sure to leave the ignore column empty for all your "
+"rows,\n"
+"                    otherwise the rows won't be imported."
 msgstr ""
 
 msgid "This importer provides example files. Click below to download them:"
@@ -197,10 +236,10 @@ msgstr ""
 msgid "Start Import"
 msgstr ""
 
-msgid "Import Data - Complete"
+msgid "Import Results"
 msgstr ""
 
-msgid "Import Complete!"
+msgid "Error"
 msgstr ""
 
 msgid "New items"
@@ -231,7 +270,7 @@ msgid "Import errors"
 msgstr ""
 
 #, python-format
-msgid "Cannot import more than %s rows from one file."
+msgid "Can't import more than %s rows from one file."
 msgstr ""
 
 msgid "Allow create and update"
@@ -241,4 +280,17 @@ msgid "Only create (no updates)"
 msgstr ""
 
 msgid "Only update existing (no new ones are created)"
+msgstr ""
+
+msgid "The file doesn't contain data."
+msgstr ""
+
+msgid "Failed to import data: {}."
+msgstr ""
+
+#, python-brace-format
+msgid "{file_name} is not a valid file."
+msgstr ""
+
+msgid "The file is missing."
 msgstr ""

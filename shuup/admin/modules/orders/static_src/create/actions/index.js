@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -150,7 +150,7 @@ function handleFinalizeResponse(dispatch, data) {
             location.href = url;
         } else {
             // Very, very unlikely that we'd ever get here
-            alert(interpolate(gettext("Order %s created."), [orderIdentifier]));
+            alert(interpolate(gettext("Success! Order %s was created."), [orderIdentifier]));
         }
         return;
     }
@@ -165,7 +165,7 @@ function handleFinalizeResponse(dispatch, data) {
         }
         return;
     }
-    alert(gettext("An unspecified error occurred.\n") + data);
+    alert(gettext("Error! An unspecified error occurred.\n") + data);
 }
 
 export const beginFinalizingOrder = function () {

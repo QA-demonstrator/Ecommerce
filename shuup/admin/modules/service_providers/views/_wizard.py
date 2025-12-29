@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -45,21 +45,14 @@ class ServiceWizardFormPartMixin(object):
 
         if self.request.method == "POST":
             active_providers = self.request.POST.get(self.base_name + "-providers").split(",")
-            service_provider_form_defs = list(
-                filter(
-                    lambda x: x.name in active_providers,
-                    service_provider_form_defs
-                )
-            )
+            service_provider_form_defs = list(filter(lambda x: x.name in active_providers, service_provider_form_defs))
         return [
             TemplatedWizardFormDef(
                 name=self.base_name,
                 template_name="shuup/admin/service_providers/_wizard_service_provider_base_form.jinja",
                 extra_js="shuup/admin/service_providers/_wizard_script.jinja",
                 form_class=ServiceProviderTypeForm,
-                kwargs={
-                    "label": self.provider_label
-                }
+                kwargs={"label": self.provider_label},
             )
         ] + service_provider_form_defs
 
@@ -82,6 +75,11 @@ class CarrierWizardPane(ServiceWizardFormPartMixin, WizardPane):
     provider_label = _("shipping method")
     form_def_provide_key = "carrier_wizard_form_def"
 
+    def valid(self):
+        from shuup.admin.utils.permissions import has_permission
+
+        return has_permission(self.request.user, "shipping_method.edit")
+
 
 class PaymentWizardPane(ServiceWizardFormPartMixin, WizardPane):
     identifier = "payment"
@@ -92,3 +90,8 @@ class PaymentWizardPane(ServiceWizardFormPartMixin, WizardPane):
     base_name = "payment_method_base"
     provider_label = _("payment method")
     form_def_provide_key = "payment_processor_wizard_form_def"
+
+    def valid(self):
+        from shuup.admin.utils.permissions import has_permission
+
+        return has_permission(self.request.user, "payment_method.edit")

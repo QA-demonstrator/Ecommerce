@@ -1,14 +1,12 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-
 from django.conf.urls import url
 from django.core.handlers.base import BaseHandler
-from django.core.urlresolvers import get_resolver
 from django.http import HttpResponse
 from django.http.response import Http404
 from django.test.utils import override_settings
@@ -19,59 +17,63 @@ from shuup.admin.views.dashboard import DashboardView
 from shuup.core.error_handling import install_error_handlers
 from shuup.front.error_handlers import FrontPageErrorHandler
 from shuup.front.views.index import IndexView
+from shuup.utils.django_compat import get_resolver
 from shuup_tests.utils import replace_urls
 
 
 def setup_function(fn):
     # clear the cache for error handlers
     import shuup.core.error_handling as error_handling
+
     error_handling._URLCONF_ERROR_HANDLERS.clear()
 
 
 def errorful_view(request, *args, **kwargs):
-    raise Exception("Aaargh")  # The Castle of.
+    raise Exception("Error! Aaargh.")  # The Castle of.
 
 
 def notfound_view(request, *args, **kwargs):
-    raise Http404("Ops!")
+    raise Http404("Error! Ops!")
 
 
 def handler500(request, *args, **kwargs):
-    return HttpResponse("The best error", status=500)
+    return HttpResponse("Error! The best error.", status=500)
 
 
 def four_oh_four(request, *args, **kwargs):
-    return HttpResponse("Just a flesh wound", status=404)
+    return HttpResponse("Error! Just a flesh wound.", status=404)
 
 
 def test_front_error_handlers(rf):
     """
-    Test that SHUUP_ERROR_PAGE_HANDLERS_SPEC installs error handlers overwriting custom ones
+    Test that `SHUUP_ERROR_PAGE_HANDLERS_SPEC` installs error handlers that are overwriting custom ones.
     """
     with override_settings(
         DEBUG=False,
         SHUUP_ERROR_PAGE_HANDLERS_SPEC=["shuup.front.error_handlers.FrontPageErrorHandler"],
-        MIDDLEWARE_CLASSES=[],
+        MIDDLEWARE_CLASSES=[],  # For Django < 2
+        MIDDLEWARE=[],
         TEMPLATES=[  # Overriden to be sure about the contents of our 500.jinja
             {
                 "BACKEND": "django_jinja.backend.Jinja2",
-                "DIRS": [
-                    os.path.realpath(os.path.join(os.path.dirname(__file__), "templates"))
-                ],
+                "DIRS": [os.path.realpath(os.path.join(os.path.dirname(__file__), "templates"))],
                 "OPTIONS": {
                     "match_extension": ".jinja",
                     "newstyle_gettext": True,
                 },
                 "NAME": "jinja2",
             }
-        ]
+        ],
     ):
-        with replace_urls([
-            url("^aaargh/", errorful_view),
-            url("^notfound/", notfound_view),
-            url("^dash/", DashboardView.as_view()),
-            url("^index/", IndexView.as_view()),
-        ], {"handler404": four_oh_four, "handler500": handler500}):
+        with replace_urls(
+            [
+                url("^aaargh/", errorful_view),
+                url("^notfound/", notfound_view),
+                url("^dash/", DashboardView.as_view()),
+                url("^index/", IndexView.as_view()),
+            ],
+            {"handler404": four_oh_four, "handler500": handler500},
+        ):
             resolver = get_resolver(None)
             urlconf = resolver.urlconf_module
             handler = BaseHandler()
@@ -124,6 +126,7 @@ def test_front_error_handlers(rf):
                     assert content in force_text(response.content)
 
             from django.conf import settings
+
             # front can't handle static and media paths
             for path in (settings.STATIC_URL + "mystaticfile", settings.MEDIA_URL + "mymediafile"):
                 request = rf.get(path)
@@ -133,34 +136,35 @@ def test_front_error_handlers(rf):
                 assert error_handler.can_handle_error(request, 404) is False
 
 
-
 def test_admin_error_handlers(rf):
     """
-    Test that SHUUP_ERROR_PAGE_HANDLERS_SPEC installs error handlers overwriting custom ones
+    Test that SHUUP_ERROR_PAGE_HANDLERS_SPEC installs error handlers that are overwriting custom ones.
     """
     with override_settings(
         DEBUG=False,
         SHUUP_ERROR_PAGE_HANDLERS_SPEC=["shuup.admin.error_handlers.AdminPageErrorHandler"],
-        MIDDLEWARE_CLASSES=[],
+        MIDDLEWARE_CLASSES=[],  # For Django 2
+        MIDDLEWARE=[],
         TEMPLATES=[  # Overriden to be sure about the contents of our 500.jinja
             {
                 "BACKEND": "django_jinja.backend.Jinja2",
-                "DIRS": [
-                    os.path.realpath(os.path.join(os.path.dirname(__file__), "templates"))
-                ],
+                "DIRS": [os.path.realpath(os.path.join(os.path.dirname(__file__), "templates"))],
                 "OPTIONS": {
                     "match_extension": ".jinja",
                     "newstyle_gettext": True,
                 },
                 "NAME": "jinja2",
             }
-        ]
+        ],
     ):
-        with replace_urls([
-            url("^aaargh/", errorful_view),
-            url("^index/", IndexView.as_view()),
-            url("^dash/", DashboardView.as_view()),
-        ], {"handler404": four_oh_four, "handler500": handler500}):
+        with replace_urls(
+            [
+                url("^aaargh/", errorful_view),
+                url("^index/", IndexView.as_view()),
+                url("^dash/", DashboardView.as_view()),
+            ],
+            {"handler404": four_oh_four, "handler500": handler500},
+        ):
             resolver = get_resolver(None)
             urlconf = resolver.urlconf_module
             handler = BaseHandler()
@@ -200,7 +204,13 @@ def test_admin_error_handlers(rf):
 
             # can't handle non admin views neither media or static files
             from django.conf import settings
-            for path in ("/aaargh/", "/index/", settings.STATIC_URL + "mystaticfile", settings.MEDIA_URL + "mymediafile"):
+
+            for path in (
+                "/aaargh/",
+                "/index/",
+                settings.STATIC_URL + "mystaticfile",
+                settings.MEDIA_URL + "mymediafile",
+            ):
                 request = rf.get(path)
                 assert error_handler.can_handle_error(request, 500) is False
                 assert error_handler.can_handle_error(request, 400) is False
@@ -228,18 +238,23 @@ def test_admin_error_handlers(rf):
 
 def test_install_error_handlers(rf):
     # no error handler set
-    with override_settings(DEBUG=False, SHUUP_ERROR_PAGE_HANDLERS_SPEC=[], MIDDLEWARE_CLASSES=[]):
+    with override_settings(DEBUG=False, SHUUP_ERROR_PAGE_HANDLERS_SPEC=[], MIDDLEWARE_CLASSES=[], MIDDLEWARE=[]):
 
         def intact_view(request, *args, **kwargs):
             return HttpResponse("OK")
 
         # set handlers in root urlconf
-        with replace_urls([url("^/", intact_view),], {
-            "handler400": intact_view,
-            "handler403": intact_view,
-            "handler404": intact_view,
-            "handler500": intact_view
-        }):
+        with replace_urls(
+            [
+                url("^/", intact_view),
+            ],
+            {
+                "handler400": intact_view,
+                "handler403": intact_view,
+                "handler404": intact_view,
+                "handler500": intact_view,
+            },
+        ):
             # install error handlers - as soon as no spec was set,
             # the handlers must return the same as the default handlers
             install_error_handlers()
@@ -260,13 +275,17 @@ def test_install_error_handlers(rf):
 
         # force clear again
         import shuup.core.error_handling as error_handling
+
         error_handling._URLCONF_ERROR_HANDLERS.clear()
 
         # NO handler set in root urlconf
-        with replace_urls([
-            url("^aaargh/", errorful_view),
-            url("^notfound/", notfound_view),
-        ], {}):
+        with replace_urls(
+            [
+                url("^aaargh/", errorful_view),
+                url("^notfound/", notfound_view),
+            ],
+            {},
+        ):
             # install error handlers - as soon as no spec was set,
             # neither handlers set in urlconf, must return blank http responses with errors
             install_error_handlers()

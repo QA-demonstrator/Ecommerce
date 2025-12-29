@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,6 +18,16 @@ const RegionsMap = {
         {"code": "TI", "name": "Tirol"},
         {"code": "VB", "name": "Vorarlberg"},
         {"code": "WI", "name": "Wien"},
+    ],
+    "AU": [
+        {"code": "AU-NSW", "name": "New South Wales"},
+        {"code": "AU-QLD", "name": "Queensland"},
+        {"code": "AU-SA", "name": "South Australia"},
+        {"code": "AU-TAS", "name": "Tasmania"},
+        {"code": "AU-VIC", "name": "Victoria"},
+        {"code": "AU-WA", "name": "Western Australia"},
+        {"code": "AU-ACT", "name": "Australian Capital Territory"},
+        {"code": "AU-NT", "name": "Northern Territory"}
     ],
     "BR": [
         {"code": "AC", "name": "Acre"},

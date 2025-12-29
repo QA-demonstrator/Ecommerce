@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -37,7 +37,7 @@ class DataImporterRowSession(object):
 
     def save(self):
         try:
-            self.instance._meta.get_field('shop')
+            self.instance._meta.get_field("shop")
             self.instance.shop = self.shop
         except FieldDoesNotExist:
             pass
@@ -47,7 +47,7 @@ class DataImporterRowSession(object):
         except Exception as e:
             msg = e.message if hasattr(e, "message") else e
             self.importer.other_log_messages.append(_("Row import failed (%s).") % msg)
-            raise ImporterError("Row import failed (cannot save).", code="save-failed")
+            raise ImporterError("Error! Row import failed (cannot save).", code="save-failed")
 
         self._handle_deferred()
         self._handle_postsave_objects()

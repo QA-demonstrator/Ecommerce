@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -15,6 +15,17 @@ class ShuupAdminAppConfig(AppConfig):
     label = "shuup_admin"
     required_installed_apps = ["bootstrap3"]
     provides = {
+        "admin_product_form_part": [
+            "shuup.admin.modules.products.views.edit.ProductBaseFormPart",
+            "shuup.admin.modules.products.views.edit.ShopProductFormPart",
+            "shuup.admin.modules.products.views.edit.ProductAttributeFormPart",
+            "shuup.admin.modules.products.views.edit.ProductImageMediaFormPart",
+            "shuup.admin.modules.products.views.edit.ProductMediaFormPart",
+        ],
+        "admin_attribute_form_part": [
+            "shuup.admin.modules.attributes.form_parts.AttributeBaseFormPart",
+            "shuup.admin.modules.attributes.form_parts.AttributeChoiceOptionsFormPart",
+        ],
         "admin_module": [
             "shuup.admin.modules.system:SystemModule",
             "shuup.admin.modules.products:ProductModule",
@@ -39,19 +50,20 @@ class ShuupAdminAppConfig(AppConfig):
             "shuup.admin.modules.sales_units:SalesUnitModule",
             "shuup.admin.modules.sales_dashboard:SalesDashboardModule",
             "shuup.admin.modules.shops:ShopModule",
-            "shuup.admin.modules.demo:DemoModule",
             "shuup.admin.modules.manufacturers:ManufacturerModule",
             "shuup.admin.modules.suppliers:SupplierModule",
             "shuup.admin.modules.support:ShuupSupportModule",
-            "shuup.admin.modules.sample_data:SampleDataAdminModule",
-            "shuup.admin.modules.settings.SettingsModule"
+            "shuup.admin.modules.settings.SettingsModule",
+            "shuup.admin.modules.labels:LabelsModule",
+            "shuup.admin.modules.menu:YourAdminMenuModule",
+            "shuup.admin.modules.menu:SuperUserAdminMenuModule",
+            "shuup.admin.modules.menu:StaffAdminMenuModule",
+            "shuup.admin.modules.menu:SupplierAdminMenuModule",
         ],
-        "admin_shop_form_part": [
-            "shuup.admin.modules.settings.form_parts.OrderConfigurationFormPart"
-        ],
+        "admin_shop_form_part": ["shuup.admin.modules.settings.form_parts.OrderConfigurationFormPart"],
         "service_provider_admin_form": [
             "shuup.admin.modules.service_providers.forms:CustomCarrierForm",
-            "shuup.admin.modules.service_providers.forms:CustomPaymentProcessorForm"
+            "shuup.admin.modules.service_providers.forms:CustomPaymentProcessorForm",
         ],
         "carrier_wizard_form_def": [
             "shuup.admin.modules.service_providers.wizard_form_defs:ManualShippingWizardFormDef"
@@ -72,10 +84,12 @@ class ShuupAdminAppConfig(AppConfig):
             "shuup.admin.modules.services.weight_based_pricing.WeightBasedPricingFormPart"
         ],
         "admin_order_section": [
+            "shuup.admin.modules.orders.sections:BasicDetailsOrderSection",
             "shuup.admin.modules.orders.sections:PaymentOrderSection",
             "shuup.admin.modules.orders.sections:LogEntriesOrderSection",
             "shuup.admin.modules.orders.sections:ShipmentSection",
             "shuup.admin.modules.orders.sections:AdminCommentSection",
+            "shuup.admin.modules.orders.sections:OrderHistorySection",
         ],
         "admin_contact_section": [
             "shuup.admin.modules.contacts.sections:BasicInfoContactSection",
@@ -83,27 +97,47 @@ class ShuupAdminAppConfig(AppConfig):
             "shuup.admin.modules.contacts.sections:OrdersContactSection",
             "shuup.admin.modules.contacts.sections:MembersContactSection",
         ],
-        "admin_product_section": [
-            "shuup.admin.modules.products.sections:ProductOrdersSection"
-        ],
+        "admin_product_section": ["shuup.admin.modules.products.sections:ProductOrdersSection"],
         "admin_order_toolbar_action_item": [
             "shuup.admin.modules.orders.toolbar:CreatePaymentAction",
             "shuup.admin.modules.orders.toolbar:SetPaidAction",
-            "shuup.admin.modules.orders.toolbar:CreateShipmentAction",
             "shuup.admin.modules.orders.toolbar:CreateRefundAction",
             "shuup.admin.modules.orders.toolbar:EditAddresses",
         ],
-        "admin_model_url_resolver": [
-            "shuup.admin.utils.urls.get_model_url"
-        ]
+        "admin_model_url_resolver": ["shuup.admin.utils.urls.get_model_url"],
+        "admin_browser_config_provider": ["shuup.admin.browser_config:DefaultBrowserConfigProvider"],
+        "admin_supplier_form_part": [
+            "shuup.admin.modules.suppliers.form_parts.SupplierBaseFormPart",
+            "shuup.admin.modules.suppliers.form_parts.SupplierContactAddressFormPart",
+        ],
+        "user_list_mass_actions_provider": [
+            "shuup.admin.modules.users.mass_actions.UserMassActionProvider",
+        ],
+        "admin_object_selector": [
+            "shuup.admin.modules.attributes.object_selector.AttributeAdminObjectSelector",
+            "shuup.admin.modules.categories.object_selector.CategoryAdminObjectSelector",
+            "shuup.admin.modules.contacts.object_selector.ContactAdminObjectSelector",
+            "shuup.admin.modules.contacts.object_selector.PersonContactAdminObjectSelector",
+            "shuup.admin.modules.contacts.object_selector.CompanyContactAdminObjectSelector",
+            "shuup.admin.modules.manufacturers.object_selector.ManufacturerAdminObjectSelector",
+            "shuup.admin.modules.permission_groups.object_selector.PermissionGroupAdminObjectSelector",
+            "shuup.admin.modules.product_types.object_selector.ProductTypeAdminObjectSelector",
+            "shuup.admin.modules.products.object_selector.ProductAdminObjectSelector",
+            "shuup.admin.modules.products.object_selector.ShopProductAdminObjectSelector",
+            "shuup.admin.modules.services.object_selector.CarrierAdminObjectSelector",
+            "shuup.admin.modules.services.object_selector.PaymentMethodAdminObjectSelector",
+            "shuup.admin.modules.services.object_selector.ShippingMethodAdminObjectSelector",
+            "shuup.admin.modules.shops.object_selector.ShopAdminObjectSelector",
+            "shuup.admin.modules.suppliers.object_selector.SupplierAdminObjectSelector",
+            "shuup.admin.modules.taxes.object_selector.CustomerTaxGroupAdminObjectSelector",
+            "shuup.admin.modules.taxes.object_selector.TaxAdminObjectSelector",
+            "shuup.admin.modules.taxes.object_selector.TaxClassAdminObjectSelector",
+            "shuup.admin.modules.users.object_selector.UserAdminObjectSelector",
+        ],
     }
 
     def ready(self):
-        from shuup.core.order_creator.signals import order_creator_finished
-        from shuup.admin.modules.orders.receivers import handle_custom_payment_return_requests
-
-        order_creator_finished.connect(handle_custom_payment_return_requests,
-                                       dispatch_uid='shuup.admin.handle_cash_payments')
+        import shuup.admin.signal_handling  # noqa (F401)
 
         validate_templates_configuration()
 

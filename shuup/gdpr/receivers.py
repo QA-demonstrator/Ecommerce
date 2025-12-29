@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django.dispatch import receiver
 
-from shuup.front.signals import (
-    checkout_complete, company_registration_save, login_allowed,
-    person_registration_save
-)
+from shuup.front.signals import checkout_complete, company_registration_save, login_allowed, person_registration_save
 from shuup.gdpr.utils import create_user_consent_for_all_documents
 
 
@@ -31,4 +28,5 @@ def create_consents_login_allowed(sender, request, user, *args, **kwargs):
 
 @receiver(checkout_complete)
 def create_consents_checkout_complete(sender, request, user, order, *args, **kwargs):
-    create_user_consent_for_all_documents(request.shop, user)
+    if user.is_authenticated:
+        create_user_consent_for_all_documents(request.shop, user)

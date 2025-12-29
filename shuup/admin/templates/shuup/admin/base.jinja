@@ -2,21 +2,39 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Shuup &dash; {% block title -%}
+        {% set shop_name = request.shop.public_name if request.shop.public_name else "Shuup" %}
+        <title>{{ shop_name }} &dash; {% block title -%}
             {% if title %}{{ title }}
             {% elif view and view.title %}{{ view.title }}{% endif %}
         {%- endblock %}
         </title>
+
+        {% for snippet in shuup_admin.get_admin_snippets("head_start", request) %}
+            {{ snippet|safe }}
+        {% endfor %}
+
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="{{ static("shuup_admin/img/favicon.ico") }}" rel="icon" type="image/x-icon">
-        <link href="{{ static("shuup_admin/css/base.css") }}" rel="stylesheet" type="text/css">
+        {% if request.GET.autoRefresh %}
+            <meta http-equiv="refresh" content="{{ request.GET.autoRefresh }}"/>
+        {% endif %}
+        {%- set favicon = request.shop.favicon.url if request.shop.favicon else static("shuup/front/img/favicon.ico") -%}
+        <link rel="icon" type="image/x-icon" href="{{ favicon }}">
+        <link href="{{ shuup_static("shuup_admin/css/base.css") }}" rel="stylesheet" type="text/css">
         {% block extra_css %}{% endblock -%}
         {% block extra_head %}{% endblock -%}
         {% set conf = shuup_admin.get_config() %}
         <script>var ShuupAdminConfig = {{ conf|json }};</script>
-        <script type="text/javascript" src="{{ url("shuup_admin:js-catalog") }}?lang={{ LANGUAGE_CODE }}"></script>
+        <script type="text/javascript" src="{{ url("shuup_admin:js-catalog") }}?lang={{ LANGUAGE_CODE }}&v={{ get_shuup_version() }}"></script>
+
+        {% for snippet in shuup_admin.get_admin_snippets("head_end", request) %}
+            {{ snippet|safe }}
+        {% endfor %}
+
     </head>
     <body class="{% block body_class %}{% endblock %} {{ "popup" if request.GET.popup else "" }}{% if not conf["menuOpen"] %} desktop-menu-closed{% endif %}">
+        {% for snippet in shuup_admin.get_admin_snippets("body_start", request) %}
+            {{ snippet|safe }}
+        {% endfor %}
         {% if iframe_close %}
             <script>
                 {% if quick_add_target %}
@@ -36,11 +54,17 @@
         {% endblock %}
         {% block support_content %}
             <div class="support-nav-wrap{% if iframe_mode %} iframe-mode{% endif %}">
+                <div class="flex-wrapper active-shop-and-supplier-info">
                 {% if shuup_admin.is_multishop_enabled() %}
-                <div class="flex-wrapper">
-                    <h3>Active shop: <strong>{{ shuup_admin.get_admin_shop().name }}</strong></h3>
-                </div>
+                    <h3>{% trans %}Active shop:{% endtrans %} <strong>{{ shuup_admin.get_admin_shop().name }}</strong></h3>
                 {% endif %}
+                {% if shuup_admin.is_multiple_suppliers_enabled() %}
+                    {% set supplier = shuup_admin.get_admin_supplier() %}
+                    {% if supplier %}
+                        <h3>{% trans %}Active vendor:{% endtrans %} <strong>{{ supplier.name }}</strong></h3>
+                    {% endif %}
+                {% endif %}
+                </div>
                 <div class="support-nav">
                     {% block breadcrumbs -%}
                         {% if not iframe_mode %}
@@ -70,29 +94,39 @@
         {% endblock %}
         {% block post_content %}{% endblock %}
         {% endif %}
-        <script src="{{ static("shuup_admin/js/vendor.js") }}"></script>
-        <script src="{{ static("shuup_admin/js/base.js") }}"></script>
+
+        <script src="{{ shuup_static('shuup_admin/js/vendor.js') }}"></script>
+        <script src="{{ shuup_static('shuup_admin/js/base.js') }}"></script>
+
+        {% block init_scripts %}
+        <script>
+            if (window.ShuupAdminEditors) {
+                window.ShuupAdminEditors.activateEditors(".summernote-editor");
+            }
+        </script>
+        {% endblock %}
+
         {% block extra_js %}{% endblock %}
-        {% if messages %}
-        <script>
-            (function(){
-                if(!window.Messages) return;
-                {% for message in messages -%}Messages.enqueue({
-                    tags: {{ message.tags|json }},
-                    text: {{ (""~message.message)|json }}
-                });{% endfor %}
-            }());
-        </script>
-        {% endif %}
-        {% if tour_complete == False %}
-        <script>
-            $(document).ready(function() {
-                // 991px - 15px = Table breakpoint
-                if ($(window).width() > 976) {
-                    $.tour({ tourKey: "{{ tour_key }}", url: ShuupAdminConfig.browserUrls.tour });
-                }
-            });
-        </script>
-        {% endif %}
+
+        {% block messages %}
+            {% if messages %}
+            <script>
+                (function(){
+                    if(!window.Messages) return;
+                    {% for message in messages -%}Messages.enqueue({
+                        tags: {{ message.tags|json }},
+                        text: {{ message.message|json }}
+                    });{% endfor %}
+                }());
+            </script>
+            {% endif %}
+        {% endblock %}
+
+        {% block tour %}
+            <script>$(function() {window.runTour();});</script>
+        {% endblock %}
+        {% for snippet in shuup_admin.get_admin_snippets("body_end", request) %}
+            {{ snippet|safe }}
+        {% endfor %}
     </body>
 </html>

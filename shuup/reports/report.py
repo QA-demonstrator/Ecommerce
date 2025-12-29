@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-from collections import OrderedDict
-from decimal import Decimal
-
 import six
-from django.utils.encoding import force_text
+from collections import OrderedDict
+from datetime import datetime, timedelta
+from decimal import Decimal
+from django.conf import settings
 from django.utils.functional import Promise
+from django.utils.timezone import get_current_timezone, make_aware
 
 from shuup.apps.provides import get_provide_objects
 from shuup.core.models import Shop
 from shuup.core.pricing import TaxfulPrice, TaxlessPrice
 from shuup.reports.forms import BaseReportForm
 from shuup.reports.utils import parse_date_range
+from shuup.utils.django_compat import force_text
 
 
 class ShuupReportBase(object):
@@ -28,6 +30,7 @@ class ShuupReportBase(object):
 
     filename_template = None
     icon = "fa-money"
+    queryset_row_limit = settings.DEFAULT_REPORTS_ITEM_LIMIT
 
     form_class = BaseReportForm
 
@@ -36,14 +39,25 @@ class ShuupReportBase(object):
             self.options = kwargs["initial"]
         else:
             self.options = kwargs
+
         self.start_date = kwargs.get("start_date", None)
         self.end_date = kwargs.get("end_date", None)
         if self.options.get("date_range"):
             self.start_date, self.end_date = parse_date_range(self.options["date_range"])
+
         if self.options.get("shop"):
             self.shop = Shop.objects.get(pk=self.options["shop"])
         else:
             self.shop = None
+
+        if self.start_date is None:
+            self.start_date = make_aware(datetime.min + timedelta(days=1), get_current_timezone())
+        if self.end_date is None:
+            self.end_date = make_aware(datetime.max - timedelta(days=1), get_current_timezone())
+
+        if self.options.get("request"):
+            self.request = self.options["request"]
+
         self.rendered = False
 
     def __unicode__(self):
@@ -61,6 +75,15 @@ class ShuupReportBase(object):
     def get_description(cls):
         return force_text(cls.description)
 
+    @classmethod
+    def is_available(cls, request):
+        try:
+            from shuup.admin.utils.permissions import has_permission
+
+            return has_permission(request.user, cls.identifier)
+        except ImportError:
+            return True
+
     def ensure_texts(self):
         """
         Ensure that lazy objects are forced as texts
@@ -73,12 +96,7 @@ class ShuupReportBase(object):
         self.schema = s
 
     def get_return_data(self, data, has_totals=True):
-        return {
-            "start": self.start_date,
-            "end": self.end_date,
-            "data": data,
-            "has_totals": has_totals
-        }
+        return {"start": self.start_date, "end": self.end_date, "data": data, "has_totals": has_totals}
 
     def dict_getter(self, c, datum):
         return datum.get(c["key"])
@@ -112,20 +130,21 @@ class ShuupReportBase(object):
                         totals[k] = None
 
                 if type(val) in countable_types:
-                    totals[k] += val
+                    totals[k] = totals[k] + val if totals[k] else val
 
         return totals
 
 
-def get_report_class(name):
-    for cls_name, cls in six.iteritems(get_report_classes()):
+def get_report_class(name, request):
+    for cls_name, cls in six.iteritems(get_report_classes(request)):
         if cls_name == name:
             return cls
     return None
 
 
-def get_report_classes():
+def get_report_classes(request=None, provides_key="reports"):
     items = {}
-    for cls in list(get_provide_objects("reports")):
-        items[cls.get_name()] = cls
+    for cls in list(get_provide_objects(provides_key)):
+        if not (request and not cls.is_available(request)):
+            items[cls.get_name()] = cls
     return OrderedDict(sorted(items.items(), key=lambda t: t[1].title))

@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -34,7 +34,7 @@ export function init(config = {}) {
         return;
     }
     const persistor = persistStore(store, {
-        keyPrefix: interpolate("order_creator_shop-%s:", [config.shops[0].id])
+        keyPrefix: interpolate("order_creator_shop-%s-%s:", [config.shops[0].id, config.orderId])
     }, () => {
         var countryDefault = config.countryDefault;
         if (!countryDefault && config.countries.length > 0) {
@@ -73,7 +73,7 @@ export function init(config = {}) {
             if (!savedOrder.id || savedOrder.id !== orderId) {
                 // Saved order id does not match with current order
                 // Purge the wrong saved state and initialize from orderData
-                persistor.purgeAll();
+                persistor.purge();
                 store.dispatch(setShop(config.orderData.shop));
                 store.dispatch(setCustomer(config.orderData.customer));
                 store.dispatch(setShippingMethod(config.orderData.shippingMethodId));
@@ -84,7 +84,7 @@ export function init(config = {}) {
         } else {  // New mode
             if (savedOrder.id) {
                 // Purge the old saved state for existing order
-                persistor.purgeAll();
+                persistor.purge();
             }
         }
         controller = m.mount(document.getElementById("order-tool-container"), {
@@ -99,11 +99,11 @@ export function init(config = {}) {
 
 export function debugSaveState() {
     window.localStorage.setItem("_OrderCreatorState", JSON.stringify(store.getState()));
-    console.log("Saved.");  // eslint-disable-line no-console
+    console.log("Success! Saved.");  // eslint-disable-line no-console
 }
 
 export function debugLoadState() {
     const state = JSON.parse(window.localStorage.getItem("_OrderCreatorState"));
     store.dispatch({ "type": "_replaceState", "payload": state });
-    console.log("Loaded.");  // eslint-disable-line no-console
+    console.log("Success! Loaded.");  // eslint-disable-line no-console
 }

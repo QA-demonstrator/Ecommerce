@@ -1,15 +1,13 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 from django import forms
-from django.core.urlresolvers import reverse_lazy
 from django.http.response import HttpResponseNotAllowed
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.edit import BaseDeleteView
 
@@ -19,7 +17,8 @@ from shuup.admin.utils.picotable import Column, TextFilter
 from shuup.admin.utils.views import CreateOrUpdateView, PicotableListView
 from shuup.apps.provides import get_provide_objects
 from shuup.core import cache
-from shuup.xtheme.admin_module.widgets import CodeEditorWidget
+from shuup.utils.django_compat import force_text, reverse_lazy
+from shuup.xtheme.admin_module.widgets import XthemeCodeEditorWidget
 from shuup.xtheme.models import Snippet
 from shuup.xtheme.resources import GLOBAL_SNIPPETS_CACHE_KEY
 
@@ -27,36 +26,27 @@ from shuup.xtheme.resources import GLOBAL_SNIPPETS_CACHE_KEY
 class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
-        fields = ["location", "themes", "snippet_type", "snippet"]
-        widgets = {
-            "snippet": CodeEditorWidget()
-        }
+        fields = ["name", "location", "themes", "snippet_type", "snippet"]
+        widgets = {"snippet": XthemeCodeEditorWidget()}
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request")
         super(SnippetForm, self).__init__(*args, **kwargs)
 
-        themes_choices = [
-            (theme.identifier, theme.name)
-            for theme in get_provide_objects("xtheme")
-            if theme.identifier
-        ]
+        themes_choices = [(theme.identifier, theme.name) for theme in get_provide_objects("xtheme") if theme.identifier]
         self.fields["themes"] = forms.MultipleChoiceField(
             choices=themes_choices,
             required=False,
             help_text=_(
                 "Select the themes that will have this snippet injected. Leave the field blank to inject in all themes."
-            )
+            ),
         )
 
         from shuup.xtheme.resources import LOCATION_INFO
-        location_choices = [
-            (location_name, location["name"])
-            for location_name, location in LOCATION_INFO.items()
-        ]
+
+        location_choices = [(location_name, location["name"]) for location_name, location in LOCATION_INFO.items()]
         self.fields["location"] = forms.ChoiceField(
-            choices=location_choices,
-            help_text=_("Select the location of the page to inject the snippet.")
+            choices=location_choices, help_text=_("Select the location of the page to inject the snippet.")
         )
 
     def save(self, commit=True):
@@ -98,27 +88,24 @@ class SnippetEditView(CreateOrUpdateView):
 
 
 class SnippetListView(PicotableListView):
+    url_identifier = "xtheme_snippet"
     model = Snippet
     default_columns = [
+        Column("name", _("Name"), filter_config=TextFilter(filter_field="name", placeholder=_("Filter by name..."))),
         Column(
             "location",
             _("Location"),
             sort_field="location",
-            filter_config=TextFilter(
-                filter_field="location",
-                placeholder=_("Filter by location...")
-            )
+            filter_config=TextFilter(filter_field="location", placeholder=_("Filter by location...")),
         ),
         Column("snippet_type", _("Type"), sort_field="snippet_type"),
-        Column("themes", _("Themes"), display="get_themes")
+        Column("themes", _("Themes"), display="get_themes"),
     ]
 
     def get_themes(self, value):
-        return ", ".join([
-            force_text(theme.name)
-            for theme in get_provide_objects("xtheme")
-            if theme.identifier in value.themes
-        ])
+        return ", ".join(
+            [force_text(theme.name) for theme in get_provide_objects("xtheme") if theme.identifier in value.themes]
+        )
 
     def get_queryset(self):
         return Snippet.objects.filter(shop=get_shop(self.request))

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import json
-
 import pytest
 from babel.dates import format_date
 from django.utils.encoding import force_text
@@ -21,10 +20,16 @@ from shuup.core.order_creator import OrderCreator
 from shuup.reports.forms import DateRangeChoices
 from shuup.reports.writer import get_writer_instance
 from shuup.testing.factories import (
-    create_random_person, get_address, get_default_payment_method,
-    get_default_product, get_default_shipping_method, get_default_shop,
-    get_default_supplier, get_default_tax_class, get_initial_order_status,
-    OrderLineType
+    OrderLineType,
+    create_random_person,
+    get_address,
+    get_default_payment_method,
+    get_default_product,
+    get_default_shipping_method,
+    get_default_shop,
+    get_default_supplier,
+    get_default_tax_class,
+    get_initial_order_status,
 )
 from shuup.utils.i18n import get_current_babel_locale
 from shuup_tests.utils.basketish_order_source import BasketishOrderSource
@@ -32,12 +37,10 @@ from shuup_tests.utils.basketish_order_source import BasketishOrderSource
 
 def get_default_campaign(coupon, discount="20"):
     shop = get_default_shop()
-    campaign = BasketCampaign.objects.create(
-            shop=shop, public_name="test", name="test",
-            coupon=coupon, active=True
-    )
+    campaign = BasketCampaign.objects.create(shop=shop, public_name="test", name="test", coupon=coupon, active=True)
     BasketDiscountAmount.objects.create(discount_amount=shop.create_price(discount), campaign=campaign)
     return campaign
+
 
 def seed_source(coupon, produce_price=10):
     source = BasketishOrderSource(get_default_shop())
@@ -60,18 +63,17 @@ def seed_source(coupon, produce_price=10):
     return source
 
 
-
 @pytest.mark.django_db
 def test_coupons_usage_report(rf):
     shop = get_default_shop()
-    tax_class = get_default_tax_class()
+    get_default_tax_class()
     creator = OrderCreator()
 
     coupon1 = Coupon.objects.create(code="coupon1", active=True)
     coupon2 = Coupon.objects.create(code="coupon2", active=True)
 
-    campaign1 = get_default_campaign(coupon1, "10")
-    campaign2 = get_default_campaign(coupon2, "25")
+    get_default_campaign(coupon1, "10")
+    get_default_campaign(coupon2, "25")
 
     source1 = seed_source(coupon1)
     source2 = seed_source(coupon1)
@@ -111,14 +113,16 @@ def test_coupons_usage_report(rf):
         for dt in order.lines.discounts():
             discount += dt.taxful_price
 
-        expected_data.append({
-            "date": format_date(order.order_date, locale=get_current_babel_locale()),
-            "coupon": order.codes[0],
-            "order": str(order),
-            "taxful_total": str(order.taxful_total_price.as_rounded().value),
-            "taxful_subtotal": str((order.taxful_total_price - discount).as_rounded().value),
-            "total_discount": str(discount.as_rounded().value)
-        })
+        expected_data.append(
+            {
+                "date": format_date(order.order_date, locale=get_current_babel_locale()),
+                "coupon": order.codes[0],
+                "order": str(order),
+                "taxful_total": float(order.taxful_total_price.as_rounded().value),
+                "taxful_subtotal": float((order.taxful_total_price - discount).as_rounded().value),
+                "total_discount": float(discount.as_rounded().value),
+            }
+        )
 
     assert len(expected_data) == len(data)
 

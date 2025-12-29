@@ -1,57 +1,39 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from __future__ import unicode_literals
-
+import os
 import re
-
 import six
-from django.utils.encoding import force_text
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from jinja2.utils import contextfunction
+from logging import getLogger
+from typing import TYPE_CHECKING, Iterable
 
+from shuup.apps.provides import get_provide_objects
 from shuup.core import cache
 from shuup.core.fields import TaggedJSONEncoder
 from shuup.core.shop_provider import get_shop
+from shuup.utils.django_compat import force_text
 from shuup.xtheme.utils import get_html_attrs
 
+if TYPE_CHECKING:  # pragma: no cover
+    from shuup.xtheme.models import Snippet
+
+LOGGER = getLogger(__name__)
+
 LOCATION_INFO = {
-    "head_end": {
-        "name": _("End of head"),
-        "regex": re.compile(r"</head>", re.I),
-        "placement": "pre"
-    },
-    "head_start": {
-        "name": _("Start of head"),
-        "regex": re.compile(r"<head[^>]*>", re.I),
-        "placement": "post"
-    },
-    "body_end": {
-        "name": _("End of body"),
-        "regex": re.compile(r"</body>", re.I),
-        "placement": "pre"
-    },
-    "body_start": {
-        "name": _("Start of body"),
-        "regex": re.compile(r"<body[^>]*>", re.I),
-        "placement": "post"
-    },
-    "content_start": {
-        "name": _("Content start"),
-        "regex": re.compile(r"^.*", re.I),
-        "placement": "pre"
-    },
-    "content_end": {
-        "name": _("Content end"),
-        "regex": re.compile(r".*$", re.I),
-        "placement": "post"
-    }
+    "head_end": {"name": _("End of head"), "regex": re.compile(r"</head>", re.I), "placement": "pre"},
+    "head_start": {"name": _("Start of head"), "regex": re.compile(r"<head[^>]*>", re.I), "placement": "post"},
+    "body_end": {"name": _("End of body"), "regex": re.compile(r"</body>", re.I), "placement": "pre"},
+    "body_start": {"name": _("Start of body"), "regex": re.compile(r"<body[^>]*>", re.I), "placement": "post"},
+    "content_start": {"name": _("Content start"), "regex": re.compile(r"^.*", re.I), "placement": "pre"},
+    "content_end": {"name": _("Content end"), "regex": re.compile(r".*$", re.I), "placement": "post"},
 }
 
 KNOWN_LOCATIONS = set(LOCATION_INFO.keys())
@@ -66,6 +48,7 @@ class InlineScriptResource(six.text_type):
 
     The contents are rendered inside a ``<script>`` tag.
     """
+
     @classmethod
     def from_vars(cls, var_name, *args, **kwargs):
         """
@@ -74,13 +57,44 @@ class InlineScriptResource(six.text_type):
         Aside from ``var_name`` the signature of this function is similar to that of ``dict``.
         Useful for configuration options, etc.
 
-        :param var_name: The variable to add into global scope
+        :param var_name: The variable to add into global scope.
         :type var_name: str
-        :return: An `InlineScriptResource` object
+        :return: An `InlineScriptResource` object.
         :rtype: InlineScriptResource
         """
         ns = dict(*args, **kwargs)
         return cls("window.%s = %s;" % (var_name, TaggedJSONEncoder().encode(ns)))
+
+
+class JinjaMarkupResource(object):
+    """
+    A Jinja markup resource.
+    """
+
+    def __init__(self, template, context):
+        self.template = template
+        self.context = context
+
+    def __str__(self):
+        return self.template
+
+    def render(self):
+        template = force_text(self.template)
+        if not template:
+            return template
+
+        from django.template import engines
+
+        for engine_name in engines:
+            engine = engines[engine_name]
+            try:
+                return engine.env.from_string(template).render(self.context)
+            except Exception:
+                LOGGER.exception("Error! Failed to render Jinja string in Snippet plugin.")
+                return force_text(_("(Error while rendering.)"))
+
+    def __eq__(self, other):
+        return self.render() == other
 
 
 class InlineMarkupResource(six.text_type):
@@ -105,6 +119,7 @@ class ResourceContainer(object):
     `~shuup.xtheme.engine.XthemeTemplate` (akin to how `django-jinja`'s Template injects
     `request` and `csrf_token`).
     """
+
     def __init__(self):
         self.resources = {}
 
@@ -124,7 +139,7 @@ class ResourceContainer(object):
         if not resource:
             return False
         if location not in KNOWN_LOCATIONS:
-            raise ValueError("%r is not a known xtheme resource location" % location)
+            raise ValueError("Error! `%r` is not a known xtheme resource location." % location)
         lst = self.resources.setdefault(location, [])
         if resource not in lst:
             lst.append(resource)
@@ -135,11 +150,11 @@ class ResourceContainer(object):
         """
         Render the resources for the given location, then (by default) clean that list of resources.
 
-        :param location: The name of the location. See KNOWN_LOCATIONS.
+        :param location: The name of the location. See `KNOWN_LOCATIONS`.
         :type location: str
         :param clean: Whether or not to clean up the list of resources.
         :type clean: bool
-        :return: String of HTML
+        :return: String of HTML.
         """
         lst = self.resources.get(location)
         if not lst:
@@ -155,10 +170,13 @@ class ResourceContainer(object):
 
         :param resource: The resource.
         :type resource: str|InlineMarkupResource|InlineScriptResource
-        :return: String of HTML
+        :return: String of HTML.
         """
         if not resource:  # pragma: no cover
             return ""
+
+        if isinstance(resource, JinjaMarkupResource):
+            return resource.render()
 
         if isinstance(resource, InlineMarkupResource):
             return force_text(resource)
@@ -171,12 +189,15 @@ class ResourceContainer(object):
 
         resource = force_text(resource)
 
-        # TODO: should this be extensible?
+        from six.moves.urllib.parse import urlparse
 
-        if resource.endswith(".js"):
+        file_path = urlparse(resource)
+        file_name = os.path.basename(file_path.path)
+
+        if file_name.endswith(".js"):
             return "<script%s></script>" % get_html_attrs({"src": resource})
 
-        if resource.endswith(".css"):
+        if file_name.endswith(".css"):
             return "<link%s>" % get_html_attrs({"href": resource, "rel": "stylesheet"})
 
         return "<!-- (unknown resource type: %s) -->" % escape(resource)
@@ -185,15 +206,15 @@ class ResourceContainer(object):
 @contextfunction
 def inject_resources(context, content, clean=True):
     """
-    Inject all the resources in the context's ResourceContainer into appropriate places in the content given.
+    Inject all the resources in the context's `ResourceContainer` into appropriate places in the content given.
 
-    :param context: Rendering context
+    :param context: Rendering context.
     :type context: jinja2.runtime.Context
-    :param content: HTML content
+    :param content: HTML content.
     :type content: str
     :param clean: Clean the resource container as we go?
     :type clean: bool
-    :return: Possibly modified HTML content
+    :return: Possibly modified HTML content.
     :rtype: str
     """
     rc = get_resource_container(context)
@@ -201,11 +222,15 @@ def inject_resources(context, content, clean=True):
         return content
 
     for location_name, location in LOCATION_INFO.items():
-        match = location["regex"].search(content)
-        if not match:
+        if not rc.resources.get(location_name):
             continue
+
         injection = rc.render_resources(location_name, clean=clean)
         if not injection:
+            continue
+
+        match = location["regex"].search(content)
+        if not match:
             continue
 
         start = match.start()
@@ -217,7 +242,7 @@ def inject_resources(context, content, clean=True):
         elif placement == "post":
             content = content[:end] + injection + content[end:]
         else:  # pragma: no cover
-            raise ValueError("Unknown placement %s" % placement)
+            raise ValueError("Error! Unknown placement `%s`." % placement)
 
     return content
 
@@ -226,9 +251,9 @@ def get_resource_container(context):
     """
     Get a `ResourceContainer` from a rendering context.
 
-    :param context: Context
+    :param context: Context.
     :type context: jinja2.runtime.Context
-    :return: Resource Container
+    :return: Resource Container.
     :rtype: shuup.xtheme.resources.ResourceContainer|None
     """
     return context.get(RESOURCE_CONTAINER_VAR_NAME)
@@ -239,13 +264,13 @@ def add_resource(context, location, resource):
     """
     Add an Xtheme resource into the given context.
 
-    :param context: Context
+    :param context: Context.
     :type context: jinja2.runtime.Context
-    :param location: Location string (see KNOWN_LOCATIONS)
+    :param location: Location string (see `KNOWN_LOCATIONS`).
     :type location: str
-    :param resource: Resource descriptor (URL or inline markup object)
+    :param resource: Resource descriptor (URL or inline markup object).
     :type resource: str|InlineMarkupResource|InlineScriptResource
-    :return: Success flag
+    :return: Success flag.
     :rtype: bool
     """
     rc = get_resource_container(context)
@@ -256,32 +281,40 @@ def add_resource(context, location, resource):
 
 def valid_view(context):
     """
-    Prevent adding the global snippet in admin views and in editor view
+    Prevent adding the global snippet in admin views and in editor view.
     """
     view_class = getattr(context["view"], "__class__", None) if context.get("view") else None
-    if not view_class or not context.get("request"):
+    request = context.get("request")
+    if not (view_class and request):
         return False
 
-    request = context.get("request")
-    if request:
-        match = request.resolver_match
-        if match and match.app_name == "shuup_admin":
-            return False
+    match = request.resolver_match
+    if not (match and match.app_name != "shuup_admin"):
+        return False
 
-    view_name = getattr(view_class, "__name__", "")
-    if view_name == "EditorView":
+    from shuup.xtheme.views.editor import EditorView
+
+    if issubclass(view_class, EditorView):
         return False
 
     return True
 
 
-def inject_global_snippet(context, content):
+class SnippetBlocker:
+    @classmethod
+    def should_block_global_snippet_injection(cls, snippet: "Snippet", context: dict) -> bool:
+        raise NotImplementedError
+
+
+def inject_global_snippet(context, content):  # noqa: C901
     if not valid_view(context):
         return
 
     from shuup.xtheme import get_current_theme
     from shuup.xtheme.models import Snippet, SnippetType
-    shop = get_shop(context["request"])
+
+    request = context["request"]
+    shop = getattr(request, "shop", None) or get_shop(context["request"])
 
     cache_key = GLOBAL_SNIPPETS_CACHE_KEY.format(shop_id=shop.id)
     snippets = cache.get(cache_key)
@@ -292,9 +325,20 @@ def inject_global_snippet(context, content):
 
     for snippet in snippets:
         if snippet.themes:
-            current_theme = get_current_theme(shop)
+            current_theme = getattr(request, "theme", None) or get_current_theme(shop)
             if current_theme and current_theme.identifier not in snippet.themes:
                 continue
+
+        snippet_blockers = get_provide_objects("xtheme_snippet_blocker")  # type: Iterable[SnippetBlocker]
+        blocked = False
+
+        for snippet_blocker in snippet_blockers:
+            if snippet_blocker.should_block_global_snippet_injection(snippet, context):
+                blocked = True
+                break
+
+        if blocked:
+            continue
 
         content = snippet.snippet
         if snippet.snippet_type == SnippetType.InlineJS:
@@ -303,5 +347,10 @@ def inject_global_snippet(context, content):
             content = InlineStyleResource(content)
         elif snippet.snippet_type == SnippetType.InlineHTMLMarkup:
             content = InlineMarkupResource(content)
+        elif snippet.snippet_type == SnippetType.InlineJinjaHTMLMarkup:
+            context = dict(context.items())
+            # prevent recursive injection
+            context["allow_resource_injection"] = False
+            content = JinjaMarkupResource(content, context)
 
         add_resource(context, snippet.location, content)

@@ -1,32 +1,36 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
 import json
-
 import pytest
+from django.test import override_settings
 from django.utils.translation import activate, get_language
 
 from shuup.admin.views.select import MultiselectAjaxView
 from shuup.core.models import (
-    Category, CompanyContact, PersonContact, Product, ProductMode,
-    SalesUnit, ShopProduct, ShopProductVisibility
+    Category,
+    CategoryStatus,
+    CompanyContact,
+    PersonContact,
+    Product,
+    ProductMode,
+    SalesUnit,
+    ShopProduct,
+    ShopProductVisibility,
+    Supplier,
 )
-from shuup.testing.factories import create_product, get_default_shop, get_shop, create_random_user
+from shuup.testing.factories import create_product, create_random_user, get_default_shop, get_shop
 from shuup.testing.utils import apply_request_middleware
-from shuup_tests.utils.fixtures import regular_user
-
+from shuup_tests.utils.fixtures import regular_user  # noqa: F401
 
 
 def _get_search_results(rf, view, model_name, search_str, user, search_mode=None, sales_units=None, shop=None):
-    data = {
-        "model": model_name,
-        "search": search_str
-    }
+    data = {"model": model_name, "search": search_str}
     if search_mode:
         data.update({"searchMode": search_mode})
 
@@ -54,6 +58,7 @@ def test_ajax_select_view_with_products(rf, admin_user):
 
     product_name_en = "The Product"
     product = create_product("the product", shop=shop, **{"name": product_name_en})
+    shop_product = product.get_shop_instance(shop)
 
     product_name_fi = "tuote"
     product.set_current_language("fi")
@@ -66,17 +71,22 @@ def test_ajax_select_view_with_products(rf, admin_user):
     results = _get_search_results(rf, view, "shuup.Product", "some str", admin_user)
     assert len(results) == 0
 
-    results = _get_search_results(rf, view, "shuup.Product", None, admin_user)
-    assert len(results) == 0
+    results = _get_search_results(rf, view, "shuup.Product", "", admin_user)
+    assert len(results) == 1
 
     results = _get_search_results(rf, view, "shuup.Product", "product", admin_user)
     assert len(results) == 1
     assert results[0].get("id") == product.id
     assert results[0].get("name") == product_name_en
 
+    results = _get_search_results(rf, view, "shuup.ShopProduct", "product", admin_user)
+    assert len(results) == 1
+    assert results[0].get("id") == shop_product.id
+    assert results[0].get("name") == product_name_en
+
     activate("fi")
     results = _get_search_results(rf, view, "shuup.Product", "product", admin_user)
-    assert get_language() == 'fi'
+    assert get_language() == "fi"
     assert len(results) == 1
     assert results[0].get("id") == product.id
     assert results[0].get("name") == product_name_fi
@@ -89,6 +99,22 @@ def test_ajax_select_view_with_products(rf, admin_user):
     product.soft_delete()
     results = _get_search_results(rf, view, "shuup.Product", "product", admin_user)
     assert len(results) == 0
+    supplier1 = Supplier.objects.create(name="supplier1", enabled=True)
+    supplier1.shops.add(shop)
+    product = create_product(
+        "test-product", shop, default_price="200", supplier=supplier1, mode=ProductMode.SIMPLE_VARIATION_PARENT
+    )
+    results = _get_search_results(rf, view, "shuup.Product", "  product  ", admin_user, "parent_product")
+    assert len(results) == 1
+
+    shop2 = get_shop(identifier="shop2")
+    supplier2 = Supplier.objects.create(name="supplier2", enabled=False)
+    supplier2.shops.add(shop2)
+    create_product(
+        "test-product-two", shop2, default_price="200", supplier=supplier2, mode=ProductMode.SIMPLE_VARIATION_PARENT
+    )
+    results = _get_search_results(rf, view, "shuup.Product", "  product  ", admin_user, "parent_product")
+    assert len(results) == 1
 
 
 @pytest.mark.django_db
@@ -108,7 +134,7 @@ def test_multi_select_with_main_products(rf, admin_user):
             assert child.mode == ProductMode.VARIATION_CHILD
 
     assert parent.variation_children.count() == 4 * 3
-    assert Product.objects.count() == 4*3 + 1
+    assert Product.objects.count() == 4 * 3 + 1
 
     results = _get_search_results(rf, view, "shuup.Product", "test", admin_user)
     assert len(results) == Product.objects.count()
@@ -148,7 +174,7 @@ def test_multi_select_with_sellable_only_products(rf, admin_user):
     assert len(results) == Product.objects.count()
 
     results = _get_search_results(rf, view, "shuup.Product", "test", admin_user, "sellable_mode_only")
-    assert len(results) ==  Product.objects.count() - 1
+    assert len(results) == Product.objects.count() - 1
 
     create_product("test1", shop=shop, **{"name": "test 123"})
     results = _get_search_results(rf, view, "shuup.Product", "test", admin_user, "sellable_mode_only")
@@ -187,7 +213,6 @@ def test_multi_select_with_product_sales_unit(rf, admin_user):
     oz = SalesUnit.objects.create(symbol="oz", name="Ounce")
     create_product("oz", shop=shop, **{"name": "Ounce Product", "sales_unit": oz})
 
-
     view = MultiselectAjaxView.as_view()
 
     results = _get_search_results(rf, view, "shuup.Product", "Product", admin_user)
@@ -204,9 +229,7 @@ def test_multi_select_with_product_sales_unit(rf, admin_user):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("contact_cls", [
-    PersonContact, CompanyContact
-])
+@pytest.mark.parametrize("contact_cls", [PersonContact, CompanyContact])
 def test_ajax_select_view_with_contacts(rf, contact_cls, admin_user):
     shop = get_default_shop()
     view = MultiselectAjaxView.as_view()
@@ -244,9 +267,7 @@ def test_ajax_select_view_with_contacts(rf, contact_cls, admin_user):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("contact_cls", [
-    PersonContact, CompanyContact
-])
+@pytest.mark.parametrize("contact_cls", [PersonContact, CompanyContact])
 def test_ajax_select_view_with_contacts_multipleshop(rf, contact_cls):
     shop1 = get_default_shop()
     shop2 = get_shop(identifier="shop2")
@@ -353,3 +374,70 @@ def test_multiselect_inactive_users_and_contacts(rf, regular_user, admin_user):
     results = _get_search_results(rf, view, "shuup.PersonContact", "joe", admin_user)
 
     assert len(results) == 0
+
+
+@pytest.mark.django_db
+def test_select_category(rf, admin_user):
+    shop = get_default_shop()
+    activate("en")
+    view = MultiselectAjaxView.as_view()
+
+    category1 = Category.objects.create(name="category", status=CategoryStatus.VISIBLE)
+    category2 = Category.objects.create(name="category", status=CategoryStatus.INVISIBLE)
+    Category.objects.create(name="category")
+    category1.shops.add(shop)
+    category2.shops.add(shop)
+
+    results = _get_search_results(rf, view, "shuup.Category", "category", admin_user)
+    assert len(results) == 2
+
+    # only visible
+    results = _get_search_results(rf, view, "shuup.Category", "category", admin_user, search_mode="visible")
+    assert len(results) == 1
+
+
+@pytest.mark.django_db
+def test_select_supplier(rf, admin_user):
+    shop = get_default_shop()
+    activate("en")
+    view = MultiselectAjaxView.as_view()
+
+    supplier1 = Supplier.objects.create(name="supplier1", enabled=True)
+    supplier2 = Supplier.objects.create(name="supplier2", enabled=False)
+    Supplier.objects.create(name="supplier3", enabled=True)
+
+    supplier1.shops.add(shop)
+    supplier2.shops.add(shop)
+
+    results = _get_search_results(rf, view, "shuup.supplier", "supplier", admin_user)
+    assert len(results) == 2
+
+    # only enabled
+    results = _get_search_results(rf, view, "shuup.supplier", "supplier", admin_user, search_mode="enabled")
+    assert len(results) == 1
+
+
+@pytest.mark.django_db
+def test_shop_products_with_supplier_filter(rf, admin_user):
+    shop = get_default_shop()
+    activate("en")
+    view = MultiselectAjaxView.as_view()
+
+    superuser1 = create_random_user(is_superuser=True, is_staff=True)
+    supplier1 = Supplier.objects.create(identifier=superuser1.username)
+    superuser2 = create_random_user(is_superuser=True, is_staff=True)
+    supplier2 = Supplier.objects.create(identifier=superuser2.username)
+
+    product_name_en = "ok"
+    product = create_product("test1", shop=shop, supplier=supplier1, **{"name": product_name_en})
+    shop_product = product.get_shop_instance(shop)
+    assert shop_product.suppliers.filter(pk=supplier1.pk).exists()
+    supplier_provider = "shuup.testing.supplier_provider.UsernameSupplierProvider"
+    with override_settings(SHUUP_ADMIN_SUPPLIER_PROVIDER_SPEC=supplier_provider):
+        results = _get_search_results(rf, view, "shuup.ShopProduct", "ok", superuser1)
+        assert len(results) == 1
+        assert results[0].get("id") == shop_product.id
+        assert results[0].get("name") == product_name_en
+
+        results = _get_search_results(rf, view, "shuup.ShopProduct", "ok", superuser2)
+        assert len(results) == 0

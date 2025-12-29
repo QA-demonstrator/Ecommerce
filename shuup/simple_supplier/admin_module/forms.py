@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -10,9 +10,7 @@ from django import forms
 from shuup.admin.form_part import FormPart, TemplatedFormDef
 from shuup.core.models import Product, Supplier
 from shuup.simple_supplier.module import SimpleSupplierModule
-from shuup.simple_supplier.utils import (
-    get_stock_adjustment_div, get_stock_information_html
-)
+from shuup.simple_supplier.utils import get_stock_adjustment_div, get_stock_information_html
 
 
 class SimpleSupplierForm(forms.Form):
@@ -36,10 +34,14 @@ class SimpleSupplierForm(forms.Form):
         return  # No need to save anything since all stock adjustments are made by AJAX.
 
     def get_suppliers(self, product):
-        return Supplier.objects.filter(shop_products__product=product, module_identifier="simple_supplier").distinct()
+        return Supplier.objects.filter(
+            shop_products__product=product, supplier_modules__module_identifier="simple_supplier"
+        ).distinct()
 
     def can_manage_stock(self):
-        return Supplier.objects.filter(module_identifier="simple_supplier", stock_managed=True).exists()
+        return Supplier.objects.filter(
+            supplier_modules__module_identifier="simple_supplier", stock_managed=True
+        ).exists()
 
     def get_stock_information(self, supplier, product):
         return get_stock_information_html(supplier, product)
@@ -60,7 +62,7 @@ class SimpleSupplierFormPart(FormPart):
                 form_class=self.form,
                 template_name="shuup/simple_supplier/admin/product_form_part.jinja",
                 required=False,
-                kwargs={"product": self.object.product, "request": self.request}
+                kwargs={"product": self.object.product, "request": self.request},
             )
 
     def form_valid(self, form):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,15 +9,19 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.conf import settings
+from django.contrib import messages
 from django.db.models import Q
-from django.utils.encoding import force_text
+from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
+from django.views.generic import DetailView
 
 from shuup.admin.forms import ShuupAdminFormNoTranslation
-from shuup.admin.forms.fields import Select2MultipleField
+from shuup.admin.forms.fields import ObjectSelect2MultipleField
 from shuup.admin.shop_provider import get_shop
+from shuup.admin.toolbar import get_default_edit_toolbar
 from shuup.admin.utils.views import CreateOrUpdateView
 from shuup.core.models import Manufacturer, Shop
+from shuup.utils.django_compat import force_text, reverse_lazy
 
 
 class ManufacturerForm(ShuupAdminFormNoTranslation):
@@ -30,13 +34,13 @@ class ManufacturerForm(ShuupAdminFormNoTranslation):
         super(ManufacturerForm, self).__init__(*args, **kwargs)
         # add shops field when superuser only
         if getattr(self.request.user, "is_superuser", False):
-            self.fields["shops"] = Select2MultipleField(
+            self.fields["shops"] = ObjectSelect2MultipleField(
                 label=_("Shops"),
                 help_text=_("Select shops for this manufacturer. Keep it blank to share with all shops."),
                 model=Shop,
                 required=False,
             )
-            initial_shops = (self.instance.shops.all() if self.instance.pk else [])
+            initial_shops = self.instance.shops.all() if self.instance.pk else []
             self.fields["shops"].widget.choices = [(shop.pk, force_text(shop)) for shop in initial_shops]
         else:
             # drop shops fields
@@ -71,3 +75,29 @@ class ManufacturerEditView(CreateOrUpdateView):
         kwargs = super(ManufacturerEditView, self).get_form_kwargs()
         kwargs["request"] = self.request
         return kwargs
+
+    def get_toolbar(self):
+        object = self.get_object()
+        delete_url = reverse_lazy("shuup_admin:manufacturer.delete", kwargs={"pk": object.pk}) if object.pk else None
+        return get_default_edit_toolbar(self, self.get_save_form_id(), delete_url=delete_url)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if context["front_url"] == "/None":
+            context["front_url"] = None
+
+        return context
+
+
+class ManufacturerDeleteView(DetailView):
+    model = Manufacturer
+
+    def get_queryset(self):
+        return Manufacturer.objects.filter(Q(shops=get_shop(self.request)) | Q(shops__isnull=True))
+
+    def post(self, request, *args, **kwargs):
+        manufacturer = self.get_object()
+        manufacturer_name = force_text(manufacturer)
+        manufacturer.delete()
+        messages.success(request, _("%s has been deleted.") % manufacturer_name)
+        return HttpResponseRedirect(reverse_lazy("shuup_admin:manufacturer.list"))

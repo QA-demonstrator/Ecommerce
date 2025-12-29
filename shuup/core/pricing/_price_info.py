@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -58,9 +58,24 @@ class PriceInfo(Priceful):
         self.quantity = quantity
         self.expires_on = expires_on
 
+    def __lt__(self, other):
+        return self.price.value < other.price.value
+
+    def __le__(self, other):
+        return self.price.value <= other.price.value
+
+    def __gt__(self, other):
+        return self.price.value > other.price.value
+
+    def __ge__(self, other):
+        return self.price.value >= other.price.value
+
+    def __eq__(self, other):
+        return self.price.value == other.price.value
+
+    def __ne__(self, other):
+        return self.price.value != other.price.value
+
     def __repr__(self):
-        expire_str = '' if self.expires_on is None else(
-            ', expires_on=%r' % (self.expires_on,))
-        return "%s(%r, %r, %r%s)" % (
-            type(self).__name__, self.price, self.base_price, self.quantity,
-            expire_str)
+        expire_str = "" if self.expires_on is None else (", expires_on=%r" % (self.expires_on,))
+        return "%s(%r, %r, %r%s)" % (type(self).__name__, self.price, self.base_price, self.quantity, expire_str)

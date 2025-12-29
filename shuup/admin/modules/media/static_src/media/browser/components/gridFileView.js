@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,7 @@ import fileContextMenu from "../menus/fileContextMenu";
 
 export default function(ctrl, folders, files) {
     const folderItems = _.map(folders, function(folder) {
-        return m("div.col-xs-6.col-md-4.col-lg-3.grid-folder.fd-zone", {
+        return m("div.grid-folder.fd-zone", {
             key: "folder-" + folder.id,
             "data-folder-id": folder.id,
             config: dropzoneConfig(ctrl),
@@ -33,8 +33,12 @@ export default function(ctrl, folders, files) {
         ]);
     });
     const fileItems = _.map(files, function(file) {
+        var editOptionsAvailable = fileContextMenu(ctrl, file)().filter(function( item ) {
+            return item !== undefined;
+        });
+
         return m(
-            "div.col-xs-6.col-md-4.col-lg-3.grid-file",
+            "div.grid-file",
             {
                 key: file.id,
                 draggable: true,
@@ -52,18 +56,20 @@ export default function(ctrl, folders, files) {
                     }
                 }
             },
-            m("button.file-cog-btn.btn.btn-xs.btn-default", {
+            editOptionsAvailable.length > 0 ? m("button.file-cog-btn.btn.btn-xs.btn-default", {
                 key: "filecog",
                 onclick: (event) => {
                     menuManager.open(event.currentTarget, fileContextMenu(ctrl, file));
                     event.preventDefault();
                 }
-            }, m("i.fa.fa-cog")),
+            }, m("i.fa.fa-cog")) : null,
             wrapFileLink(file, "a.file-preview", [
-                m("img.img-responsive", {src: file.thumbnail || images.defaultThumbnail}),
+                m("div.preview-img-wrap", [
+                    m("img.img-responsive", {src: file.thumbnail || images.defaultThumbnail}),
+                ]),
                 m("div.file-name", file.name)
             ])
         );
     });
-    return m("div.row", folderItems.concat(fileItems));
+    return m("div.custom-browser-row", folderItems.concat(fileItems));
 }

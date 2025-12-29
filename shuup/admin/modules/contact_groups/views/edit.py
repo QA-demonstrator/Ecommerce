@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
 from __future__ import unicode_literals
 
-from django.core.urlresolvers import reverse_lazy
 from django.db.transaction import atomic
 
 from shuup.admin.form_part import FormPartsViewMixin, SaveFormPartsMixin
 from shuup.admin.toolbar import get_default_edit_toolbar
 from shuup.admin.utils.views import CreateOrUpdateView
 from shuup.core.models import ContactGroup
+from shuup.utils.django_compat import reverse_lazy
 
 from .forms import ContactGroupBaseFormPart, ContactGroupMembersFormPart
 

@@ -1,26 +1,23 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-
 import pytest
 import six
 from django.utils.translation import activate
 
 from shuup.core.models._addresses import MutableAddress
-from shuup.default_importer.importers.contact import (
-    CompanyContactImporter, PersonContactImporter
-)
+from shuup.default_importer.importers.contact import CompanyContactImporter, PersonContactImporter
 from shuup.importer.transforms import transform_file
 from shuup.importer.utils.importer import ImportMode
 from shuup.testing.factories import get_default_shop
 
 
 @pytest.mark.django_db
-def test_customer_sample():
+def test_customer_sample(rf):
     filename = "customer_sample.xlsx"
     activate("en")
     shop = get_default_shop()
@@ -28,7 +25,9 @@ def test_customer_sample():
     path = os.path.join(os.path.dirname(__file__), "data", "contact", filename)
     transformed_data = transform_file(filename.split(".")[1], path)
 
-    importer = PersonContactImporter(transformed_data, shop, "en")
+    importer = PersonContactImporter(
+        transformed_data, CompanyContactImporter.get_importer_context(rf.get("/"), shop=shop, language="en")
+    )
     importer.process_data()
     assert len(importer.unmatched_fields) == 0
     importer.do_import(ImportMode.CREATE_UPDATE)
@@ -50,9 +49,9 @@ def test_customer_sample():
         "street": "TestStreet",
         "city": "Los Angeles",
         "postal_code": "90000",
-        "country":  "US",
+        "country": "US",
         "region_code": "CA",
-        "phone": "1123555111"
+        "phone": "1123555111",
     }
     second_row = {
         "first_name": "My",
@@ -63,14 +62,14 @@ def test_customer_sample():
         "postal_code": "90001",
         "country": "US",
         "region_code": "CA",
-        "phone": "1235678900"
+        "phone": "1235678900",
     }
     assert_contact_address(first_contact, first_address, first_row)
     assert_contact_address(second_contact, second_address, second_row)
 
 
 @pytest.mark.django_db
-def test_company_sample():
+def test_company_sample(rf):
     filename = "company_contact_sample.xlsx"
     activate("en")
     shop = get_default_shop()
@@ -78,7 +77,9 @@ def test_company_sample():
     path = os.path.join(os.path.dirname(__file__), "data", "contact", filename)
     transformed_data = transform_file(filename.split(".")[1], path)
 
-    importer = CompanyContactImporter(transformed_data, shop, "en")
+    importer = CompanyContactImporter(
+        transformed_data, CompanyContactImporter.get_importer_context(rf.get("/"), shop=shop, language="en")
+    )
     importer.process_data()
     assert len(importer.unmatched_fields) == 0
     importer.do_import(ImportMode.CREATE_UPDATE)
@@ -102,9 +103,9 @@ def test_company_sample():
         "street": "TestStreet",
         "city": "Los Angeles",
         "postal_code": "90000",
-        "country":  "US",
+        "country": "US",
         "region_code": "CA",
-        "phone": "1123555111"
+        "phone": "1123555111",
     }
     second_row = {
         "name": "Test Company 2",
@@ -116,10 +117,11 @@ def test_company_sample():
         "postal_code": "90001",
         "country": "US",
         "region_code": "CA",
-        "phone": "1235678900"
+        "phone": "1235678900",
     }
     assert_contact_address(first_contact, first_address, first_row)
     assert_contact_address(second_contact, second_address, second_row)
+
 
 def assert_contact_address(contact, address, row):
     assert contact.default_shipping_address == address

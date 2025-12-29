@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,37 +9,32 @@ from __future__ import unicode_literals
 
 import warnings
 from decimal import Decimal
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.utils.encoding import force_text
 
 from shuup.core.models import Order, OrderLine, OrderLineType, ShopProduct
-from shuup.core.order_creator.signals import (
-    order_creator_finished, post_order_line_save
-)
+from shuup.core.order_creator.signals import order_creator_finished, post_order_line_save
 from shuup.core.shortcuts import update_order_line_from_product
-from shuup.core.utils import context_cache
 from shuup.core.utils.users import real_user_or_none
 from shuup.utils.deprecation import RemovedFromShuupWarning
+from shuup.utils.django_compat import force_text
 from shuup.utils.numbers import bankers_round
 
 from ._source_modifier import get_order_source_modifier_modules
 
 
 class OrderProcessor(object):
-
     def source_line_to_order_lines(self, order, source_line):
         """
         Convert a source line into one or more order lines.
 
-        Normally each source line will yield just one order line, but
-        package products will yield a parent line and its child lines.
+        Normally each source line will yield just one order line, but package
+        products will yield lines for both the parent and its children products.
 
         :type order: shuup.core.models.Order
-        :param order: The order
+        :param order: The order.
         :type source_line: shuup.core.order_creator.SourceLine
-        :param source_line: The SourceLine
+        :param source_line: The SourceLine.
         :rtype: Iterable[OrderLine]
         """
         order_line = OrderLine(order=order)
@@ -50,7 +45,7 @@ class OrderProcessor(object):
             if product.sales_unit:
                 quantized_quantity = bankers_round(quantity, product.sales_unit.decimals)
                 if quantized_quantity != quantity:
-                    raise ValueError("Sales unit decimal conversion causes precision loss!")
+                    raise ValueError("Error! Sales unit decimal conversion causes precision loss.")
         else:
             order_line.product = None
 
@@ -65,14 +60,16 @@ class OrderProcessor(object):
             order_line.base_unit_price = source_line.base_unit_price
         if source_line.discount_amount:
             order_line.discount_amount = source_line.discount_amount
-        order_line.type = (source_line.type if source_line.type is not None
-                           else OrderLineType.OTHER)
+        order_line.type = source_line.type if source_line.type is not None else OrderLineType.OTHER
         order_line.accounting_identifier = text(source_line.accounting_identifier)
         order_line.require_verification = bool(source_line.require_verification)
-        order_line.verified = (not order_line.require_verification)
+        order_line.verified = not order_line.require_verification
         order_line.source_line = source_line
         order_line.parent_source_line = source_line.parent_line
-        order_line.extra_data = {"source_line_id": source_line.line_id}
+        extra_data = source_line.data.get("extra", {}) if hasattr(source_line, "data") else {}
+        extra_data.update({"source_line_id": source_line.line_id})
+
+        order_line.extra_data = extra_data
         self._check_orderability(order_line)
 
         yield order_line
@@ -108,22 +105,24 @@ class OrderProcessor(object):
         if not order_line.product:
             return
         if not order_line.supplier:
-            raise ValueError("Order line has no supplier")
+            raise ValueError("Error! Order line has no supplier.")
         order = order_line.order
         try:
             shop_product = order_line.product.get_shop_instance(order.shop)
         except ShopProduct.DoesNotExist:
-            raise ValidationError("%s: Not available in %s" % (order_line.product, order.shop), code="invalid_shop")
+            raise ValidationError(
+                "Error! %s is not available in %s." % (order_line.product, order.shop), code="invalid_shop"
+            )
 
         shop_product.raise_if_not_orderable(
-            supplier=order_line.supplier,
-            quantity=order_line.quantity,
-            customer=order.customer
+            supplier=order_line.supplier, quantity=order_line.quantity, customer=order.customer
         )
 
     def process_saved_order_line(self, order, order_line):
         """
-        Called in sequence for all order lines to be saved into the order. These have all been saved, so they have PKs.
+        Called in sequence for all order lines to be saved into the order.
+        These have all been saved, so they have PKs.
+
         :type order: Order
         :type order_line: OrderLine
         """
@@ -131,10 +130,7 @@ class OrderProcessor(object):
 
     def add_lines_into_order(self, order, lines):
         # Map source lines to order lines for parentage linking
-        order_line_by_source = {
-            id(order_line.source_line): order_line
-            for order_line in lines
-        }
+        order_line_by_source = {id(order_line.source_line): order_line for order_line in lines}
 
         # Set line ordering, parentage and save the lines
         for index, order_line in enumerate(lines):
@@ -207,7 +203,7 @@ class OrderProcessor(object):
             status=order_source.status,
             payment_data=order_source.payment_data,
             shipping_data=order_source.shipping_data,
-            extra_data=order_source.extra_data
+            extra_data=order_source.extra_data,
         )
 
     def finalize_creation(self, order, order_source):
@@ -216,7 +212,7 @@ class OrderProcessor(object):
         lines = self.get_source_order_lines(source=order_source, order=order)
         self.add_lines_into_order(order, lines)
 
-        if any(line.require_verification for line in order.lines.all()):
+        if order.lines.filter(require_verification=True).exists():
             order.require_verification = True
             order.all_verified = False
         else:
@@ -288,20 +284,21 @@ class OrderProcessor(object):
 
 
 class OrderCreator(OrderProcessor):
-
     def __init__(self, request=None):
         """
         Initialize order creator.
 
         :type request: django.http.HttpRequest|None
         :param request:
-          Optional request object for backward compatibility.  Passing
+          Optional request object for backward compatibility. Passing
           non-None value is DEPRECATED.
         """
         if request is not None:
             warnings.warn(
-                "Initializing OrderCreator with a request is deprecated",
-                RemovedFromShuupWarning, stacklevel=2)
+                "Warning! Initializing `OrderCreator` with a `request` is deprecated.",
+                RemovedFromShuupWarning,
+                stacklevel=2,
+            )
 
     def create_order(self, order_source):
         data = self.get_source_base_data(order_source)
@@ -309,7 +306,4 @@ class OrderCreator(OrderProcessor):
         order.save()
         order = self.finalize_creation(order, order_source)
         order_creator_finished.send(sender=type(self), order=order, source=order_source)
-        # reset product prices
-        for line in order.lines.exclude(product_id=None):
-            context_cache.bump_cache_for_product(line.product, shop=order.shop)
         return order

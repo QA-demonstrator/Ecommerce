@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,29 +9,25 @@ from __future__ import unicode_literals
 
 import json
 import re
-
 from django.contrib import messages
-from django.core.urlresolvers import reverse
 from django.db.transaction import atomic
-from django.http import (
-    HttpResponse, HttpResponseNotFound, HttpResponseRedirect
-)
-from django.utils.text import force_text
-from django.utils.translation import ugettext as _
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView, View
 
-from shuup.core.models import get_person_contact, Order
+from shuup.core.models import Order, get_person_contact
 from shuup.front.views.dashboard import DashboardViewMixin
-from shuup.gdpr.models import (
-    GDPR_ANONYMIZE_TASK_TYPE_IDENTIFIER, GDPRCookieCategory
-)
+from shuup.gdpr.models import GDPR_ANONYMIZE_TASK_TYPE_IDENTIFIER, GDPRCookieCategory
 from shuup.gdpr.utils import (
-    add_consent_to_response_cookie, create_user_consent_for_all_documents,
-    get_active_consent_pages, get_cookie_consent_data,
-    is_documents_consent_in_sync
+    add_consent_to_response_cookie,
+    create_user_consent_for_all_documents,
+    get_active_consent_pages,
+    get_cookie_consent_data,
+    is_documents_consent_in_sync,
 )
 from shuup.simple_cms.models import Page
 from shuup.utils.analog import LogEntryKind
+from shuup.utils.django_compat import force_text, is_anonymous, reverse
 from shuup.utils.djangoenv import has_installed
 
 COOKIE_CONSENT_RE = r"cookie_category_(\d+)"
@@ -68,7 +64,7 @@ class GDPRCookieConsentView(View):
 class GDPRPolicyConsentView(View):
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        if request.user.is_anonymous():
+        if is_anonymous(request.user):
             return HttpResponseNotFound()
 
         shop = request.shop
@@ -79,7 +75,7 @@ class GDPRPolicyConsentView(View):
         if document:
             if not is_documents_consent_in_sync(shop, user):
                 return HttpResponseNotFound()
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', "/"))
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         return HttpResponseNotFound()
 
 
@@ -107,10 +103,12 @@ class GDPRDownloadDataView(View):
             return HttpResponseNotFound()
 
         self.request.person.add_log_entry(
-            "User personal data download requested", kind=LogEntryKind.NOTE, user=self.request.user)
+            "Info! User personal data download requested.", kind=LogEntryKind.NOTE, user=self.request.user
+        )
 
         from shuup.gdpr.utils import get_all_contact_data
-        data = json.dumps(get_all_contact_data(self.request.person))
+
+        data = json.dumps(get_all_contact_data(self.request.shop, self.request.person))
         response = HttpResponse(data, content_type="application/json")
         response["Content-Disposition"] = "attachment; filename=user_data.json"
         return response
@@ -122,15 +120,17 @@ class GDPRAnonymizeView(View):
             return HttpResponseNotFound()
 
         self.request.person.add_log_entry(
-            "User anonymization requested", kind=LogEntryKind.NOTE, user=request.user)
+            "Info! User anonymization requested.", kind=LogEntryKind.NOTE, user=request.user
+        )
 
         with atomic():
             from shuup.tasks.models import TaskType
             from shuup.tasks.utils import create_task
+
             task_type = TaskType.objects.get_or_create(
                 shop=request.shop,
                 identifier=GDPR_ANONYMIZE_TASK_TYPE_IDENTIFIER,
-                defaults=dict(name=_("GDPR: Anonymize"))
+                defaults=dict(name=_("GDPR: Anonymize")),
             )[0]
             contact = get_person_contact(request.user)
             create_task(
@@ -138,7 +138,7 @@ class GDPRAnonymizeView(View):
                 contact,
                 task_type,
                 _("GDPR: Anonymize contact"),
-                _("Customer ID {customer_id} requested to be anonymized.").format(**dict(customer_id=contact.id))
+                _("Customer ID {customer_id} requested to be anonymized.").format(**dict(customer_id=contact.id)),
             )
 
             contact.is_active = False

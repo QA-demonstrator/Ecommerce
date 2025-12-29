@@ -7,12 +7,28 @@
         <form method="post" id="product_form" novalidate>
             {% if orderability_errors %}
                 {# TODO: FIX THIS FOR MOBILE SCREEN SIZES #}
-                <p class="alert alert-info"
+                <div class="alert alert-info"
                 data-toggle="tooltip"
                 data-title="{% for error in orderability_errors %}{{ error }} {% endfor %}"
                 data-placement="bottom">
                     <i class="fa fa-info-circle text-info"></i> {% trans %}This product is currently not orderable.{% endtrans %}
-                </p>
+                    <ul>
+                    {% for error in orderability_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if validation_issues %}
+                {# TODO: FIX THIS FOR MOBILE SCREEN SIZES #}
+                {% for issue in validation_issues %}
+                    {% set issue_content = bleach.clean(issue.message|string, strip=True) %}
+                    <div class="validation-issues-alert alert alert-{{ issue.get_alert_type() }}"
+                        data-toggle="tooltip" data-placement="bottom"
+                        data-code="{{ issue.code }}" data-title="{{ issue_content }}" >
+                        <i class="fa fa-warning"></i> {{ issue_content|safe if issue.is_html else issue_content }}
+                    </div>
+                {% endfor %}
             {% endif %}
             {% csrf_token %}
             {% call content_block(_("Basic Information"), "fa-info-circle", id="basic-information-section") %}
@@ -36,7 +52,7 @@
     {% endcall %}
 {% endblock %}
 {% block extra_js %}
-    <script src="{{ static("shuup_admin/js/product.js") }}"></script>
+    <script src="{{ shuup_static("shuup_admin/js/product.js") }}"></script>
     <script>
         function saveAsACopy(){
             $("#product_form").attr("action", "{{ url('shuup_admin:shop_product.new') }}").submit();
@@ -57,18 +73,19 @@
                 title: "{% trans %}Add a new product{% endtrans %}",
                 icon: "{{ static('shuup_admin/img/product.png') }}",
                 helpPage: "products.html",
-                classes: 'shepherd-element-wide',
+                classes: 'has-icon has-help-button',
                 text: [
                     "{% trans %}You are adding a product.{% endtrans %}",
                     "{% trans %}To make it stand out, give it an awesome description and picture. This is what will help your shoppers learn about your products. It will also help shoppers find them in the store and on the web.{% endtrans %}",
                     "{% trans %}You can set its price or size and many other things in the option boxes for each product.{% endtrans %}"
-                ]
+                ],
+                scrollTo: false,
             });
             if ($("a[href='#basic-information-section']").length > 0) {
                 steps.push({
                     title: "{% trans %}Basic Information{% endtrans %}",
                     text: ["{% trans %}All the required product information.{% endtrans %}"],
-                    attachTo: "a[href='#basic-information-section'] bottom",
+                    attachTo: "a[href='#basic-information-section'] left",
                     scrollTo: false,
                 });
             }
@@ -76,7 +93,7 @@
                 steps.push({
                     title: "{% trans %}Additional Details{% endtrans %}",
                     text: ["{% trans %}Product features such as size, weight and keywords are located here.{% endtrans %}"],
-                    attachTo: "a[href='#additional-details-section'] bottom",
+                    attachTo: "a[href='#additional-details-section'] left",
                     scrollTo: false,
                 });
             }
@@ -84,7 +101,7 @@
                 steps.push({
                     title: "{% trans %}Manufacturer{% endtrans %}",
                     text: ["{% trans %}If you know the product manufacturer, it can be set here.{% endtrans %}"],
-                    attachTo: "a[href='#manufacturer-section'] bottom",
+                    attachTo: "a[href='#manufacturer-section'] left",
                     scrollTo: false,
                 });
             }
@@ -92,7 +109,7 @@
                 steps.push({
                     title: "{% trans %}Additional Information{% endtrans %}",
                     text: ["{% trans %}Strictly shop related information. For example set the minimum price applicable in this shop.{% endtrans %}"],
-                    attachTo: "a[href*='-additional-section'] bottom",
+                    attachTo: "a[href*='-additional-section'] left",
                     scrollTo: false,
                 });
             }
@@ -100,7 +117,7 @@
                 steps.push({
                     title: "{% trans %}Product Files{% endtrans %}",
                     text: ["{% trans %}You can attach files such as manual to the merchandise(s) here.{% endtrans %}"],
-                    attachTo: "a[href='#product-media-section'] bottom",
+                    attachTo: "a[href='#product-media-section'] left",
                     scrollTo: false,
                 });
             }
@@ -129,7 +146,12 @@
                     scrollTo: false,
                 });
             }
-            $.tour({ method: "setPageSteps", steps: steps });
+            window.tourConfig = {
+                tourComplete: ("{{ tour_complete }}" == "True" ? true : false),
+                tourKey: "{{ tour_key }}",
+                url: ShuupAdminConfig.browserUrls.tour,
+                initialSteps: steps
+            };
         });
     </script>
     {% for product_section in product_sections %}

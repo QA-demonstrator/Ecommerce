@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import json
-
-from django.core.urlresolvers import NoReverseMatch, reverse
+import six
 from django.middleware.csrf import get_token
-from django.utils.encoding import force_text
 from django.utils.html import conditional_escape, format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from shuup.admin.utils.forms import flatatt_filter
 from shuup.admin.utils.permissions import get_missing_permissions
 from shuup.admin.utils.str_utils import camelcase_to_snakecase
-from shuup.admin.utils.urls import get_model_url, NoModelUrl
+from shuup.admin.utils.urls import NoModelUrl, get_model_url
 from shuup.apps.provides import get_provide_objects
+from shuup.utils.django_compat import NoReverseMatch, Resolver404, force_text, resolve, reverse
 
 
 class BaseToolbarButtonProvider(object):
@@ -47,8 +46,16 @@ class BaseToolbarButtonProvider(object):
 class BaseActionButton(object):
     base_css_classes = ("btn", "")
 
-    def __init__(self, text="", icon=None, disable_reason=None, tooltip=None,
-                 extra_css_class="", required_permissions=(), identifier=None):
+    def __init__(
+        self,
+        text="",
+        icon=None,
+        disable_reason=None,
+        tooltip=None,
+        extra_css_class="",
+        required_permissions=(),
+        identifier=None,
+    ):
         """
         :param text: The actual text for the button.
         :param icon: Icon CSS class string
@@ -68,7 +75,7 @@ class BaseActionButton(object):
         self.icon = icon
         self.disable_reason = disable_reason
         self.disabled = bool(self.disable_reason)
-        self.tooltip = (self.disable_reason or tooltip)
+        self.tooltip = self.disable_reason or tooltip
         self.extra_css_class = extra_css_class
         self.required_permissions = required_permissions
         self.identifier = identifier
@@ -89,10 +96,9 @@ class BaseActionButton(object):
         return "".join(force_text(bit) for bit in bits)
 
     def get_computed_class(self):
-        return " ".join(filter(None, list(self.base_css_classes) + [
-            self.extra_css_class,
-            "disabled" if self.disabled else ""
-        ]))
+        return " ".join(
+            filter(None, list(self.base_css_classes) + [self.extra_css_class, "disabled" if self.disabled else ""])
+        )
 
 
 class URLActionButton(BaseActionButton):
@@ -112,23 +118,30 @@ class URLActionButton(BaseActionButton):
             except NoReverseMatch:
                 pass
         self.url = url
+
+        if "required_permissions" not in kwargs:
+            try:
+                permission = resolve(six.moves.urllib.parse.urlparse(force_text(url)).path).url_name
+                kwargs["required_permissions"] = (permission,)
+            except Resolver404:
+                pass
+
         super(URLActionButton, self).__init__(**kwargs)
 
     def render(self, request):
         if not get_missing_permissions(request.user, self.required_permissions):
-            yield '<a %s>' % flatatt_filter({
-                "href": self.url,
-                "class": self.get_computed_class(),
-                "title": self.tooltip
-            })
+            yield "<a %s>" % flatatt_filter(
+                {"href": self.url, "class": self.get_computed_class(), "title": self.tooltip}
+            )
             yield self.render_label()
-            yield '</a>'
+            yield "</a>"
 
 
 class SettingsActionButton(URLActionButton):
     """
     A generic settings button meant to be used across many modules
     """
+
     def __init__(self, url, **kwargs):
         kwargs.setdefault("icon", "fa fa-cog")
         kwargs.setdefault("text", _("Settings"))
@@ -152,8 +165,7 @@ class SettingsActionButton(URLActionButton):
             return_url = kwargs.get("return_url")
             if not return_url:
                 return_url = camelcase_to_snakecase(model.__name__)
-            kwargs["url"] = url + "?module=%s&model=%s&return_url=%s" % (
-                model.__module__, model.__name__, return_url)
+            kwargs["url"] = url + "?module=%s&model=%s&return_url=%s" % (model.__module__, model.__name__, return_url)
 
         return cls(**kwargs)
 
@@ -167,6 +179,7 @@ class NewActionButton(URLActionButton):
         kwargs.setdefault("icon", "fa fa-plus")
         kwargs.setdefault("text", _("Create new"))
         kwargs.setdefault("extra_css_class", "btn-primary")
+
         super(NewActionButton, self).__init__(url, **kwargs)
 
     @classmethod
@@ -184,6 +197,7 @@ class NewActionButton(URLActionButton):
             except NoModelUrl:
                 return None
             kwargs["url"] = url
+
         kwargs.setdefault("text", _("New %(model)s") % {"model": model._meta.verbose_name})
         return cls(**kwargs)
 
@@ -201,14 +215,16 @@ class JavaScriptActionButton(BaseActionButton):
 
     def render(self, request):
         if not get_missing_permissions(request.user, self.required_permissions):
-            yield '<a %s>' % flatatt_filter({
-                "href": "#",
-                "class": self.get_computed_class(),
-                "title": self.tooltip,
-                "onclick": mark_safe(self.onclick) if self.onclick else None
-            })
+            yield "<a %s>" % flatatt_filter(
+                {
+                    "href": "#",
+                    "class": self.get_computed_class(),
+                    "title": self.tooltip,
+                    "onclick": mark_safe(self.onclick) if self.onclick else None,
+                }
+            )
             yield self.render_label()
-            yield '</a>'
+            yield "</a>"
 
 
 class PostActionButton(BaseActionButton):
@@ -227,18 +243,20 @@ class PostActionButton(BaseActionButton):
 
     def render(self, request):
         if not get_missing_permissions(request.user, self.required_permissions):
-            yield '<button %s>' % flatatt_filter({
-                "form": self.form_id,  # This can be used to post another form
-                "formaction": self.post_url,
-                "name": self.name,
-                "value": self.value,
-                "type": "submit",
-                "title": self.tooltip,
-                "class": self.get_computed_class(),
-                "onclick": ("return confirm(%s)" % json.dumps(force_text(self.confirm)) if self.confirm else None)
-            })
+            yield "<button %s>" % flatatt_filter(
+                {
+                    "form": self.form_id,  # This can be used to post another form
+                    "formaction": self.post_url,
+                    "name": self.name,
+                    "value": self.value,
+                    "type": "submit",
+                    "title": self.tooltip,
+                    "class": self.get_computed_class(),
+                    "onclick": ("return confirm(%s)" % json.dumps(force_text(self.confirm)) if self.confirm else None),
+                }
+            )
             yield self.render_label()
-            yield '</button>'
+            yield "</button>"
 
 
 class DropdownActionButton(BaseActionButton):
@@ -262,7 +280,7 @@ class DropdownActionButton(BaseActionButton):
 
             for bit in item.render(request):
                 yield bit
-        yield '</div>'
+        yield "</div>"
 
     def render(self, request):
         if not get_missing_permissions(request.user, self.required_permissions):
@@ -274,27 +292,25 @@ class DropdownActionButton(BaseActionButton):
                 for bit in self.split_button.render(request):
                     yield bit
 
-            yield '<button %s>' % flatatt_filter({
-                "type": "button",
-                "class": self.get_computed_class(),
-                "data-toggle": "dropdown",
-                "title": self.tooltip
-            })
+            yield "<button %s>" % flatatt_filter(
+                {"type": "button", "class": self.get_computed_class(), "data-toggle": "dropdown", "title": self.tooltip}
+            )
 
             if not self.split_button:
                 yield self.render_label()
                 yield " "
 
-            yield '</button>'
+            yield "</button>"
             for bit in self.render_dropdown(request):
                 yield bit
-            yield '</div>'
+            yield "</div>"
 
 
 class DropdownItem(BaseActionButton):
     """
     An item to be shown in a `DropdownActionButton`.
     """
+
     base_css_classes = ()
 
     def __init__(self, url="#", onclick=None, **kwargs):
@@ -308,11 +324,11 @@ class DropdownItem(BaseActionButton):
                 "class": "dropdown-item",
                 "title": self.tooltip,
                 "href": self.url,
-                "onclick": (mark_safe(self.onclick) if self.onclick else None)
+                "onclick": (mark_safe(self.onclick) if self.onclick else None),
             }
-            yield '<a %s>' % flatatt_filter(attrs)
+            yield "<a %s>" % flatatt_filter(attrs)
             yield self.render_label()
-            yield '</a>'
+            yield "</a>"
 
     @staticmethod
     def visible_for_object(object):
@@ -329,6 +345,7 @@ class PostActionDropdownItem(PostActionButton):
     """
     A POST action item to be shown in a `DropdownActionButton`.
     """
+
     base_css_classes = ("dropdown-item", "")
 
     def __init__(self, **kwargs):
@@ -355,6 +372,7 @@ class DropdownDivider(BaseActionButton):
     """
     A Divider for DropdownActionButtons.
     """
+
     base_css_classes = ()
 
     def render(self, request):
@@ -365,6 +383,7 @@ class DropdownHeader(BaseActionButton):
     """
     Header for DropdownActionButtons.
     """
+
     base_css_classes = ()
 
     def render(self, request):
@@ -373,6 +392,7 @@ class DropdownHeader(BaseActionButton):
 
 
 # -----------
+
 
 class ButtonGroup(list):
     def render(self, request):
@@ -384,7 +404,7 @@ class ButtonGroup(list):
                 else:
                     for bit in button.render(request):
                         yield bit
-        yield '</div>'
+        yield "</div>"
 
 
 class Toolbar(list):
@@ -446,7 +466,7 @@ class Toolbar(list):
                 for bit in group.render(request):
                     yield bit
 
-        yield '</div></form></div>'
+        yield "</div></form></div>"
 
     def render_to_string(self, request):
         return "".join(force_text(bit) for bit in self.render(request))
@@ -476,21 +496,36 @@ def try_reverse(viewname, **kwargs):
 
 def get_discard_button(discard_url):
     return URLActionButton(
-        url=discard_url,
-        text=_(u"Discard Changes"),
-        icon="fa fa-undo",
-        extra_css_class="dropdown-item"
+        url=discard_url, text=_("Discard Changes"), icon="fa fa-undo", extra_css_class="btn btn-inverse"
     )
 
 
+def get_save_as_copy_button(object, copy_url):
+    if copy_url and object and object.pk:
+        copy_url = try_reverse(copy_url, pk=object.pk)
+        return DropdownItem(
+            url=copy_url,
+            text=_("Save as a copy"),
+            icon="fa fa-clone",
+        )
+    elif object and object.pk:
+        return DropdownItem(
+            onclick="saveAsACopy()",
+            text=_("Save as a copy"),
+            icon="fa fa-clone",
+        )
+
+
 def get_default_edit_toolbar(
-        view_object, save_form_id,
-        discard_url=None,
-        delete_url=None,
-        with_split_save=True,
-        with_save_as_copy=False,
-        toolbar=None,
-        required_permissions=(),
+    view_object,
+    save_form_id,
+    discard_url=None,
+    delete_url=None,
+    copy_url=None,
+    with_split_save=True,
+    with_save_as_copy=False,
+    toolbar=None,
+    required_permissions=(),
 ):
     """
     Get a toolbar with buttons used for object editing.
@@ -512,9 +547,9 @@ def get_default_edit_toolbar(
     """
     request = view_object.request
     object = getattr(view_object, "object", None)
-    discard_url = (discard_url or request.path)
-    existing_toolbar = (toolbar is not None)
-    toolbar = (toolbar if existing_toolbar else Toolbar.for_view(view_object))
+    discard_url = discard_url or request.path
+    existing_toolbar = toolbar is not None
+    toolbar = toolbar if existing_toolbar else Toolbar.for_view(view_object)
 
     default_save_button = PostActionButton(
         icon="fa fa-check-circle",
@@ -522,12 +557,6 @@ def get_default_edit_toolbar(
         text=_("Save"),
         extra_css_class="btn-success btn-save",
         required_permissions=required_permissions,
-    )
-
-    save_as_copy_button = DropdownItem(
-        onclick="saveAsACopy()",
-        text=_("Save as a copy"),
-        icon="fa fa-clone",
     )
 
     if with_split_save:
@@ -545,7 +574,9 @@ def get_default_edit_toolbar(
         ]
 
         if with_save_as_copy:
-            dropdown_options.append(save_as_copy_button)
+            save_as_copy_button = get_save_as_copy_button(object, copy_url)
+            if save_as_copy_button:
+                dropdown_options.append(save_as_copy_button)
 
         if object and object.pk:
             if discard_url:
@@ -556,7 +587,7 @@ def get_default_edit_toolbar(
             dropdown_options,
             split_button=default_save_button,
             extra_css_class="btn-success btn-dropdown-toggle",
-            required_permissions=required_permissions
+            required_permissions=required_permissions,
         )
         toolbar.append(save_dropdown)
     else:
@@ -568,14 +599,16 @@ def get_default_edit_toolbar(
     if object and object.pk:
         if delete_url:
             delete_url = try_reverse(delete_url, pk=object.pk)
-            toolbar.append(PostActionButton(
-                post_url=delete_url,
-                text=_(u"Delete"),
-                icon="fa fa-trash",
-                extra_css_class="btn-danger",
-                confirm=_("Are you sure you wish to delete %s?") % object,
-                required_permissions=required_permissions
-            ))
+            toolbar.append(
+                PostActionButton(
+                    post_url=delete_url,
+                    text=_("Delete"),
+                    icon="fa fa-trash",
+                    extra_css_class="btn-danger",
+                    confirm=_("Are you sure you wish to delete %s?") % object,
+                    required_permissions=required_permissions,
+                )
+            )
 
     if existing_toolbar:
         toolbar.extend(Toolbar.for_view(view_object))

@@ -1,12 +1,11 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import six
 from django.contrib import messages
-from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
@@ -15,6 +14,7 @@ from django.views.generic import FormView
 from shuup.admin.modules.contacts.forms import GroupMassEditForm, MassEditForm
 from shuup.admin.utils.views import MassEditMixin
 from shuup.core.models import Contact
+from shuup.utils.django_compat import reverse
 
 
 class ContactMassEditView(MassEditMixin, FormView):
@@ -33,7 +33,7 @@ class ContactMassEditView(MassEditMixin, FormView):
                     setattr(contact, k, v)
             contact.save()
 
-        messages.success(self.request, _("Contacts changed successfully"))
+        messages.success(self.request, _("Contacts were changed."))
         self.request.session["mass_action_ids"] = []
         return HttpResponseRedirect(reverse("shuup_admin:contact.list"))
 
@@ -50,6 +50,6 @@ class ContactGroupMassEditView(MassEditMixin, FormView):
         for group in groups:
             group.members.add(*ids)
 
-        messages.success(self.request, _("Contacts Groups changed successfully"))
+        messages.success(self.request, _("Contacts Groups were changed."))
         self.request.session["mass_action_ids"] = []
         return HttpResponseRedirect(reverse("shuup_admin:contact.list"))

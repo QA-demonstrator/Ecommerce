@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-import time
-
 import pytest
+import time
 from django.test.utils import override_settings
 from django.utils.translation import activate, get_language
 
 from shuup.testing import factories
 from shuup.testing.browser_utils import (
-    click_element, page_has_loaded, wait_until_appeared, wait_until_condition
+    click_element,
+    initialize_admin_browser_test,
+    page_has_loaded,
+    wait_until_appeared,
+    wait_until_condition,
 )
-from shuup.testing.browser_utils import initialize_admin_browser_test
 
 pytestmark = pytest.mark.skipif(os.environ.get("SHUUP_BROWSER_TESTS", "0") != "1", reason="No browser tests run.")
 
 
-
 @pytest.mark.parametrize("default_language", ["it", "pt-br", "fi"])
-@pytest.mark.browser
-@pytest.mark.djangodb
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
 def test_xtheme_plugin_form_language_order(admin_user, browser, live_server, settings, default_language):
     """
     Test that the first language option is the Parler default
@@ -72,7 +73,12 @@ def test_xtheme_plugin_form_language_order(admin_user, browser, live_server, set
 
             # select the TextPlugin
             wait_until_appeared(iframe, "select[name='general-plugin']")
-            iframe.select("general-plugin", "text")
+            click_element(iframe, "#select2-id_general-plugin-container")
+            wait_until_appeared(iframe, "input.select2-search__field")
+            iframe.find_by_css("input.select2-search__field").first.value = "Text"
+            wait_until_appeared(browser, ".select2-results__option:not([aria-live='assertive'])")
+            iframe.execute_script('$($(".select2-results__option")[1]).trigger({type: "mouseup"})')
+
             time.sleep(1)
             wait_until_condition(iframe, lambda x: page_has_loaded(x), timeout=20)
             wait_until_appeared(iframe, "ul.editor-tabs")
@@ -83,8 +89,8 @@ def test_xtheme_plugin_form_language_order(admin_user, browser, live_server, set
 
 
 @pytest.mark.parametrize("language", ["it", "pt-br", "fi", "en"])
-@pytest.mark.browser
-@pytest.mark.djangodb
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
 def test_xtheme_plugin_form_selected_language_pane(admin_user, browser, live_server, settings, language):
     """
     Test that the current language is selected by default
@@ -123,7 +129,11 @@ def test_xtheme_plugin_form_selected_language_pane(admin_user, browser, live_ser
 
         # select the TextPlugin
         wait_until_appeared(iframe, "select[name='general-plugin']")
-        iframe.select("general-plugin", "text")
+        click_element(iframe, "#select2-id_general-plugin-container")
+        wait_until_appeared(iframe, "input.select2-search__field")
+        iframe.find_by_css("input.select2-search__field").first.value = "Text"
+        wait_until_appeared(browser, ".select2-results__option:not([aria-live='assertive'])")
+        iframe.execute_script('$($(".select2-results__option")[1]).trigger({type: "mouseup"})')
         time.sleep(1)
         wait_until_condition(iframe, lambda x: page_has_loaded(x), timeout=20)
         wait_until_appeared(iframe, "ul.editor-tabs")
@@ -132,8 +142,8 @@ def test_xtheme_plugin_form_selected_language_pane(admin_user, browser, live_ser
         assert language == iframe.find_by_css("ul.editor-tabs li.active a").first.text
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
 def test_xtheme_editor_form_picture(admin_user, browser, live_server, settings):
     """
     Test that is is possible to add image fron media browser
@@ -194,4 +204,6 @@ def test_xtheme_editor_form_picture(admin_user, browser, live_server, settings):
         browser.windows.current = browser.windows[0]
 
         # make sure the image was added to the editor
-        wait_until_appeared(browser, "#id_plugin-text_en-editor-wrap .note-editable img[src='%s']" % filer_image.url, timeout=20)
+        wait_until_appeared(
+            browser, "#id_plugin-text_en-editor-wrap .note-editable img[src='%s']" % filer_image.url, timeout=20
+        )

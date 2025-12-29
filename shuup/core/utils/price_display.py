@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -20,18 +20,21 @@ Contents:
 import django_jinja.library
 import jinja2
 
-from shuup.core.pricing import PriceDisplayOptions, Priceful
+from shuup.core.catalog import ProductCatalog, ProductCatalogContext
+from shuup.core.pricing import PriceDisplayOptions, Priceful, PriceInfo
 from shuup.core.templatetags.shuup_common import money, percent
 from shuup.core.utils.price_cache import (
-    cache_many_price_info, cache_price_info, get_cached_price_info,
-    get_many_cached_price_info
+    cache_many_price_info,
+    cache_price_info,
+    get_cached_price_info,
+    get_many_cached_price_info,
 )
 from shuup.core.utils.prices import convert_taxness
 
 PRICED_CHILDREN_CACHE_KEY = "%s-%s_priced_children"
 
 
-def render_price_property(request, item, priceful, property_name='price'):
+def render_price_property(request, item, priceful, property_name="price"):
     """
     Render price property of a Priceful object.
 
@@ -41,11 +44,10 @@ def render_price_property(request, item, priceful, property_name='price'):
     :type propert_name: str
     :rtype: str
     """
-    options = PriceDisplayOptions.from_context({'request': request})
+    options = PriceDisplayOptions.from_context({"request": request})
     if options.hide_prices:
         return ""
-    new_priceful = convert_taxness(
-        request, item, priceful, options.include_taxes)
+    new_priceful = convert_taxness(request, item, priceful, options.include_taxes)
     price_value = getattr(new_priceful, property_name)
     return money(price_value)
 
@@ -53,15 +55,13 @@ def render_price_property(request, item, priceful, property_name='price'):
 class _ContextObject(object):
     def __init__(self, name, property_name=None):
         self.name = name
-        self.property_name = (property_name or name)
+        self.property_name = property_name or name
         self._register()
 
 
 class _ContextFilter(_ContextObject):
     def _register(self):
-        django_jinja.library.filter(
-            name=self.name,
-            fn=jinja2.contextfilter(self))
+        django_jinja.library.filter(name=self.name, fn=jinja2.contextfilter(self))
 
     @property
     def cache_identifier(self):
@@ -70,13 +70,26 @@ class _ContextFilter(_ContextObject):
 
 class _ContextFunction(_ContextObject):
     def _register(self):
-        django_jinja.library.global_function(
-            name=self.name,
-            fn=jinja2.contextfunction(self))
+        django_jinja.library.global_function(name=self.name, fn=jinja2.contextfunction(self))
+
+
+def _get_item_price_info(request, item, quantity, supplier=None):
+    # the item has a catalog price annotate, use it
+    # this speeds up when using querysets coming from ProductCatalog
+    if hasattr(item, "catalog_price") and hasattr(item, "catalog_discounted_price") and item.catalog_price is not None:
+        shop = request.shop
+        discounted_price = item.catalog_discounted_price if item.catalog_discounted_price is not None else None
+        return PriceInfo(
+            price=shop.create_price((discounted_price if discounted_price else item.catalog_price) * quantity),
+            base_price=shop.create_price(item.catalog_price * quantity),
+            quantity=quantity,
+        )
+
+    return _get_priceful(request, item, quantity, supplier)
 
 
 class PriceDisplayFilter(_ContextFilter):
-    def __call__(self, context, item, quantity=1, include_taxes=None, allow_cache=True):
+    def __call__(self, context, item, quantity=1, include_taxes=None, allow_cache=True, supplier=None):
         options = PriceDisplayOptions.from_context(context)
         if options.hide_prices:
             return ""
@@ -84,55 +97,55 @@ class PriceDisplayFilter(_ContextFilter):
         if include_taxes is None:
             include_taxes = options.include_taxes
 
-        request = context.get('request')
-        price_info = get_cached_price_info(
-            request,
-            item,
-            quantity,
-            include_taxes=include_taxes
-        ) if allow_cache else None
+        request = context.get("request")
+
+        price_info = (
+            get_cached_price_info(request, item, quantity, include_taxes=include_taxes, supplier=supplier)
+            if allow_cache
+            else None
+        )
 
         if not price_info:
-            price_info = _get_priceful(request, item, quantity)
+            price_info = _get_item_price_info(request, item, quantity, supplier)
 
             if not price_info:
                 return ""
 
             price_info = convert_taxness(request, item, price_info, include_taxes)
             if allow_cache:
-                cache_price_info(request, item, quantity, price_info, include_taxes=include_taxes)
+                cache_price_info(request, item, quantity, price_info, include_taxes=include_taxes, supplier=supplier)
 
         return money(getattr(price_info, self.property_name))
 
 
 class PricePropertyFilter(_ContextFilter):
-    def __call__(self, context, item, quantity=1, allow_cache=True):
-        request = context.get('request')
-        price_info = get_cached_price_info(request, item, quantity) if allow_cache else None
+    def __call__(self, context, item, quantity=1, allow_cache=True, supplier=None):
+        request = context.get("request")
+        price_info = get_cached_price_info(request, item, quantity, supplier=supplier) if allow_cache else None
 
         if not price_info:
-            price_info = _get_priceful(request, item, quantity)
+            price_info = _get_item_price_info(request, item, quantity, supplier)
 
             if not price_info:
                 return ""
             if allow_cache:
-                cache_price_info(request, item, quantity, price_info)
+                cache_price_info(request, item, quantity, price_info, supplier=supplier)
 
         return getattr(price_info, self.property_name)
 
 
 class PricePercentPropertyFilter(_ContextFilter):
-    def __call__(self, context, item, quantity=1, allow_cache=True):
-        request = context.get('request')
-        price_info = get_cached_price_info(request, item, quantity) if allow_cache else None
+    def __call__(self, context, item, quantity=1, allow_cache=True, supplier=None):
+        request = context.get("request")
+        price_info = get_cached_price_info(request, item, quantity, supplier=supplier) if allow_cache else None
 
         if not price_info:
-            price_info = _get_priceful(request, item, quantity)
+            price_info = _get_item_price_info(request, item, quantity, supplier)
 
             if not price_info:
                 return ""
             if allow_cache:
-                cache_price_info(request, item, quantity, price_info)
+                cache_price_info(request, item, quantity, price_info, supplier=supplier)
 
         return percent(getattr(price_info, self.property_name))
 
@@ -160,8 +173,38 @@ class TotalPriceDisplayFilter(_ContextFilter):
         return money(total)
 
 
+def get_priced_children_for_price_range(request, product, quantity, supplier):
+    catalog = ProductCatalog(
+        ProductCatalogContext(
+            shop=request.shop,
+            user=getattr(request, "user", None),
+            supplier=supplier,
+            contact=getattr(request, "customer", None),
+            purchasable_only=True,
+        )
+    )
+
+    product_queryset = (
+        catalog.get_products_queryset()
+        .filter(pk__in=product.variation_children.values_list("pk", flat=True))
+        .order_by("catalog_price")
+    )
+
+    low = product_queryset.first()
+
+    if low is None:
+        return []
+
+    high = product_queryset.last()
+
+    return [
+        (low, _get_item_price_info(request, low, quantity, supplier)),
+        (high, _get_item_price_info(request, high, quantity, supplier)),
+    ]
+
+
 class PriceRangeDisplayFilter(_ContextFilter):
-    def __call__(self, context, product, quantity=1, allow_cache=True):
+    def __call__(self, context, product, quantity=1, allow_cache=True, supplier=None):
         """
         :type product: shuup.core.models.Product
         """
@@ -169,23 +212,24 @@ class PriceRangeDisplayFilter(_ContextFilter):
         if options.hide_prices:
             return ("", "")
 
-        request = context.get('request')
-        priced_products = get_many_cached_price_info(
-            request,
-            product,
-            quantity,
-            include_taxes=options.include_taxes
-        ) if allow_cache else None
+        request = context.get("request")
+        priced_products = (
+            get_many_cached_price_info(
+                request, product, quantity, include_taxes=options.include_taxes, supplier=supplier
+            )
+            if allow_cache
+            else None
+        )
 
-        if not priced_products:
+        if priced_products is None:
             priced_children_key = PRICED_CHILDREN_CACHE_KEY % (product.id, quantity)
             priced_products = []
 
             if hasattr(request, priced_children_key):
                 priced_children = getattr(request, priced_children_key)
             else:
-                priced_children = product.get_priced_children(request, quantity) or [
-                    (product, _get_priceful(request, product, quantity))
+                priced_children = get_priced_children_for_price_range(request, product, quantity, supplier) or [
+                    (product, _get_item_price_info(request, product, quantity, supplier))
                 ]
                 setattr(request, priced_children_key, priced_children)
 
@@ -197,7 +241,9 @@ class PriceRangeDisplayFilter(_ContextFilter):
                 priced_products.append(priceful)
 
             if priced_products and allow_cache:
-                cache_many_price_info(request, product, quantity, priced_products, include_taxes=options.include_taxes)
+                cache_many_price_info(
+                    request, product, quantity, priced_products, include_taxes=options.include_taxes, supplier=supplier
+                )
 
         if not priced_products:
             return ("", "")
@@ -205,7 +251,7 @@ class PriceRangeDisplayFilter(_ContextFilter):
         return (money(priced_products[0].price), money(priced_products[-1].price))
 
 
-def _get_priceful(request, item, quantity):
+def _get_priceful(request, item, quantity, supplier):
     """
     Get priceful from given item.
 
@@ -214,33 +260,39 @@ def _get_priceful(request, item, quantity):
     should implement the `Priceful` interface.
 
     :type request: django.http.HttpRequest
+    :param request: used as pricing context
     :type item: shuup.core.taxing.TaxableItem
     :type quantity: numbers.Number
+    :type supplier: shuup.core.models.Supplier
+    :param supplier: used to pass for pricing context
     :rtype: shuup.core.pricing.Priceful|None
     """
-    if hasattr(item, 'get_price_info'):
+    if supplier:
+        # Passed from template and sometimes chosen by end user,
+        # but most of the time just decided by supplier strategy.
+        setattr(request, "supplier", supplier)
+
+    if hasattr(item, "supplier"):
+        # When item already has supplier fe. order and basket lines.
+        # This is always forced and supplier passed from template
+        # can't override this. Though developer should never pass
+        # supplier to template filter while getting price for source line.
+        setattr(request, "supplier", getattr(item, "supplier"))
+
+    if hasattr(item, "get_price_info"):
         key_prefix = "%s-%s-" % (item.id, quantity)
+        if supplier:
+            key_prefix += "-%s" % (supplier.id)
+
         price_key = "%s_get_priceful" % key_prefix
         if hasattr(request, price_key):
             return getattr(request, price_key)
 
-        if hasattr(item, 'is_variation_parent') and item.is_variation_parent():
-            priced_children_key = PRICED_CHILDREN_CACHE_KEY % (item.id, quantity)
-            priced_children = getattr(request, priced_children_key, None)
-
-            if priced_children is None:
-                priced_children = item.get_priced_children(request, quantity)
-
-            price = (
-                priced_children[0][1] if priced_children else item.get_cheapest_child_price_info(request, quantity)
-            )
-        else:
-            price = item.get_price_info(request, quantity=quantity)
-
+        price = item.get_price_info(request, quantity=quantity)
         setattr(request, price_key, price)
         return price
 
-    if hasattr(item, 'get_total_cost'):
+    if hasattr(item, "get_total_cost"):
         return item.get_total_cost(request.basket)
 
     assert isinstance(item, Priceful)

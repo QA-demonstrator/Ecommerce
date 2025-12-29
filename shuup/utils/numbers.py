@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import re
-from decimal import Decimal, ROUND_HALF_EVEN, ROUND_HALF_UP
-
 import six
+from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
 
 from shuup.utils import update_module_attributes
 
@@ -41,7 +40,7 @@ def bankers_round(value, ndigits=0):
     return value.quantize(quantizer, rounding=ROUND_HALF_EVEN)
 
 
-def nickel_round(value, quant=Decimal('0.05'), rounding=ROUND_HALF_UP):
+def nickel_round(value, quant=Decimal("0.05"), rounding=ROUND_HALF_UP):
     """
     Round decimal value to nearest quant.
 
@@ -73,7 +72,7 @@ def strip_non_float_chars(s):
     return re.sub("[^-+0123456789.]+", "", six.text_type(s))
 
 
-_simple_decimal_rx = re.compile(r'^[-+]?(\d{1,50}\.\d{0,50}|\.?\d{1,50})$')
+_simple_decimal_rx = re.compile(r"^[-+]?(\d{1,50}\.\d{0,50}|\.?\d{1,50})$")
 
 raise_exception = object()
 
@@ -83,8 +82,8 @@ def parse_simple_decimal(value, error=raise_exception):
     Parse simple decimal value from string.
 
     Simple decimal is basically a string of digits with optional sign
-    and decimal point.  Anything fancy, such as exponent forms, NaN or
-    Infinity is an error.  So are other unallowed characters.  There is
+    and decimal point. Anything fancy, such as exponent forms, NaN or
+    Infinity is an error. So are other unallowed characters. There is
     also a length limit of 50 digits before and after the decimal point.
 
     >>> assert parse_simple_decimal('42') == Decimal(42)
@@ -103,14 +102,10 @@ def parse_simple_decimal(value, error=raise_exception):
     :rtype: Decimal|type(error)
     :raises ValueError: on errors by default
     """
-    decoded_value = (
-        value.decode('ascii', errors='replace')
-        if six.PY2 and isinstance(value, bytes)
-        else value)
-    if not isinstance(decoded_value, six.text_type) or (
-            not _simple_decimal_rx.match(decoded_value)):
+    decoded_value = value.decode("ascii", errors="replace") if six.PY2 and isinstance(value, bytes) else value
+    if not isinstance(decoded_value, six.text_type) or (not _simple_decimal_rx.match(decoded_value)):
         if error is raise_exception:
-            raise ValueError('Cannot parse as simple decimal: %r' % (value,))
+            raise ValueError("Error! Value `%r` can't be parsed as a simple decimal." % (value,))
         return error
     return Decimal(value)
 
@@ -163,7 +158,7 @@ def parse_decimal_string(s):
 def try_parse_decimal_string(s):
     try:
         return parse_decimal_string(s)
-    except:
+    except Exception:
         return None
 
 
@@ -186,7 +181,7 @@ def get_string_sort_order(s):
 
     try:  # If not, see if it looks enough like a decimal
         return (5, parse_decimal_string(s))
-    except:  # Otherwise just sort as a string
+    except Exception:  # Otherwise just sort as a string
         return (1, s)
 
 

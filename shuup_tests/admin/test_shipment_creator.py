@@ -1,28 +1,22 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
-import re
-
 import pytest
+import re
 from bs4 import BeautifulSoup
 from django import forms
 
 from shuup.admin.form_modifier import FormModifier
-from shuup.admin.modules.orders.views.shipment import (
-    OrderCreateShipmentView, ShipmentForm
-)
+from shuup.admin.modules.orders.views.shipment import OrderCreateShipmentView, ShipmentForm
 from shuup.apps.provides import override_provides
 from shuup.core.excs import NoShippingAddressException
 from shuup.core.models import Order
-from shuup.testing.factories import (
-    create_order_with_product, create_product, get_default_shop,
-    get_default_supplier
-)
+from shuup.testing.factories import create_order_with_product, create_product, get_default_shop, get_default_supplier
 from shuup.testing.utils import apply_request_middleware
 
 
@@ -32,18 +26,16 @@ def test_shipment_creating_view_get(rf, admin_user):
     supplier = get_default_supplier()
     product = create_product(sku="test-sku", shop=shop, supplier=supplier, default_price=3.33)
     quantity = 1
-    order = create_order_with_product(
-        product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
+    order = create_order_with_product(product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
 
     request = apply_request_middleware(rf.get("/"), user=admin_user)
     view = OrderCreateShipmentView.as_view()
-    response = view(request, pk=order.pk).render()
+    response = view(request, pk=order.pk, supplier_pk=supplier.pk).render()
     assert response.status_code == 200
 
     # Should contain supplier input and input for product
     soup = BeautifulSoup(response.content)
     assert soup.find("input", {"id": "id_q_%s" % product.pk})
-    assert soup.find("select", {"id": "id_supplier"})
 
 
 @pytest.mark.django_db
@@ -53,13 +45,10 @@ def test_shipment_creating_view_post(rf, admin_user):
     product = create_product(sku="test-sku", shop=shop, supplier=supplier, default_price=3.33)
     order = create_order_with_product(product, supplier, quantity=1, taxless_base_unit_price=1, shop=shop)
 
-    data = {
-        "q_%s" % product.pk: 1,
-        "supplier": supplier.pk
-    }
+    data = {"q_%s" % product.pk: 1}
     request = apply_request_middleware(rf.post("/", data=data), user=admin_user)
     view = OrderCreateShipmentView.as_view()
-    response = view(request, pk=order.pk)
+    response = view(request, pk=order.pk, supplier_pk=supplier.pk)
     assert response.status_code == 302
 
     # Order should have shipment
@@ -76,20 +65,18 @@ def test_extending_shipment_with_extra_fields(rf, admin_user):
     supplier = get_default_supplier()
     product = create_product(sku="test-sku", shop=shop, supplier=supplier, default_price=3.33)
     quantity = 1
-    order = create_order_with_product(
-        product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
+    order = create_order_with_product(product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
 
     extend_form_class = "shuup_tests.admin.test_shipment_creator.ShipmentFormModifierTest"
     with override_provides(ShipmentForm.form_modifier_provide_key, [extend_form_class]):
         request = apply_request_middleware(rf.get("/"), user=admin_user)
         view = OrderCreateShipmentView.as_view()
-        response = view(request, pk=order.pk).render()
+        response = view(request, pk=order.pk, supplier_pk=supplier.pk).render()
         assert response.status_code == 200
 
         # Should contain supplier input, input for product and input for phone
         soup = BeautifulSoup(response.content)
         assert soup.find("input", {"id": "id_q_%s" % product.pk})
-        assert soup.find("select", {"id": "id_supplier"})
         assert soup.find("input", {"id": "id_phone"})
 
 
@@ -99,19 +86,14 @@ def test_extending_shipment_clean_hook(rf, admin_user):
     supplier = get_default_supplier()
     product = create_product(sku="test-sku", shop=shop, supplier=supplier, default_price=3.33)
     quantity = 1
-    order = create_order_with_product(
-        product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
+    order = create_order_with_product(product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
 
     extend_form_class = "shuup_tests.admin.test_shipment_creator.ShipmentFormModifierTest"
     with override_provides(ShipmentForm.form_modifier_provide_key, [extend_form_class]):
-        data = {
-            "q_%s" % product.pk: 1,
-            "supplier": supplier.pk,
-            "phone": "911"
-        }
+        data = {"q_%s" % product.pk: 1, "phone": "911"}
         request = apply_request_middleware(rf.post("/", data=data), user=admin_user)
         view = OrderCreateShipmentView.as_view()
-        response = view(request, pk=order.pk).render()
+        response = view(request, pk=order.pk, supplier_pk=supplier.pk).render()
         assert response.status_code == 200
         soup = BeautifulSoup(response.content)
         assert soup.body.findAll(text=re.compile("Phone number should start with country code!"))
@@ -123,20 +105,15 @@ def test_extending_shipment_form_valid_hook(rf, admin_user):
     supplier = get_default_supplier()
     product = create_product(sku="test-sku", shop=shop, supplier=supplier, default_price=3.33)
     quantity = 1
-    order = create_order_with_product(
-        product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
+    order = create_order_with_product(product, supplier, quantity=quantity, taxless_base_unit_price=1, shop=shop)
 
     extend_form_class = "shuup_tests.admin.test_shipment_creator.ShipmentFormModifierTest"
     with override_provides(ShipmentForm.form_modifier_provide_key, [extend_form_class]):
         phone_number = "+358911"
-        data = {
-            "q_%s" % product.pk: 1,
-            "supplier": supplier.pk,
-            "phone": phone_number
-        }
+        data = {"q_%s" % product.pk: 1, "phone": phone_number}
         request = apply_request_middleware(rf.post("/", data=data), user=admin_user)
         view = OrderCreateShipmentView.as_view()
-        response = view(request, pk=order.pk)
+        response = view(request, pk=order.pk, supplier_pk=supplier.pk)
         assert response.status_code == 302
 
         # Order should now have shipment, but let's re fetch it first

@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -16,11 +16,19 @@ SHOP_SESSION_KEY = "admin_shop"
 
 
 class AdminShopProvider(object):
-
     def get_shop(self, request):
         if not request.user.is_staff:
             return None
 
+        cached_shop = getattr(request, "_cached_admin_shop", None)
+        if cached_shop:
+            return request._cached_admin_shop
+
+        shop = self._get_shop(request)
+        request._cached_admin_shop = shop
+        return shop
+
+    def _get_shop(self, request):
         # take the first if multishop is disabled
         if not settings.SHUUP_ENABLE_MULTIPLE_SHOPS:
             return Shop.objects.first()
@@ -49,19 +57,21 @@ class AdminShopProvider(object):
 
     def set_shop(self, request, shop=None):
         if not request.user.is_staff:
-            raise PermissionDenied(_("You must be a staff user"))
+            raise PermissionDenied(_("You must have the Access to Admin Panel permission."))
 
         if shop:
             # only can set if the user is superuser or is the shop staff
             if shop.staff_members.filter(pk=request.user.pk).exists() or request.user.is_superuser:
                 request.session[SHOP_SESSION_KEY] = shop.id
+                request._cached_admin_shop = shop
             else:
-                raise PermissionDenied(_("You are not a staff member of this shop"))
+                raise PermissionDenied(_("You must have the Access to Admin Panel permissions to this shop."))
 
         else:
             self.unset_shop(request)
 
     def unset_shop(self, request):
+        request._cached_admin_shop = None
         if SHOP_SESSION_KEY in request.session:
             del request.session[SHOP_SESSION_KEY]
 

@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-
 import pytest
-
 from django.core.management import call_command
 
 from shuup.core.models import AnonymousContact, Product, Shop, Supplier
 from shuup.testing.browser_utils import (
-    click_element, wait_until_appeared, wait_until_condition
+    click_element,
+    initialize_admin_browser_test,
+    wait_until_appeared,
+    wait_until_condition,
 )
-from shuup.testing.browser_utils import initialize_admin_browser_test
 
 pytestmark = pytest.mark.skipif(os.environ.get("SHUUP_BROWSER_TESTS", "0") != "1", reason="No browser tests run.")
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
+@pytest.mark.django_db
 def test_dev_onboarding(browser, admin_user, live_server, settings):
-    Shop.objects.first().delete()  # Delete first hop created by test initializations
+    Shop.objects.first().delete()  # Delete first shop created by test initializations
     call_command("shuup_init", *[], **{})
     shop = Shop.objects.first()
-    assert shop.maintenance_mode
+    assert not shop.maintenance_mode
     initialize_admin_browser_test(browser, live_server, settings, onboarding=True)
 
     browser.fill("address-first_name", "Matti")
@@ -74,7 +73,13 @@ def test_dev_onboarding(browser, admin_user, live_server, settings):
     assert Product.objects.count() == 10
     supplier = Supplier.objects.first()
     customer = AnonymousContact()
-    assert len([
-        product for product in Product.objects.all()
-            if product.get_shop_instance(shop).is_orderable(supplier, customer, 1)
-    ]) == 10
+    assert (
+        len(
+            [
+                product
+                for product in Product.objects.all()
+                if product.get_shop_instance(shop).is_orderable(supplier, customer, 1)
+            ]
+        )
+        == 10
+    )

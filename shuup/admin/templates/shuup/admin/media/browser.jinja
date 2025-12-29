@@ -6,7 +6,7 @@
 
 {% block action_buttons %}
     <div class="btn-toolbar" role="toolbar">
-        <button class="btn btn-primary dropdown-toggle" onclick="MediaBrowser.openFolderContextMenu(event)">
+        <button class="btn btn-primary dropdown-toggle" id="media-folder-edit-button" onclick="MediaBrowser.openFolderContextMenu(event)">
             <i class="fa fa-cog"></i>
             {% trans %}Edit{% endtrans %}
             <span class="caret"></span>
@@ -15,6 +15,9 @@
              {# wrapper will be filled with an invisible file input by Javascript #}
              <i class="fa fa-upload"></i> {% trans %}Upload{% endtrans %}
         </button>
+        <button class="btn btn-inverse" id="copy-path-wrapper">
+             <i class="fa fa-clipboard"></i> {% trans %}Copy folder path{% endtrans %}
+        </button>
     </div>
 {% endblock %}
 
@@ -22,13 +25,14 @@
     <div id="BrowserView"></div>
 {% endblock %}
 {% block extra_js %}
-    <script src="{{ static("shuup_admin/js/media-browser.js") }}"></script>
+    <script src="{{ shuup_static("shuup_admin/js/media-browser.js") }}"></script>
     <script>
     window.MediaBrowser.init({{ browser_config|json }});
     window.MediaBrowser.setupUploadButton(document.getElementById("upload-button-wrapper"));
+    window.MediaBrowser.setupCopyButton(document.getElementById("copy-path-wrapper"));
     </script>
 {% endblock %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{{ static("shuup_admin/css/media-browser.css") }}">
+    <link rel="stylesheet" href="{{ shuup_static("shuup_admin/css/media-browser.css") }}">
     <style>body.popup .support-nav {padding:0;padding-bottom: 10px}</style>
 {% endblock %}

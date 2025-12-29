@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -49,23 +49,25 @@ window.serializeForm = function($form) {
 };
 
 window.renderFormErrors = function($form, errors) {
-    for(let formName in errors) {
-        let formErrors = errors[formName];
-        for(let fieldName in formErrors) {
-            let fieldErrors = formErrors[fieldName].join(" ");
+    Object.keys(errors).forEach((formName) => {
+        const formErrors = errors[formName];
+        Object.keys(formErrors).forEach((fieldName) => {
+            const fieldErrors = formErrors[fieldName].join(" ");
             if(fieldName === "__all__") {
                 $form.parent().find(".errors").append('<div class="alert alert-danger">' + fieldErrors + '</div>');
             } else {
-                let $field = $form.find(":input[name='" + formName + "-" + fieldName + "']").parent(".form-group");
-                $field.append("<span class='help-block error-block'>" + fieldErrors + "</span>").addClass("has-error");
+                const field = $("[name=" + formName + "-" + fieldName + "]");
+                field.closest(".form-group").addClass("has-error");
+                $("<br><span class='help-block error-block'>" + fieldErrors + "</span>").insertBefore(field.closest(".form-input-group"));
             }
-        }
-    }
+        });
+    });
 };
 
 window.clearErrors = function ($form) {
     $form.find(".has-error").removeClass("has-error");
     $form.find(".error-block").remove();
+    $form.find("br").remove();
     $form.parent().find(".errors").empty();
 };
 
@@ -90,6 +92,7 @@ $(function() {
     $(".language-dependent-content").each(function() {
         const $ctr = $(this);
         var firstTabWithErrorsOpened = false;
+
         $ctr.find(".nav-tabs li").each(function() {
             const $tab = $(this);
             const lang = $tab.data("lang");
@@ -116,15 +119,23 @@ $(function() {
         const saveBtn = document.getElementsByClassName("btn btn-success btn-save")[0];
         const groupBtn = document.getElementsByClassName("btn-group")[0];
         const dropBtn = document.getElementsByClassName("btn dropdown-toggle btn-success btn-dropdown-toggle")[0];
-        if(saveBtn) {
-            if (document.body.scrollTop === 0 && document.documentElement.scrollTop === 0){
-                saveBtn.classList.remove("opaque");
-                dropBtn.classList.remove("opaque");
-                groupBtn.classList.remove("opaque");
-            } else if (!(inViewport(saveBtn))) {
-                groupBtn.classList.add("opaque")
-                saveBtn.classList.add("opaque");
-                dropBtn.classList.add("opaque");
+        elemArr = []
+        if(dropBtn) {
+            elemArr.push(groupBtn);
+            elemArr.push(dropBtn);
+        }
+        else if (saveBtn) {
+            elemArr.push(saveBtn);
+        }
+
+        if (document.body.scrollTop === 0 && document.documentElement.scrollTop === 0){
+            for(let el of elemArr) {
+                el.classList.remove("opaque");
+            }
+        }
+        else if (!(inViewport(saveBtn))) {
+            for(let el of elemArr) {
+                el.classList.add("opaque");
             }
         }
     };

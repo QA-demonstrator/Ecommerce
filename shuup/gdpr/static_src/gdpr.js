@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,18 +35,23 @@
     });
 
     function saveConsent() {
+        $(".gdpr-consent-warn-bar").hide();
+        $(".gdpr-consent-preferences").hide();
         data = $("#consent-form").serialize();
         var request = $.ajax({
             url: $("#consent-form").attr("action"),
             type: 'POST',
             data: data,
             success: function() {
+                // Remove GDPR divs and their content upon successful completion
                 $(".gdpr-consent-warn-bar").remove();
-                $(".gdpr-consent-preferences").remove(); // Remove GDPR divs and their content upon successful completion
+                $(".gdpr-consent-preferences").remove();
                 $("body").removeClass("body-noscroll");
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                window.alert(gettext("An error has occurred while saving the consent, please try again."));
+                $(".gdpr-consent-warn-bar").show();
+                $(".gdpr-consent-preferences").show();
+                window.alert(gettext("Error! Saving the consent failed, please try again."));
             }
         });
     }

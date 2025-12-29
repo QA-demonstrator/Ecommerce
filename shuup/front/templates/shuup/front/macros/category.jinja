@@ -17,7 +17,7 @@
     <hr>
 {% endmacro %}
 
-{% macro render_products_section() %}
+{% macro render_products_section(supplier=None) %}
     <div class="row">
         <div class="col-md-3 categories-nav">
             {{ render_category_menu() }}
@@ -35,7 +35,7 @@
         <div class="col-md-9 products-wrap">
             {% placeholder "category_top_extra" %}{% endplaceholder %}
             {{ render_product_filters_top() }}
-            {{ render_product_list() }}
+            {{ render_product_list(supplier) }}
         </div>
     </div>
     {% placeholder "category_bottom_extra" %}{% endplaceholder %}
@@ -69,7 +69,7 @@
     </div>
 {% endmacro %}
 
-{% macro render_product_filters_top() %}
+{% macro render_product_filters_top(item=None) %}
     <div class="row product-list-actions">
         <div class="col-sm-4">
             {% if "sort" in form.fields.keys() %}
@@ -101,16 +101,20 @@
 
         <div id="filters" class="filters collapse" aria-expanded="false">
             {% for field in form %}
-                {% if field.name not in ["sort", "q", "limit"] %}
-                    <div class="filter-block">
-                        <a href="#{{ field.name }}"
-                           class="block-title"
-                           data-toggle="collapse"
-                           aria-expanded="true"
-                           aria-controls="categories">{{ field.label }}</a>
-                        <br>
-                        {{ render_field(field, render_label=False) }}
-                    </div>
+                {% if field.field.widget.is_hidden %}
+                    {{ field.as_widget()|safe }}
+                {% else %}
+                    {% if field.name not in ["sort", "q", "limit"] %}
+                        <div class="filter-block">
+                            <a href="#{{ field.name }}"
+                            class="block-title"
+                            data-toggle="collapse"
+                            aria-expanded="true"
+                            aria-controls="categories">{{ field.label }}</a>
+                            <br>
+                            {{ render_field(field, render_label=False) }}
+                        </div>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
         </div>
@@ -118,13 +122,15 @@
 {% endmacro %}
 
 
-{% macro render_product_list() %}
+{% macro render_product_list(supplier=None) %}
     <div id="ajax_content">
             {%  set pagination = shuup.general.get_pagination_variables(products, page_size or 12) %}
             <div class="row product-list-view grid">
                 {% for product in pagination.objects if shuup.product.is_visible(product) %}
                     <div class="single-product">
-                        {{ product_box(product, show_description=True, class="product-card category-view box") }}
+                        {{ product_box(
+                            product, show_description=True,
+                            class="product-card category-view box", supplier=supplier) }}
                     </div>
                 {% endfor %}
             </div>

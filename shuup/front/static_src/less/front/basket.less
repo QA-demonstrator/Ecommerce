@@ -42,6 +42,7 @@
             margin-bottom: 1.5rem;
             @media (max-width: @screen-xs-max) {
                 min-height: 75px;
+                margin-bottom: 5.5rem;
             }
             @media (min-width: @screen-sm-min) {
                 margin: 1rem 0 1.5rem 0;
@@ -127,6 +128,27 @@
     }
     .input-group {
         margin-top: 15px;
+    }
+}
+
+.basket-used-codes {
+    margin-top: 30px;
+
+    .used-coupon-text {
+        margin-bottom: 0;
+    }
+
+    .basket-used-code {
+        margin-top: 15px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+
+        .basket-code {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
     }
 }
 

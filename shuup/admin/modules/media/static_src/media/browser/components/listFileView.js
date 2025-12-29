@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,16 +21,20 @@ export default function(ctrl, folders, files) {
         ]);
     });
     const fileItems = _.map(files, function(file) {
+        var editOptionsAvailable = fileContextMenu(ctrl, file)().filter(function( item ) {
+            return item !== undefined;
+         });
+
         return m("tr", {key: file.id}, [
             m("td", wrapFileLink(file)),
             m("td.text-right", file.size),
             m("td.text-right", moment(file.date).format()),
-            m("td", {key: "filecog",
+            editOptionsAvailable.length > 0 ? m("td", {key: "filecog",
                 onclick: (event) => {
                     menuManager.open(event.currentTarget, fileContextMenu(ctrl, file));
                     event.preventDefault();
                 }
-            }, m("i.fa.fa-cog"))
+            }, m("i.fa.fa-cog")) : null
         ]);
     });
     return m("div.table-responsive", [

@@ -10,6 +10,674 @@ Unrealeased
   with appropriate version header and this help text will be removed.
 
 
+Shuup 1.10.1
+------------
+
+Released on 2019-12-09 8:15pm +0200.
+
+Admin
+~~~~~
+
+- Fix bug with coupon codes
+
+Campaigns
+~~~~~~~~~
+
+- Add a variation parent basket condition. This condition will match on each
+  child in basket of a chosen product.
+
+Core
+~~~~
+
+- Change contactgroup name length to 256 so it is better in line with other
+  name fields
+
+Xtheme
+~~~~~~
+
+- Fix bug with Select2 in plugin
+
+General
+~~~~~~~
+
+- Add ability to display text on top of carousel
+
+
+Shuup 1.10.0
+------------
+
+Released on 2019-11-14 7:15am +0200.
+
+Remove API code and move to separated repositories Shuup API and
+Shuup REST API both available through PyPI and still included in
+default installation.
+
+
+Shuup 1.9.13
+------------
+
+Released on 2019-11-12 11:15am +0200.
+
+Core
+~~~~
+
+- Add default to order line modified on migration
+
+General
+~~~~~~~
+
+- Adjust django-filer version for Django 1.8 and 1.9
+
+Tasks
+~~~~~
+
+- Fix issue with broken div in dashboard item
+
+
+Shuup 1.9.12
+------------
+
+Released on 2019-11-07 2:40pm +0200.
+
+Admin
+~~~~~
+
+- Include breadcrumbs to is active menu check
+- Modernize dashboard blocks
+- Temp disable home view progress balls as broken
+- Fix the initial categories for product edit view 
+- Add settings to make select2 fields to load data asynchronously
+- Add signal that is triggered when form is valid in views
+- Make front url for nav customizable per project
+- Show dashboard link at navigation
+- Add shop and supplier info to order detail
+- Fix issues with order querysets
+
+Core
+~~~~
+
+- Move force anons and person contacts to front
+- Add orderline behaviour attribute 
+- Add related name for shop staff members
+
+General
+~~~~~~~
+
+- Move admin and front login forms to settings spec 
+- Add shop validation for order printouts
+
+
+Shuup 1.9.11
+------------
+
+Released on 2019-10-18 12:57pm +0300.
+
+Admin
+~~~~~
+
+- Init shop product suppliers with only supplier 
+- Add option to extend shop edit actions
+- Fix bug with supplier create
+- Fix the product images management form part
+
+Carousel
+~~~~~~~~
+
+- Update max-length for slide external URL
+
+Core
+~~~~
+
+- Add slugfield for supplier
+- Allow taxes on order source children lines
+
+Importer
+~~~~~~~~
+
+- Allow to use custom file_transformer
+
+Notify
+~~~~~~
+
+- Fix z-index on the modal-dialog
+
+
+Shuup 1.9.10
+------------
+
+Released on 2019-10-02 5:00pm +0300.
+
+Admin
+~~~~~
+
+- Add option to add messages menu entries
+- Orders, fixed `self.request.shop` to `get_shop(self.request)`
+- Fix issues with product list mass actions
+- Fix /sa/ products mass-actions
+- Make the refund lines data be an object instead of an array
+- Add tests around refund view
+- Add suppliers to product list by default
+- Hide arbitrary refund option when disabled
+- Highlight active items on menu
+- Add object saved signal with request for logging
+- Add option to register log menu entries
+
+Core
+~~~~
+
+- Add order line creation and modification dates
+- Allow refunding other than product lines 
+- Add the parent line supplier in the refund supplier line
+- Add SHUUP_ prefix to settings
+- Add SHUUP_ prefix to ALLOW_ARBITRARY_REFUNDS-setting
+- Add option to disable arbitrary refunds
+- Do not try to refund lines without quantity
+- Fix issue with order source update from order
+
+GDPR
+~~~~
+
+- Add 3 years on GDPR consent cookie expiration date
+- Add templatetag function to return all the cookies consented
+- Add default active field to allow default checked cookies
+
+Notify
+~~~~~~
+
+- Create environment provider method set through settings
+- Fix the email template variable name
+- Add option to wrap HTML body
+- Define script log entry
+- Make it possible to change the event runner 
+- Make it possible to use from_email when sending emails
+
+Utils
+~~~~~
+
+- Add force text for value to models get data dict
+
+XTheme
+~~~~~~
+
+- Add option to skip resource injection 
+
+
+Shuup 1.9.9
+-----------
+
+Released on 2019-08-21 9:30pm +0300.
+
+Admin
+~~~~~
+
+- Add option to pass extra dropzone configurations to widget
+- Add option to soft delete CMS pages
+- Add option to soft delete suppliers
+- Add option to pass extra dropzone configurations to widget
+- Fix field help text 
+
+Core
+~~~~
+
+- Add option to soft delete suppliers
+- Improve filtering for variation children
+
+
+Shuup 1.9.8
+-----------
+
+Released on 2019-08-06 9:00am -0800.
+
+Admin
+~~~~~
+
+- Preserve selected section on object edit views
+- Update bootstrap colorpicker and change color validation after 1 second
+- Update summernote version to latest and enable more editor features
+- Fix issues with media browser script
+- Fix issue with media dropzone
+- Go back to user page after stop impersonating
+- Refactor clean method and add test case for inactive user message
+
+Core
+~~~~
+
+- Set that contact group shop field can be empty
+
+Front
+~~~~~
+
+- Include product image dimensions in Open graph tags
+- Refactor clean method and add test case for inactive user message
+
+XTheme
+~~~~~~
+
+- Update summernote version to latest and enable more editor features
+
+
+Shuup 1.9.7
+-----------
+
+Released on 2019-06-19 11:15am -0800.
+
+Admin
+~~~~~
+
+- Expose dropzone activation to the world 
+- Fix boolean test when a false constant is needed
+- Fix state issue with order editing
+- Customize admin menu with nested levels
+- Drop subcategories from admin menu as unused
+- Customize admin menu with first level categories
+
+Core
+~~~~
+
+- Add signal and notify event when order status changes
+- Use force_text in models __str__ method to make sure to return strings
+
+Front
+~~~~~
+
+- Filter out invalid suppliers from category list
+- Make shipping address optional in checkout phase
+- Fix manufacturer, supplier and variation filters
+
+
+Shuup 1.9.6
+-----------
+
+Released on 2019-06-07 11:40am -0800.
+
+Admin
+~~~~~
+
+- Fix action button url parse (related to:
+  Add default required_permissions to the URLActionButton from url_name)
+
+Shuup 1.9.5
+-----------
+
+Released on 2019-06-07 10:00am -0800.
+
+Admin
+~~~~~
+
+- Add default required_permissions to the URLActionButton from url_name
+- Fix contact & order address form breaking on region copy
+- Edit Supplier description as HTML-field. This requires that you mark
+  supplier description safe when rendering.
+
+Core
+~~~~
+- Enable image upload for Categories through REST API
+- Add basic REST API to for contact groups and contact group display options
+- Add custom template tag to render static source urls. The template tag adds
+  the Shuup version as a suffix to burst caches
+- Fix compute bought with relation algorithm. Relate products directly and
+  render parents in cross sell plugins when configured to
+- Fix Contact field to use a field that considers django polymorphic.
+  Original JSONField has a bug that doesn't consider Django polymorphic
+  environment and fail to deserialize the value.
+
+Front
+~~~~~
+
+- Do not render bought with relations with siblings
+- Only show marketing permissions check on first checkout. Save a
+  configuration for each customer inside the options field
+- Add selected for complex variations and tests
+- Improve front filters JS customisation
+- Add missing data- attribute with the product ID. When product was not
+  orderable, the template rendered didn't contain the correct product id
+  making the product images disappear.
+- Add custom event to warn that product list has been loaded
+- Replace Xtheme products view with all category view
+- Make sure to get unique product ids when computing relations. Without that
+  the same product could run many times wasting time and resources
+- Select variation children in product detail view. Make the simple variation
+  option selected in parent product detail view
+- Fix pagination by adding default page number and clearing the loading state
+- Remove extra div tag
+- Fix rendering problem with purchased files
+- Add custom field ids format to prevent duplicates 
+
+GDPR
+~~~~
+
+- Do not ask to consent documents already consented
+- Make consent checkboxes optional for auth. This is choice the merchant can
+  make from admin panel. By default all consent checkboxes are enabled.
+
+
+Shuup 1.9.4
+-----------
+
+Released on 2019-05-14 4:15pm -0800.
+
+Admin
+~~~~~
+
+- Add option to setup auto reload for page
+- Show name for active supplier at all times when multiple suppliers are
+  enabled for Shuup project (refs to `shuup.admin.supplier_provider:get_supplier`.
+- Bump shop product cache on supplier save
+- Enable manufacturer logo for APIs
+- Adjust refund view for supplier
+
+Core
+~~~~
+
+- Add options JSON field for `shuup.core.models.Contact`.
+- Do not allow creating payment when the not paid amount is not valid
+- Expose data from `shuup.core.order_creator.SourceLine`
+
+Front
+~~~~~
+
+- Pass down the supplier in product macros
+- Fix issues with supplier in product detail context.
+- Pass supplier to orderability check on order form macro
+- Improve bootstrap field renderer around multiple checkbox options
+- Extend order refund utils for supplier
+- Truncate product name to 40 characters in basket partial dropdown
+- Go back to old staff user when stop impersonating
+- Fix categories product list filter
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Regions: add Australia to data
+- Xtheme: sort plugins by name
+
+
+Shuup 1.9.3
+-----------
+
+Released on 2019-04-22 10:45am -0800.
+
+Admin
+~~~~~
+
+- Fix issue with picotable column values 
+- Add option to control time step for datetime pickers
+
+Campaigns
+~~~~~~~~~
+
+- Fix bug in Campaign free product effect 
+- Add campaign supplier to discount lines. When lines causes new lines to 
+  basket it is important that those discount lines are linked to correct
+  supplier based on campaign.
+
+Core
+~~~~
+
+- Fix issues with custom Django User-model
+- Include variation parents to bought with calculations
+
+Docker
+~~~~~~
+
+- Add new Dockerfile for shuup_workbench
+
+Front
+~~~~~
+
+- Fix issue with product images and Simple Lightbox
+- Add new products page which shows products for all visible categories. This
+  suites fronts that does not have most typical category based navigation
+  required.
+- Add option to customize customer information forms
+- Improve logout when impersonating user
+- Make category select for carousel async
+- Fix styles for product quantity field at basket
+- Improve caches
+
+
+Simple CMS
+~~~~~~~~~~
+
+- Allow page owner see invisible CMS page 
+- Add supplier for CMS page
+
+
+Shuup 1.9.2
+-----------
+
+Released on 2019-03-30 17:45pm -0800.
+
+Admin
+~~~~~~
+
+- Fix issue with saving default order status
+- Improve shipment creation order section and create view
+- Add setting to customize datetime pickers format
+- Do not collapse attributes product section by default
+- Add select2 search inputs min length configurable
+- Fix Picotable checkboxes for mobile Safari & improve style
+- Add option to extend browser urls through provides
+- Fix bug with datetime widgte by making datetime form fields readonly
+
+Campaigns
+~~~~~~~~~~
+
+- Add supplier to basket campaigns and to coupon codes
+- Enable admin permissions for conditions and effects
+
+Core
+~~~~
+
+- Add delete option for product type
+- Improve order methods for shipments
+
+Discounts
+~~~~~~~~~~
+
+- Add option to limit discounts based on supplier
+
+Front
+~~~~~
+
+- Improve sort & filters
+- Fix issue with gettext import when gettext is used by addons
+- Add option for variation buttons instead select
+- Fix bug with variation product orderability check at order detail
+- Do not require primary image for product
+
+Notify
+~~~~~~
+
+- Improve several issues with admin module styles and fix few issues with
+  serializing objects
+
+Simple Supplier
+~~~~~~~~~~~~~~~~
+
+- Do not spam spam alert notifications inside a minute
+- Make the physical stock be equal to logical when product is not shipped
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Unlock lxml version limitation
+- Update pytoml to toml
+- Update Bootstrap outside admin to 3.4.1
+- Update Shepherd.js to latest
+- Update Parcel bundler to latest version
+
+
+Shuup 1.9.1
+-----------
+
+Released on 2019-03-16 13:30pm -0800.
+
+Admin
+~~~~~
+
+- Fix dropzone component and allow browsing local files
+- Remove missed message from product view that makes no sense
+- Introduce extra permissions for admin modules
+- Remove language column from picotable settings
+
+Core
+~~~~
+
+- Add managed stock flag in ProductStockStatus
+- Add database index for applied attributes fields
+
+Front
+~~~~~
+
+- Change templates to not render dashboard links when person is not available
+- Add option to explicitly override shop's list sort&filter config
+- Make the sort filter data contain the request and current category
+- Improve sort and filters to allow hidden fields
+- Only set sort & filters data when the form has changed
+- Bump sort & filters queryset cache
+- Fix custom checkbox rendering for required fields
+- Show available date in front template
+- Add mixin with fields for base template
+
+Reports
+~~~~~~~~
+
+- Fix max and min dates when values are set to None
+- Fix start and end date filtering
+
+Xtheme
+~~~~~~
+
+- Enable jinja template tags in Snippet plugin
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Update getting started with development instructions
+- Allow all hosts at workbench settings
+
+
+Shuup 1.9.0
+-----------
+
+Released on 2019-02-19 12:00pm -0800.
+
+Admin
+~~~~~
+
+- Add documentation for admin modules
+- Improve admin module permissions
+- Make mass actions extendable
+- Enable HTML content in help blocks
+- Fix picotable checkboxes breaking the layout
+- Add select2 widgets to fetch models async
+- Fix Product deletion returning 404
+
+Core
+~~~~
+
+- Add labels to order lines
+- Add product available until field
+- Add extra supplier fields
+
+Discounts
+~~~~~~~~~
+
+- Add xtheme plugin to render only products which have discount
+- Prevent doing unnecessary joins when fetching discounts
+
+Front
+~~~~~
+
+- Multiple bug fixes around sorts and filters
+- Improve company registration logic
+- Fix issue with image thumbnails
+- Improve the way orderability is handled in template tags
+- Remove deals only filter from plugins
+
+Reports
+~~~~~~~
+
+- Fix excel report writer by forcing strings when writing
+
+Xtheme
+~~~~~~
+
+- Change plugins template to render only when products are available
+- Create plugin to render a selection of products
+
+
+Shuup 1.8.2
+-----------
+
+Released on 2019-01-11 12:45pm -0800.
+
+Core
+~~~~
+
+- Introduce labels for shops and services. Labels can be used to
+  group services and shops for multishop/multivendor purposes.
+- Introduce order source validator. This enables custom validation
+  for very specific cases, such as, customer age check, basket can't
+  have a product because customer has some limit to buy it.
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Front: fix bug in carousel with Firefox and increase padding
+  for slide-arrows
+- Simple CMS: fix bug in page links
+- Addresses: add Croatia to list of EU countries
+- Wizard: fix bug in showing field errors at onboarding
+- Front: show admin button for all when there is no theme selected
+- Admin: fix bug in "save"-button at xtheme edit
+- Admin: fix product attribute card on opening
+- Admin: Fix bug in order edit view
+- Reports: fix bug in report get_totals
+- Front: disable "place order"-button on checkout after submit
+- Simple CMS: set page availability by default
+
+
+Shuup 1.8.1
+-----------
+
+Released on 2018-12-14 3:45pm -0800.
+
+Fix release for Django 1.8 support.
+
+
+Shuup 1.8.0
+-----------
+
+Released on 2018-12-14 8:45am -0800.
+
+Admin
+~~~~~
+
+- Fix dashboard block to include the current shop
+  in the queryset
+- XTheme: Show guide on theme config page
+- Theme editing, remove guide button
+- Add option to prevent highlighting a picotable column
+
+Core
+~~~~
+
+- Improve to_aware function to consider DST cases
+- Add option to pass supplier to pricing context
+  for option for supplier based pricing.
+
+Front
+~~~~~
+
+- Add supplier is enabled information to supplier
+- Add option to remove coupon codes from the basket
+- Add option to show and select supplier from front
+  when adding products to basket.
+
+
 Shuup 1.7.3
 -----------
 

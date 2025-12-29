@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import logging
-
 import six
 from django.db.models.query import QuerySet
 
@@ -30,12 +29,7 @@ cond_op_to_func_map = {
 
 class Step(object):
     def __init__(
-            self,
-            conditions=(),
-            actions=(),
-            next=StepNext.CONTINUE,
-            cond_op=StepConditionOperator.ALL,
-            enabled=True
+        self, conditions=(), actions=(), next=StepNext.CONTINUE, cond_op=StepConditionOperator.ALL, enabled=True
     ):
         self._conditions = conditions
         self._actions = actions
@@ -100,22 +94,24 @@ CONTEXT_LOGGER = logging.Logger("%s.Context" % __name__)
 
 
 class Context(object):
-    def __init__(self, variables=None, shop=None):
+    def __init__(self, variables=None, shop=None, event_identifier=None):
         if not variables:
             variables = {}
+        self.event_identifier = event_identifier
         self.shop = shop
         self._variables = dict(variables)
         self._logger = CONTEXT_LOGGER  # This object could be replaced if required
         self._log_target = None
 
     @classmethod
-    def from_variables(cls, shop=None, **variables):
+    def from_variables(cls, shop=None, event_identifier=None, **variables):
         """
         Create Context from variables.
 
+        :param event_identifier: identifier for shuup.notify event type
         :rtype: shuup.notify.script.Context
         """
-        return cls(variables, shop)
+        return cls(variables, shop, event_identifier)
 
     @classmethod
     def from_event(cls, event, shop=None):
@@ -126,7 +122,7 @@ class Context(object):
         :type shop: shuup.Shop
         :rtype: shuup.notify.script.Context
         """
-        ctx = cls(event.variable_values, shop)
+        ctx = cls(event.variable_values, shop, event.identifier)
         ctx._log_target = event.log_target
         return ctx
 
@@ -165,7 +161,7 @@ class Context(object):
         :type kwargs: dict
         """
         if not identifier:
-            raise ValueError("`identifier` is required for script logging!")
+            raise ValueError("Error! `identifier` is required for script logging.")
 
         if not self._log_target:
             return

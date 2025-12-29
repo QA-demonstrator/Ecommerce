@@ -1,12 +1,11 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import datetime
 import json
-
 import pytest
 from django.http.response import Http404
 from django.test import override_settings
@@ -14,10 +13,7 @@ from django.utils.timezone import now
 
 from shuup.admin.shop_provider import set_shop
 from shuup.core.models import Shop
-from shuup.discounts.admin.views import (
-    ArchivedDiscountListView, DiscountDeleteView, DiscountEditView,
-    DiscountListView
-)
+from shuup.discounts.admin.views import ArchivedDiscountListView, DiscountDeleteView, DiscountEditView, DiscountListView
 from shuup.discounts.models import Discount
 from shuup.testing import factories
 from shuup.testing.utils import apply_request_middleware
@@ -57,7 +53,7 @@ def test_discount_admin_edit_view(rf, staff_user, admin_user):
 
         assert response.status_code == 302
         discount1 = Discount.objects.first()
-        assert discount1.shops.first() == shop
+        assert discount1.shop == shop
 
         # Test with superuser and with different shop
         shop2 = factories.get_shop(enabled=True)
@@ -70,8 +66,6 @@ def test_discount_admin_edit_view(rf, staff_user, admin_user):
 
         discount2 = Discount.objects.exclude(id=discount1.pk).first()
         assert discount1 != discount2
-        assert discount2.shops.count() == 1
-        assert discount2.shops.filter(id=shop2.pk).exists()
 
         # Staff user can only view discount1 since that has the right shop
         _assert_view_get(rf, discount1, shop, staff_user)
@@ -88,36 +82,35 @@ def _test_discount_list_view(rf, index):
     staff_user = factories.create_random_user(is_staff=True)
     shop.staff_members.add(staff_user)
 
-    discount1 = Discount.objects.create(identifier="discount_without_effects_%s" % index)
-    discount1.shops = [shop]
+    discount1 = Discount.objects.create(identifier="discount_without_effects_%s" % index, shop=shop)
     discount2 = Discount.objects.create(
+        shop=shop,
         identifier="discount_with_amount_value_only_%s" % index,
         discount_amount_value=20,
         start_datetime=now(),
-        end_datetime=now() + datetime.timedelta(days=2))
-    discount2.shops = [shop]
+        end_datetime=now() + datetime.timedelta(days=2),
+    )
     discount3 = Discount.objects.create(
+        shop=shop,
         identifier="discount_with_amount_and_discounted_price_%s" % index,
         discount_amount_value=20,
         discounted_price_value=4,
         start_datetime=now(),
-        end_datetime=now() + datetime.timedelta(days=2))
-    discount3.shops = [shop]
+        end_datetime=now() + datetime.timedelta(days=2),
+    )
     discount4 = Discount.objects.create(
+        shop=shop,
         identifier="test_with_discounted_price_and_percentage_%s" % index,
         discounted_price_value=4,
         discount_percentage=0.20,
         start_datetime=now(),
-        end_datetime=now() + datetime.timedelta(days=2))
-    discount4.shops = [shop]
+        end_datetime=now() + datetime.timedelta(days=2),
+    )
 
     view_func = DiscountListView.as_view()
     request = apply_request_middleware(
-        rf.get("/", {
-            "jq": json.dumps({"perPage": 100, "page": 1})
-        }),
-        user=staff_user,
-        shop=shop)
+        rf.get("/", {"jq": json.dumps({"perPage": 100, "page": 1})}), user=staff_user, shop=shop
+    )
     set_shop(request, shop)
     response = view_func(request)
     if hasattr(response, "render"):
@@ -158,11 +151,8 @@ def test_discount_admin_list_view(rf, admin_user):
         # Superuser gets same data as shop staff
         shop = Shop.objects.exclude(identifier=factories.DEFAULT_IDENTIFIER).order_by("?").first()
         request = apply_request_middleware(
-            rf.get("/", {
-                "jq": json.dumps({"perPage": 100, "page": 1})
-            }),
-            user=admin_user,
-            shop=shop)
+            rf.get("/", {"jq": json.dumps({"perPage": 100, "page": 1})}), user=admin_user, shop=shop
+        )
         set_shop(request, shop)
         view_instance = DiscountListView()
         view_instance.request = request
@@ -172,7 +162,7 @@ def test_discount_admin_list_view(rf, admin_user):
         # In active 3 discounts to see that those are filtered out
         payload = {
             "action": "archive_discounts",
-            "values": [discount.pk for discount in Discount.objects.filter(shops=shop).order_by("?")[:3]]
+            "values": [discount.pk for discount in Discount.objects.filter(shop=shop).order_by("?")[:3]],
         }
         archive_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(archive_request, shop)
@@ -205,10 +195,7 @@ def test_discount_admin_list_view(rf, admin_user):
         assert response.status_code == 200
 
         # Unarchive all discounts
-        payload = {
-            "action": "unarchive_discounts",
-            "values": "all"
-        }
+        payload = {"action": "unarchive_discounts", "values": "all"}
         unarchive_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(unarchive_request, shop)
         unarchive_request._body = json.dumps(payload).encode("UTF-8")
@@ -221,10 +208,7 @@ def test_discount_admin_list_view(rf, admin_user):
         assert Discount.objects.available(shop).count() == 4
 
         # Re-archive all discounts
-        payload = {
-            "action": "archive_discounts",
-            "values": "all"
-        }
+        payload = {"action": "archive_discounts", "values": "all"}
         archive_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(archive_request, shop)
         archive_request._body = json.dumps(payload).encode("UTF-8")
@@ -239,7 +223,7 @@ def test_discount_admin_list_view(rf, admin_user):
         # Unarchive just one discount
         payload = {
             "action": "unarchive_discounts",
-            "values": [discount.pk for discount in Discount.objects.filter(shops=shop).order_by("?")[:1]]
+            "values": [discount.pk for discount in Discount.objects.filter(shop=shop).order_by("?")[:1]],
         }
         unarchive_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(unarchive_request, shop)
@@ -255,7 +239,7 @@ def test_discount_admin_list_view(rf, admin_user):
         # Delete one archived discount
         payload = {
             "action": "delete_discounts",
-            "values": [discount.pk for discount in Discount.objects.archived(shop).order_by("?")[:1]]
+            "values": [discount.pk for discount in Discount.objects.archived(shop).order_by("?")[:1]],
         }
         delete_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(delete_request, shop)
@@ -266,13 +250,10 @@ def test_discount_admin_list_view(rf, admin_user):
             response.render()
 
         assert response.status_code == 200
-        assert Discount.objects.filter(shops=shop).count() == 3
+        assert Discount.objects.filter(shop=shop).count() == 3
 
         # Delete all for this shop only
-        payload = {
-            "action": "delete_discounts",
-            "values": "all"
-        }
+        payload = {"action": "delete_discounts", "values": "all"}
         delete_request = apply_request_middleware(rf.post("/"), user=admin_user, shop=shop)
         set_shop(delete_request, shop)
         delete_request._body = json.dumps(payload).encode("UTF-8")
@@ -282,7 +263,7 @@ def test_discount_admin_list_view(rf, admin_user):
             response.render()
 
         assert response.status_code == 200
-        assert Discount.objects.filter(shops=shop).count() == 1  # Since only archived can be deleted with mass action
+        assert Discount.objects.filter(shop=shop).count() == 1  # Since only archived can be deleted with mass action
         assert Discount.objects.available(shop).count() == 1
         assert Discount.objects.archived(shop).count() == 0
         assert Discount.objects.count() == 9
@@ -293,10 +274,8 @@ def _test_discount_delete_view(rf, index):
     staff_user = factories.create_random_user(is_staff=True)
     shop.staff_members.add(staff_user)
     discount_identifier = "discount%s" % index
-    discount = Discount.objects.create(identifier=discount_identifier)
-    discount.shops = [shop]
-    extra_discount = Discount.objects.create(identifier="extra_discount%s" % index)
-    extra_discount.shops = [shop]
+    discount = Discount.objects.create(identifier=discount_identifier, shop=shop)
+    Discount.objects.create(identifier="extra_discount%s" % index, shop=shop)
 
     assert Discount.objects.filter(identifier=discount_identifier).exists()
     view_func = DiscountDeleteView.as_view()
@@ -309,7 +288,7 @@ def _test_discount_delete_view(rf, index):
     assert not Discount.objects.filter(identifier=discount_identifier).exists()
 
     # Make sure that this staff can't remove other people discounts
-    other_discounts = Discount.objects.exclude(shops=shop)
+    other_discounts = Discount.objects.exclude(shop=shop)
     discount_count = other_discounts.count()
     for discount in other_discounts:
         view_func = DiscountDeleteView.as_view()
@@ -320,7 +299,7 @@ def _test_discount_delete_view(rf, index):
             if hasattr(response, "render"):
                 response.render()
 
-    assert discount_count == Discount.objects.exclude(shops=shop).count()
+    assert discount_count == Discount.objects.exclude(shop=shop).count()
 
 
 @pytest.mark.django_db

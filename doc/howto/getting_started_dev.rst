@@ -14,8 +14,8 @@ Getting Started with Shuup Development
 
 Requirements
 ------------
-* Python 2.7.9+/3.4+. https://www.python.org/download/.
-* Node.js (v0.12 or above). https://nodejs.org/en/download/
+* Python 3.6+. https://www.python.org/download/.
+* Node.js (v12 or above). https://nodejs.org/en/download/
 * Any database supported by Django.
 
 Installation for Shuup Development
@@ -25,31 +25,46 @@ To start developing Shuup, you'll need a Git checkout of Shuup and a
 Github fork of Shuup for creating pull requests.  Github pull requests
 are used to get your changes into Shuup Base.
 
-1. If you haven't done so already, create a fork of Shuup in Github by
-   clicking the "Fork" button at https://github.com/shuup/shuup and
-   clone the fork to your computer as usual. See `Github Help about
-   forking repos <https://help.github.com/articles/fork-a-repo/>`__ for
-   details.
+If you haven't done so already, create a fork of Shuup in Github by
+clicking the "Fork" button at https://github.com/shuup/shuup and
+clone the fork to your computer as usual. See `Github Help about
+forking repos <https://help.github.com/articles/fork-a-repo/>`__ for
+details.
 
-2. Setup a virtualenv and activate it.  You may use the traditional
-   ``virtualenv`` command, or the newer ``python -m venv`` if you're
-   using Python 3.  See `Virtualenv User Guide
+Docker
+######
+
+Fastest way to get Shuup development environment up and running is to use `Docker <https://www.docker.com>`_.
+
+1. Run the development compose file, it allows your local changes to update in the browser:
+
+   .. code-block:: shell
+
+      docker-compose -f docker-compose-dev.yml up
+
+2. Open `localhost:8000/sa <http://localhost:8000/sa>`_ in a browser,
+   log in with username: ``admin`` password: ``admin``
+
+Locally
+#######
+
+1. Setup a virtualenv and activate it. See `Virtualenv User Guide
    <https://virtualenv.pypa.io/en/latest/userguide.html>`__, if you
    are unfamiliar with virtualenv.  For example, following commands
    create and activate a virtualenv in Linux:
 
    .. code-block:: shell
 
-      virtualenv shuup-venv
+     virtualenv shuup-venv
       . shuup-venv/bin/activate
 
-3. Finally, you'll need to install Shuup in the activated virtualenv in
-   development mode.  To do that, run the following commands in the
+3. Finally, you'll need to install Shuup in the activated virtualenv.
+   To do that, run the following commands in the
    root of the checkout (within the activated virtualenv):
 
    .. code-block:: shell
 
-      pip install -e .[everything]
+      pip install -r requirements-dev.txt
 
 .. note::
     Some extra steps is required for **Windows**
@@ -69,6 +84,10 @@ are used to get your changes into Shuup Base.
 
     Error is still there? Try to edit Windows environment PATH, and move GTK Runtime
     location to the top of the list.
+
+.. note::
+    Extra information/warning regarding SQLite `read more
+    <https://github.com/shuup/shuup/issues/1730>`__.
 
 
 Workbench, the built-in test project
@@ -90,13 +109,16 @@ root.
    python -m shuup_workbench migrate
 
    # Import some basic data.
-   python -m shuup_workbench shuup_populate_mock --with-superuser=admin
+   python -m shuup_workbench shuup_init
+
+   # Create superuser so you can login admin panel
+   python -m shuup_workbench createsuperuser
 
    # Run the Django development server (on port 8000 by default).
    python -m shuup_workbench runserver
 
-You can use the credentials ``admin``/``admin``, that is username ``admin``
-and password ``admin`` to log in as a superuser on http://127.0.0.1:8000/ .
+You can use the created credentials to log in as a superuser on
+http://127.0.0.1:8000/sa/ .
 
 Building resources
 ------------------
@@ -119,23 +141,23 @@ The command also accepts couple arguments, see its help for more details:
 
    python setup.py build_resources --help
 
+.. note::
+    Make sure your running rather new version from `Node
+    <https://nodejs.org/en/>`__ and non LTS version is recommended
+    for advanced users only.
+
+
 Running tests
 -------------
 
 To run tests in the active virtualenv:
 
 .. code-block:: shell
+   pip install -r requirements-tests.txt
 
    py.test -v --nomigrations shuup_tests
    # Or with coverage
    py.test -vvv --nomigrations --cov shuup --cov-report html shuup_tests
-
-To run tests for all supported Python versions run:
-
-.. code-block:: shell
-
-   pip install tox  # To install tox, needed just once
-   tox
 
 Running browser tests
 ---------------------
@@ -144,18 +166,11 @@ Running browser tests
 
    SHUUP_BROWSER_TESTS=1 py.test -v --nomigrations shuup_tests/browser
 
-Headless with Firefox:
-
-.. code-block:: shell
-
-   SHUUP_BROWSER_TESTS=1 MOZ_HEADLESS=1 py.test -v --nomigrations shuup_tests/browser
-
 For Chrome
 
 .. code-block:: shell
 
    SHUUP_BROWSER_TESTS=1 py.test -v --nomigrations --splinter-webdriver=chrome shuup_tests/browser
-
 
 For OSX with Homebrew:
 
@@ -167,13 +182,13 @@ For OSX with Homebrew:
     # Install Geckodriver (for Firefox)
     brew install geckodriver
 
-    # If your current version is below 0.23.0 (for Firefox)
+    # If your current version is below 0.29.1 (for Firefox)
     brew upgrade geckodriver
 
     # Make sure the selenium is up to date (tested with 3.141.0)
     pip install selenium -U
 
-    # Make sure splinter is up to date (tested with 0.9.0)
+    # Make sure splinter is up to date (tested with 0.14.0)
     pip install splinter -U
 
 For other OS and browsers check package documentation directly:

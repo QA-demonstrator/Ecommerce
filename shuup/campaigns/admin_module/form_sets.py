@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -10,8 +10,12 @@ from django.conf import settings
 from django.forms import BaseModelFormSet
 
 from shuup.campaigns.models import (
-    BasketCondition, BasketDiscountEffect, BasketLineEffect, CatalogFilter,
-    ContextCondition, ProductDiscountEffect
+    BasketCondition,
+    BasketDiscountEffect,
+    BasketLineEffect,
+    CatalogFilter,
+    ContextCondition,
+    ProductDiscountEffect,
 )
 from shuup.utils.multilanguage_model_form import TranslatableModelForm
 
@@ -32,7 +36,6 @@ class BaseFormset(BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         self.form_class = kwargs.pop("form")
         self.owner = kwargs.pop("owner")
-        kwargs.pop("empty_permitted")
         super(BaseFormset, self).__init__(*args, **kwargs)
 
     def get_name(self):
@@ -42,7 +45,7 @@ class BaseFormset(BaseModelFormSet):
         return self.form_class._meta.model
 
     def get_queryset(self):
-        raise NotImplemented("Override this in subclass")
+        raise NotImplementedError("Override this in subclass")
 
     def form(self, **kwargs):
         if issubclass(self.form_class, TranslatableModelForm):

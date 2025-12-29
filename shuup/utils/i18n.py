@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-
 import babel
 import babel.numbers
 from babel import UnknownLocaleError
@@ -13,11 +12,26 @@ from babel.dates import format_datetime
 from babel.numbers import format_currency, format_decimal, parse_pattern
 from django.apps import apps
 from django.utils import translation
-from django.utils.lru_cache import lru_cache
 from django.utils.timezone import localtime
 from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
-from django.views.i18n import javascript_catalog
+from functools import lru_cache, wraps
+
+
+def lang_lru_cache(func):
+    """Language aware least recently used cache decorator"""
+
+    @lru_cache()
+    def cached(*args, __lang=None, **kwargs):
+        return func(*args, **kwargs)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return cached(*args, **kwargs, __lang=translation.get_language())
+
+    wrapper.cache_clear = cached.cache_clear
+
+    return wrapper
 
 
 @lru_cache()
@@ -52,9 +66,7 @@ def get_current_babel_locale(fallback="en-US-POSIX"):
         if fallback:
             locale = get_babel_locale(fallback)
         if not locale:
-            raise ValueError(
-                "Failed to get current babel locale (lang=%s)" %
-                (translation.get_language(),))
+            raise ValueError("Error! Failed to get the current babel locale (lang=%s)." % (translation.get_language(),))
     return locale
 
 
@@ -62,8 +74,7 @@ def format_number(value, digits=None):
     locale = get_current_babel_locale()
     if digits is None:
         return format_decimal(value, locale=locale)
-    (min_digits, max_digits) = (
-        digits if isinstance(digits, tuple) else (digits, digits))
+    (min_digits, max_digits) = digits if isinstance(digits, tuple) else (digits, digits)
     format = locale.decimal_formats.get(None)
     pattern = parse_pattern(format)  # type: babel.numbers.NumberPattern
     return pattern.apply(value, locale, force_frac=(min_digits, max_digits))
@@ -122,6 +133,7 @@ def format_money(amount, digits=None, widen=0, locale=None):
     return format_currency(amount.value, amount.currency, pattern, loc, currency_digits=False)
 
 
+@lang_lru_cache
 def get_language_name(language_code):
     """
     Get a language's name in the currently active locale.
@@ -145,12 +157,15 @@ def get_language_name(language_code):
 
 
 @cache_page(3600, key_prefix="js18n-%s" % get_language())
-def javascript_catalog_all(request, domain='djangojs'):
+def javascript_catalog_all(request, domain="djangojs"):
     """
-    Get JavaScript message catalog for all apps in INSTALLED_APPS.
+    Get JavaScript message catalog for all apps in `INSTALLED_APPS`.
     """
     all_apps = [x.name for x in apps.get_app_configs()]
-    return javascript_catalog(request, domain, all_apps)
+    from django.views.i18n import JavaScriptCatalog
+
+    js_catalog = JavaScriptCatalog(packages=all_apps, domain=domain)
+    return js_catalog.get(request)
 
 
 def get_currency_name(currency):
@@ -160,7 +175,7 @@ def get_currency_name(currency):
 
 def is_existing_language(language_code):
     """
-    Try to find out if language actually exists
+    Try to find out if the language actually exists.
 
     Calling `babel.Locale("en").languages.keys()`
     will contain extinct languages.
@@ -173,7 +188,7 @@ def is_existing_language(language_code):
         get_babel_locale(language_code)
     except (UnknownLocaleError, ValueError):
         """
-        Catch errors with babel locale parsing
+        Catch errors with babel locale parsing.
 
         For example language `bew` raises `UnknownLocaleError`
         and `ValueError` is being raised if language_code is
@@ -183,6 +198,7 @@ def is_existing_language(language_code):
     return True
 
 
+@lru_cache()
 def remove_extinct_languages(language_codes):
     language_codes = set(language_codes)
     codes = language_codes.copy()

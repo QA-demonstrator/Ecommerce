@@ -13,6 +13,9 @@
     .table th,
     .table td {
         padding: 0.65rem 1rem;
+        max-width: 500px;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
     }
 
     .table th.hidden-cell {
@@ -24,7 +27,7 @@
             border-bottom: 2px solid #dae0e8;
 
             th {
-                color: rgba($secondary, 0.6);
+                color: var(--secondary-light);
                 font-size: 0.9rem;
                 border: 0;
                 padding-top: 1.5rem;
@@ -33,7 +36,7 @@
                 transition: all 0.2s ease-in-out;
 
                 span:hover {
-                    color: $primary;
+                    color: var(--primary);
                 }
 
                 @include media-breakpoint-up(xl) {
@@ -46,10 +49,10 @@
 
                 &.sorted-asc,
                 &.sorted-desc {
-                    color: $secondary;
+                    color: var(--secondary);
 
                     i {
-                        color: $primary;
+                        color: var(--primary);
                     }
                 }
 
@@ -129,7 +132,7 @@
             transition: all 0.1s linear;
 
             &:not(:last-child) {
-                border-bottom: 1px solid rgba($secondary, 0.12);
+                border-bottom: 1px solid var(--secondary-opaque);
             }
         }
 
@@ -137,7 +140,7 @@
             background-color: darken($white, 2%);
 
             td img {
-                border-color: rgba($secondary, 0.6);
+                border-color: var(--secondary-light);
             }
         }
 
@@ -148,16 +151,28 @@
             border: 0;
 
             .input-checkbox {
-                width: 30px;
-                margin: 0 auto;
+                width: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: space-evenly;
+                font-size: 20px;
+
+                i.fa.fa-edit {
+                    margin-bottom: auto;
+                }
+
+                label {
+                    margin-bottom: auto;
+                }
+
+                input.row-selection {
+                    display:none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                }
             }
 
-            input.row-selection {
-                // display:none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-            }
         }
 
         tr {
@@ -167,26 +182,31 @@
                 }
 
                 td img {
-                    border-color: rgba($secondary, 0.6);
+                    border-color: var(--secondary-light);
                 }
             }
         }
 
         td a {
-            color: darken($primary, 10%);
+            color: var(--primary-dark);
             text-decoration: none;
 
             &:hover {
                 text-decoration: underline;
+                color: var(--primary);
+            }
+            &.set-shipment-status{
+                color: #ffffff;
             }
         }
 
         td img {
+            max-width: unset;
             width: 42px;
             height: 42px;
             padding: 4px;
             background-color: $white;
-            border: 1px solid rgba($secondary, 0.25);
+            border: 1px solid var(--secondary-lightest);
             border-radius: 2px;
             transition: all 0.2s ease-in-out;
         }
@@ -197,8 +217,8 @@
 
         td span.row-sku {
             font-size: 0.8rem;
-            color: rgba($secondary, 0.6);
-            background-color: rgba($secondary, 0.08);
+            color: var(--secondary-light);
+            background-color: var(--secondary-opaque);
             border-radius: 20px;
             padding: 5px 12px;
         }
@@ -209,6 +229,11 @@
 
         @include media-breakpoint-down(md) {
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            flex-direction: column;
         }
 
         @include media-breakpoint-down(xl) {
@@ -219,6 +244,7 @@
             @include media-breakpoint-down(sm) {
                 text-align: center;
                 float: left;
+                width: 100%!important;
             }
 
             @include media-breakpoint-down(md) {
@@ -242,6 +268,9 @@
 
         .picotable-filter-name {
             flex: 1;
+            @include media-breakpoint-down(md) {
+                width: 100%;
+            }
         }
 
         .picotable-filter {
@@ -297,9 +326,8 @@
             display: none;
 
             @include media-breakpoint-up(lg) {
-                display: flex;
-                justify-content: center;
-                margin: 0.5em 0;
+                display: block;
+                margin-top: 15px;
             }
         }
     }
@@ -354,7 +382,7 @@
 
                 .column {
                     font-size: 1rem;
-                    color: $primary;
+                    color: var(--primary);
                     word-wrap: break-word;
                 }
 
@@ -369,6 +397,21 @@
         }
     }
 
+    .apply-filters {
+        padding: 15px 0;
+
+        .btn {
+            font-weight: 700;
+        }
+    }
+
+    .active-filter-counter {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+    }
+
     .picotable-item-info {
         @include media-breakpoint-down(sm) {
             text-align: center;
@@ -377,14 +420,14 @@
 }
 
 .mobile-row {
-    color: rgba($text-color, 0.8);
+    color: var(--text-color-light);
     font-size: 1rem;
     padding: 0.8rem 0.5rem;
     margin: 0;
     border-bottom: 1px solid rgba($border-color, 0.08);
 
     &.header {
-        color: $text-color;
+        color: var(--text-color);
         font-weight: 700;
     }
 
@@ -392,6 +435,36 @@
         .value {
             text-align: right;
         }
+    }
+
+    .input-checkbox {
+        width: 80px;
+        min-width: 60px;
+        max-height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        font-size: 20px;
+
+        i.fa.fa-edit {
+            margin-bottom: auto;
+        }
+
+        label {
+            margin-bottom: auto;
+        }
+
+        input.row-selection {
+            display:none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    }
+
+    &:hover {
+        background-color: whitesmoke;
+        cursor: pointer;
     }
 }
 
@@ -409,9 +482,17 @@ nav.mobile-pagination {
 }
 
 .picotable-empty > div {
-    min-height: 50vh;
+    min-height: 25vh;
+
+    @include media-breakpoint-up(md) {
+        min-height: 50vh;
+    }
 
     h3, p {
         opacity: 0.8;
     }
+}
+
+a.edit {
+    margin-bottom: 2px;
 }

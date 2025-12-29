@@ -1,61 +1,38 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from collections import defaultdict
-
 import six
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.middleware.csrf import get_token
 from django.utils.translation import get_language
 from jinja2.utils import contextfunction
 
-from shuup.core.models import (
-    Category, Manufacturer, Product, ShopProduct, Supplier
-)
-from shuup.core.utils import context_cache
-from shuup.front.utils import cache as cache_utils
+from shuup.core.catalog import ProductCatalog, ProductCatalogContext
+from shuup.core.models import Category, Manufacturer, ProductMode, ShopProductVisibility
 from shuup.front.utils.companies import allow_company_registration
 from shuup.front.utils.product_statistics import get_best_selling_product_info
 from shuup.front.utils.translation import get_language_choices
 from shuup.front.utils.user import is_admin_user
 from shuup.front.utils.views import cache_product_things
+from shuup.utils import django_compat
+from shuup.utils.django_compat import reverse
 from shuup.utils.importing import cached_load
 from shuup.utils.mptt import get_cached_trees
 from shuup.utils.translation import cache_translations_for_tree
 
 
-def get_login_form(request):
+def get_login_form(request, id_prefix="quick-login"):
     # Getting the form from the Login view
-    form = cached_load("SHUUP_LOGIN_VIEW")(request=request).get_form()
+    form = cached_load("SHUUP_LOGIN_VIEW")(request=request).get_form(id_prefix=id_prefix)
     return form
 
 
-def _group_list_items(group_list, number):
-    for i in range(0, len(group_list), number):
-        yield tuple(group_list[i: i + number])
-
-
-def _is_sale_item(product, pricing_context):
-    if product.is_variation_parent():
-        for variation in product.variation_children.all():
-            if variation.get_price_info(pricing_context).is_discounted:
-                return True
-
-    elif product.is_package_parent():
-        for package_child in product.get_all_package_children():
-            if package_child.get_price_info(pricing_context).is_discounted:
-                return True
-
-    return product.get_price_info(pricing_context).is_discounted
-
-
-@contextfunction    # noqa (C901)
-def get_listed_products(context, n_products, ordering=None, filter_dict=None,
-                        orderable_only=True, sale_items_only=False):
+def _get_listed_products(context, n_products, ordering=None, filter_dict=None, orderable_only=True, extra_filters=None):
     """
     Returns all products marked as listed that are determined to be
     visible based on the current context.
@@ -70,243 +47,149 @@ def get_listed_products(context, n_products, ordering=None, filter_dict=None,
     :type filter_dict: dict[str, object]
     :param orderable_only: Boolean limiting results to orderable products
     :type orderable_only: bool
+    :param extra_filters: Extra filters to be used in Product Queryset
+    :type extra_filters: django.db.models.Q
     :rtype: list[shuup.core.models.Product]
     """
     request = context["request"]
-    customer = request.customer
+    customer = getattr(request, "customer", None)
     shop = request.shop
 
-    # Todo: Check if this should be cached
+    catalog = ProductCatalog(
+        ProductCatalogContext(
+            shop=shop,
+            user=getattr(request, "user", None),
+            contact=customer,
+            purchasable_only=orderable_only,
+            visibility=ShopProductVisibility.LISTED,
+        )
+    )
 
     if not filter_dict:
         filter_dict = {}
-    products_qs = Product.objects.listed(
-        shop=shop,
-        customer=customer,
-        language=get_language(),
-    ).filter(**filter_dict)
+
+    products_qs = (
+        catalog.get_products_queryset()
+        .language(get_language())
+        .filter(mode__in=ProductMode.get_parent_modes(), **filter_dict)
+    )
+
+    if extra_filters:
+        products_qs = products_qs.filter(extra_filters)
 
     if ordering:
         products_qs = products_qs.order_by(ordering)
 
-    if sale_items_only:
-        from shuup.core.pricing import PricingContext
-        pricing_context = PricingContext(shop=shop, customer=customer)
-
-    if orderable_only:
-        suppliers = Supplier.objects.filter(shops=shop)
-        products = []
-        for product in products_qs.iterator():
-            if len(products) == n_products:
-                break
-            try:
-                shop_product = product.get_shop_instance(shop, allow_cache=True)
-            except ShopProduct.DoesNotExist:
-                continue
-
-            for supplier in suppliers:
-                if shop_product.is_orderable(supplier, customer, shop_product.minimum_purchase_quantity):
-                    if sale_items_only and not _is_sale_item(product, pricing_context):
-                        continue
-                    products.append(product)
-                    break
-
-        return products
-
-    elif sale_items_only:
-        products = []
-        for product in products_qs.iterator():
-            if len(products) == n_products:
-                break
-            if _is_sale_item(product, pricing_context):
-                products.append(product)
-        return products
-
-    return products_qs[:n_products]
+    return products_qs.distinct()[:n_products]
 
 
 @contextfunction
-def get_best_selling_products(context, n_products=12, cutoff_days=30, orderable_only=True, sale_items_only=False):
+def get_listed_products(context, n_products, ordering=None, filter_dict=None, orderable_only=True, extra_filters=None):
+    """
+    A cached version of _get_listed_products
+    """
     request = context["request"]
-
-    key, products = context_cache.get_cached_value(
-        identifier="best_selling_products",
-        item=cache_utils.get_best_selling_products_cache_item(request.shop),
-        context=request,
-        n_products=n_products, cutoff_days=cutoff_days,
-        orderable_only=orderable_only, sale_items_only=sale_items_only
+    products = _get_listed_products(
+        context,
+        n_products,
+        ordering=ordering,
+        filter_dict=filter_dict,
+        orderable_only=orderable_only,
+        extra_filters=extra_filters,
     )
-
-    if products is not None:
-        return products
-
-    products = _get_best_selling_products(cutoff_days, n_products, orderable_only, request, sale_items_only)
-    context_cache.set_cached_value(key, products, settings.SHUUP_TEMPLATE_HELPERS_CACHE_DURATION)
+    products = cache_product_things(request, products)
     return products
 
 
-def _get_best_selling_products(cutoff_days, n_products, orderable_only, request, sale_items_only):  # noqa (C901)
+@contextfunction
+def get_best_selling_products(context, n_products=12, cutoff_days=30, orderable_only=True, supplier=None):
+    request = context["request"]
+    products = _get_best_selling_products(cutoff_days, n_products, orderable_only, request, supplier=supplier)
+    return products
+
+
+def _get_best_selling_products(cutoff_days, n_products, orderable_only, request, supplier=None):
     data = get_best_selling_product_info(
         shop_ids=[request.shop.pk],
-        cutoff_days=cutoff_days
-    )
-    combined_variation_products = defaultdict(int)
-    for product_id, parent_id, qty in data:
-        if parent_id:
-            combined_variation_products[parent_id] += qty
-        else:
-            combined_variation_products[product_id] += qty
-
-    # get all the product ids
-    product_ids = [
-        d[0] for
-        d in sorted(six.iteritems(combined_variation_products), key=lambda i: i[1], reverse=True)
-    ]
-
-    products = []
-    suppliers = []
-    if orderable_only:
-        # get suppliers for later use
-        suppliers = Supplier.objects.filter(shops__in=[request.shop])
-
-    if sale_items_only:
-        from shuup.core.pricing import PricingContext
-        pricing_context = PricingContext(shop=request.shop, customer=request.customer)
-
-    # group product ids in groups of n_products
-    # to prevent querying ALL products at once
-    for grouped_product_ids in _group_list_items(product_ids, n_products):
-        for product in Product.objects.filter(id__in=grouped_product_ids):
-            if len(products) == n_products:
-                break
-
-            if sale_items_only and not _is_sale_item(product, pricing_context):
-                continue
-
-            try:
-                shop_product = product.get_shop_instance(request.shop, allow_cache=True)
-            except ShopProduct.DoesNotExist:
-                continue
-
-            if orderable_only:
-                for supplier in suppliers:
-                    if shop_product.is_orderable(supplier, request.customer, shop_product.minimum_purchase_quantity):
-                        products.append(product)
-                        break
-
-            elif shop_product.is_visible(request.customer):
-                products.append(product)
-
-        if len(products) == n_products:
-            break
-
-    products = cache_product_things(request, products)
-    products = sorted(products, key=lambda p: product_ids.index(p.id))  # pragma: no branch
-    return products
-
-
-@contextfunction
-def get_newest_products(context, n_products=6, orderable_only=True, sale_items_only=False):
-    request = context["request"]
-
-    key, products = context_cache.get_cached_value(
-        identifier="newest_products",
-        item=cache_utils.get_newest_products_cache_item(request.shop),
-        context=request,
-        n_products=n_products, orderable_only=orderable_only, sale_items_only=sale_items_only
-    )
-    if products is not None:
-        return products
-
-    products = get_listed_products(
-        context,
-        n_products,
-        ordering="-pk",
-        filter_dict={
-            "variation_parent": None
-        },
+        cutoff_days=cutoff_days,
+        supplier=supplier,
         orderable_only=orderable_only,
-        sale_items_only=sale_items_only
+        quantity=n_products,
     )
-    products = cache_product_things(request, products)
-    context_cache.set_cached_value(key, products, settings.SHUUP_TEMPLATE_HELPERS_CACHE_DURATION)
+    sorted_product_ids = sorted(data, key=lambda item: item[1], reverse=True)
+    product_ids = [item[0] for item in sorted_product_ids]
+
+    catalog = ProductCatalog(
+        ProductCatalogContext(
+            shop=request.shop,
+            user=getattr(request, "user", None),
+            supplier=supplier,
+            contact=getattr(request, "customer", None),
+            purchasable_only=orderable_only,
+            visibility=ShopProductVisibility.LISTED,
+        )
+    )
+    valid_products_qs = (
+        catalog.get_products_queryset()
+        .filter(id__in=product_ids, mode__in=ProductMode.get_parent_modes())
+        .distinct()[:n_products]
+    )
+
+    products = cache_product_things(request, valid_products_qs)
+    # order products by the best selling order
+    products = sorted(products, key=lambda product: product_ids.index(product.pk))
     return products
 
 
 @contextfunction
-def get_random_products(context, n_products=6, orderable_only=True, sale_items_only=False):
+def get_newest_products(context, n_products=6, orderable_only=True):
     request = context["request"]
-    key, products = context_cache.get_cached_value(
-        identifier="random_products",
-        item=cache_utils.get_random_products_cache_item(request.shop),
-        context=request,
-        n_products=n_products, orderable_only=orderable_only,
-        sale_items_only=sale_items_only
+    products = _get_listed_products(
+        context, n_products, ordering="-pk", filter_dict={"variation_parent": None}, orderable_only=orderable_only
     )
-    if products is not None:
-        return products
+    products = cache_product_things(request, products)
+    return products
 
-    products = get_listed_products(
+
+@contextfunction
+def get_random_products(context, n_products=6, orderable_only=True):
+    request = context["request"]
+    products = _get_listed_products(
+        context, n_products, ordering="?", filter_dict={"variation_parent": None}, orderable_only=orderable_only
+    )
+    products = cache_product_things(request, products)
+    return products
+
+
+@contextfunction
+def get_products_for_categories(context, categories, n_products=6, orderable_only=True):
+    request = context["request"]
+    products = _get_listed_products(
         context,
         n_products,
         ordering="?",
-        filter_dict={
-            "variation_parent": None
-        },
+        filter_dict={"variation_parent": None, "shop_products__categories__in": categories},
         orderable_only=orderable_only,
-        sale_items_only=sale_items_only
     )
     products = cache_product_things(request, products)
-    context_cache.set_cached_value(key, products, settings.SHUUP_TEMPLATE_HELPERS_CACHE_DURATION)
     return products
 
 
 @contextfunction
-def get_products_for_categories(context, categories, n_products=6, orderable_only=True, sale_items_only=False):
+def get_all_manufacturers(context, purchasable_only=False):
     request = context["request"]
-    key, products = context_cache.get_cached_value(
-        identifier="products_for_category",
-        item=cache_utils.get_products_for_category_cache_item(request.shop),
-        context=request,
-        n_products=n_products,
-        categories=categories,
-        orderable_only=orderable_only,
-        sale_items_only=sale_items_only
+    catalog = ProductCatalog(
+        ProductCatalogContext(
+            shop=request.shop,
+            user=getattr(request, "user", None),
+            contact=getattr(request, "customer", None),
+            purchasable_only=purchasable_only,
+            visibility=ShopProductVisibility.LISTED,
+        )
     )
-    if products is not None:
-        return products
-
-    products = get_listed_products(
-        context,
-        n_products,
-        ordering="?",
-        filter_dict={
-            "variation_parent": None,
-            "shop_products__categories__in": categories
-        },
-        orderable_only=orderable_only,
-        sale_items_only=sale_items_only
+    manufacturers = Manufacturer.objects.filter(
+        pk__in=catalog.get_products_queryset().values_list("manufacturer_id", flat=True).distinct()
     )
-    products = cache_product_things(request, products)
-    context_cache.set_cached_value(key, products, settings.SHUUP_TEMPLATE_HELPERS_CACHE_DURATION)
-    return products
-
-
-@contextfunction
-def get_all_manufacturers(context):
-    request = context["request"]
-    key, manufacturers = context_cache.get_cached_value(
-        identifier="all_manufacturers",
-        item=cache_utils.get_all_manufacturers_cache_item(request.shop),
-        context=request
-    )
-    if manufacturers is not None:
-        return manufacturers
-
-    products = Product.objects.listed(shop=request.shop, customer=request.customer)
-    manufacturers_ids = products.values_list("manufacturer__id").distinct()
-    manufacturers = Manufacturer.objects.filter(pk__in=manufacturers_ids)
-    context_cache.set_cached_value(key, manufacturers, settings.SHUUP_TEMPLATE_HELPERS_CACHE_DURATION)
     return manufacturers
 
 
@@ -315,8 +198,8 @@ def get_root_categories(context):
     request = context["request"]
     language = get_language()
     roots = get_cached_trees(
-        Category.objects.all_visible(
-            customer=request.customer, shop=request.shop, language=language))
+        Category.objects.all_visible(customer=request.customer, shop=request.shop, language=language)
+    )
     cache_translations_for_tree(roots, languages=[language])
     return roots
 
@@ -334,7 +217,7 @@ def get_pagination_variables(context, objects, limit):
     variables = {"objects": objects}
 
     variables["paginator"] = paginator = Paginator(objects, limit)
-    variables["is_paginated"] = (paginator.num_pages > 1)
+    variables["is_paginated"] = paginator.num_pages > 1
     try:
         requested_page = int(context["request"].GET.get("page") or 0)
     except ValueError:
@@ -414,6 +297,7 @@ def can_toggle_all_seeing(context):
 @contextfunction
 def get_admin_edit_url(context, intance_or_model):
     from shuup.admin.template_helpers.shuup_admin import model_url
+
     url = model_url(context, intance_or_model)
     if url:
         return dict(
@@ -425,3 +309,17 @@ def get_admin_edit_url(context, intance_or_model):
 @contextfunction
 def get_powered_by_content(context):
     return settings.SHUUP_FRONT_POWERED_BY_CONTENT
+
+
+@contextfunction
+def get_config(context):
+    request = context["request"]
+    is_authenticated = request.user.is_authenticated
+    return {
+        "uploadUrl": (reverse("shuup:media-upload") if is_authenticated else None),
+        "csrf": get_token(request),
+    }
+
+
+def is_authenticated(user):
+    return django_compat.is_authenticated(user)

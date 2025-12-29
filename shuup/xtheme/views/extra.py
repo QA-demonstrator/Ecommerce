@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django.core.exceptions import ImproperlyConfigured
 from django.core.signals import setting_changed
 from django.http.response import HttpResponseNotFound
+from django.utils.html import escape
 
 from shuup.xtheme._theme import get_current_theme
 
@@ -26,7 +27,7 @@ def _get_view_by_name(theme, view_name):
     if hasattr(view, "as_view"):  # Handle CBVs
         view = view.as_view()
     if view and not callable(view):
-        raise ImproperlyConfigured("View %r not callable" % view)
+        raise ImproperlyConfigured("Error! View `%r` is not callable." % view)
     return view
 
 
@@ -46,16 +47,16 @@ def extra_view_dispatch(request, view):
     """
     Dispatch to an Xtheme extra view.
 
-    :param request: A request
+    :param request: A request.
     :type request: django.http.HttpRequest
-    :param view: View name
+    :param view: View name.
     :type view: str
-    :return: A response of some ilk
+    :return: A response of some kind.
     :rtype: django.http.HttpResponse
     """
-    theme = get_current_theme(request.shop)
+    theme = getattr(request, "theme", None) or get_current_theme(request.shop)
     view_func = get_view_by_name(theme, view)
     if not view_func:
-        msg = "%s/%s: Not found" % (getattr(theme, "identifier", None), view)
+        msg = "Error! %s/%s: Not found." % (getattr(theme, "identifier", None), escape(view))
         return HttpResponseNotFound(msg)
     return view_func(request)

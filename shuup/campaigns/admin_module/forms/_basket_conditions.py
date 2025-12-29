@@ -1,18 +1,25 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+from django import forms
+
 from shuup.admin.forms.fields import WeekdayField
 from shuup.admin.forms.widgets import TimeInput
 from shuup.campaigns.models.basket_conditions import (
-    BasketMaxTotalAmountCondition, BasketMaxTotalProductAmountCondition,
-    BasketTotalAmountCondition, BasketTotalProductAmountCondition,
+    BasketMaxTotalAmountCondition,
+    BasketMaxTotalProductAmountCondition,
+    BasketTotalAmountCondition,
+    BasketTotalProductAmountCondition,
     BasketTotalUndiscountedProductAmountCondition,
-    CategoryProductsBasketCondition, ContactBasketCondition,
-    ContactGroupBasketCondition, HourBasketCondition,
-    ProductsInBasketCondition
+    CategoryProductsBasketCondition,
+    ChildrenProductCondition,
+    ContactBasketCondition,
+    ContactGroupBasketCondition,
+    HourBasketCondition,
+    ProductsInBasketCondition,
 )
 from shuup.core.models import Category
 
@@ -38,6 +45,10 @@ class ProductsInBasketConditionForm(BaseRuleModelForm):
     class Meta(BaseRuleModelForm.Meta):
         model = ProductsInBasketCondition
 
+    def __init__(self, *args, **kwargs):
+        super(ProductsInBasketConditionForm, self).__init__(*args, **kwargs)
+        self.fields["products"].widget = forms.SelectMultiple(attrs={"data-model": "shuup.product"})
+
 
 class ContactGroupBasketConditionForm(BaseRuleModelForm):
     class Meta(BaseRuleModelForm.Meta):
@@ -59,6 +70,17 @@ class BasketMaxTotalAmountConditionForm(BaseRuleModelForm):
         model = BasketMaxTotalAmountCondition
 
 
+class ChildrenProductConditionForm(BaseRuleModelForm):
+    def __init__(self, *args, **kwargs):
+        super(ChildrenProductConditionForm, self).__init__(*args, **kwargs)
+        self.fields["product"].widget = forms.Select(
+            attrs={"data-model": "shuup.product", "data-search-mode": "parent_product"}
+        )
+
+    class Meta(BaseRuleModelForm.Meta):
+        model = ChildrenProductCondition
+
+
 class CategoryProductsBasketConditionForm(BaseRuleModelForm):
     def __init__(self, **kwargs):
         super(CategoryProductsBasketConditionForm, self).__init__(**kwargs)
@@ -78,9 +100,3 @@ class HourBasketConditionForm(BaseRuleModelForm):
             "hour_start": TimeInput(),
             "hour_end": TimeInput(),
         }
-
-    def __init__(self, **kwargs):
-        super(HourBasketConditionForm, self).__init__(**kwargs)
-
-        if self.instance:
-            self.fields["days"].initial = self.instance.days.split(",")

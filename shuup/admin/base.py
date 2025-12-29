@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from __future__ import unicode_literals
-
 import hashlib
-
 import six
-from django.core.urlresolvers import reverse
 from django.utils.encoding import force_bytes, force_text
+from django.utils.translation import override
+from typing import TYPE_CHECKING, Dict, Iterable, Optional
+
+from shuup.utils.django_compat import reverse
+
+if TYPE_CHECKING:  # pragma: no cover
+    from django.contrib.auth import get_user_model
+
+    from shuup.core.models import Shop, Supplier
+
+    User = get_user_model()
 
 
 class AdminModule(object):
@@ -22,7 +29,7 @@ class AdminModule(object):
 
     def get_urls(self):
         """
-        :rtype: list[django.core.urlresolvers.RegexURLPattern]
+        :rtype: list[django.urls.RegexURLPattern]
         """
         return ()
 
@@ -52,19 +59,40 @@ class AdminModule(object):
 
     def get_help_blocks(self, request, kind):
         """
-        :param request: Request
+        :param request: Request.
         :type request: django.http.request.HttpRequest
-        :param kind: block kind. Currently "setup" or "quicklink"
+        :param kind: block kind. Currently "setup" or "quicklink".
         :type kind: str
         :rtype: list[shuup.admin.views.home.HelpBlock]
         """
         return ()
 
-    def get_required_permissions(self):
+    def get_required_permissions(self) -> Iterable[str]:
         """
+        Returns a list of required permissions for this module to be enabled
+        :rtype: list[str]
+        """
+        with override(language="en"):
+            return [force_text(self.name)]
+
+    def get_extra_permissions(self) -> Iterable[str]:
+        """
+        Define custom extra permissions for admin module for option
+        to limit certain parts of the admin module based on per user
+        permission string. Should return unique list permission strings
+        across the installation to prevent unwanted side effects.
+
         :rtype: list[str]
         """
         return ()
+
+    def get_permissions_help_texts(self) -> Dict[str, str]:
+        """
+        Returns a dictionary where the keys is the permission identifier
+        and the value is a help text that can help the user to understand
+        where the permissions is used and how it works.
+        """
+        return dict()
 
     def get_notifications(self, request):
         """
@@ -74,9 +102,9 @@ class AdminModule(object):
 
     def get_activity(self, request, cutoff):
         """
-        :param cutoff: Cutoff datetime
+        :param cutoff: Cutoff datetime.
         :type cutoff: datetime.datetime
-        :param request: Request
+        :param request: Request.
         :type request: django.http.request.HttpRequest
         :return: list[shuup.admin.base.Activity]
         """
@@ -93,7 +121,7 @@ class AdminModule(object):
         :type object: django.db.models.Model
         :param kind: URL kind. Currently "detail", "list" or "new".
         :type kind: str
-        :param shop: The shop that owns the resource
+        :param shop: The shop that owns the resource.
         :type shop: shuup.core.models.Shop|None
         :return: The reversed URL or none.
         :rtype: str|None
@@ -125,27 +153,90 @@ class Resolvable(object):
                 return url
             return reverse(url)
 
-        raise TypeError("Can't real_url: %r" % url)
+        raise TypeError("Error! Can't resolve the object's provided value `%r` to an actual URL." % url)
 
     @property
     def original_url(self):
         return self._url
 
 
-class MenuEntry(Resolvable):
-    def __init__(self, text, url, icon=None, category=None, subcategory=None, ordering=99999, aliases=()):
+class BaseMenuEntry(Resolvable):
+    identifier = None
+    name = None
+    icon = ""
+    is_hidden = False
+    ordering = -1
+    entries = []
+
+    @property
+    def id(self):
+        """ Value containing only hexadecimal digits, we can use this safely in html code. """
+        return hashlib.md5(str(self.identifier).encode("utf8")).hexdigest()
+
+    @property
+    def has_entries(self):
+        return len(self.entries) > 0
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "url": self.url,
+            "name": str(self.name),
+            "icon": self.icon,
+            "is_hidden": self.is_hidden,
+            "entries": [e.to_dict() for e in self.entries],
+        }
+
+    def get(self, item, default=None):
+        return getattr(self, item, default)
+
+    def __getitem__(self, item):
+        return self.get(item)
+
+    def __iter__(self):
+        return iter(sorted(self.entries, key=lambda e: e.ordering))
+
+
+class MenuEntry(BaseMenuEntry):
+    def __init__(self, text, url, icon=None, category=None, ordering=99999, aliases=(), **kwargs):
         self.text = text
         self._url = url
         self.icon = icon
         self.category = category
-        self.subcategory = subcategory
         self.ordering = ordering
         self.aliases = tuple(aliases)
+
+    @property
+    def identifier(self):
+        return self._url
+
+    @property
+    def name(self):
+        return str(self.text)
+
+    @name.setter
+    def name(self, value):
+        self.text = value
 
     def get_search_query_texts(self):
         yield self.text
         for alias in self.aliases:
             yield alias
+
+    def get_text(self, request) -> str:
+        return self.text
+
+    def get_badge(self, request) -> Optional[Dict]:
+        """
+        Should return a dictionary with the information of the badge or None:
+        ```
+            {
+                "tag": "info|success|danger|warning",
+                "value": "my value"
+            }
+        ```
+        """
+        return None
 
 
 class SearchResult(Resolvable):
@@ -213,14 +304,15 @@ class Section(object):
     (e.g. `admin_order_section`) to show a custom section on the specified
     model object's admin detail page.
 
-    `identifier` must be unique
-    `name` the section caption
-    `icon` the section icon
-    `template` the section template file
+    `identifier` must be unique.
+    `name` the section caption.
+    `icon` the section icon.
+    `template` the section template file.
     `extra_js` the section extra javascript template file,
-               set a file which contains js code inside a <script> tag
-    `order` the order
+    set a file which contains js code inside a <script> tag.
+    `order` the order.
     """
+
     identifier = ""
     name = ""
     icon = ""
@@ -229,9 +321,10 @@ class Section(object):
     order = 0
 
     @classmethod
-    def visible_for_object(cls, obj, request=None):
+    def visible_for_object(cls, obj, request):
         """
-        Returns whether this sections must be visible for the provided object (e.g. `order`)
+        Returns whether this sections must be visible for the provided object (e.g. `order`).
+
         :type model object: e.g. shuup.core.models.Order
         :type request: HttpRequest
         :return whether this section must be shown in order section list, defaults to false
@@ -240,15 +333,14 @@ class Section(object):
         return False
 
     @classmethod
-    def get_context_data(cls, obj, request=None):
+    def get_context_data(cls, obj, request):
         """
-        Returns additional information to be used in the template
+        Returns additional information to be used in the template.
 
         To fetch this data in the template, you must first add it to your request's context
 
         e.g. `context[admin_order_section.identifier] =
                 admin_order_section.get_context_data(self.object)`
-
 
         :type object: e.g. shuup.core.models.Order
         :type request: HttpRequest
@@ -256,3 +348,13 @@ class Section(object):
         :rtype: object|None
         """
         return None
+
+
+class AdminTemplateInjector:
+    @classmethod
+    def get_admin_template_snippet(cls, place: str, shop: "Shop", user: "User", supplier: "Optional[Supplier]"):
+        """
+        Get snippets to be injected on base admin template.
+        The `place` can be: `body_start`, `body_end`, `hear_start` or `head_end`.
+        """
+        raise NotImplementedError()

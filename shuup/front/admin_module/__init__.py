@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import datetime
-
 from django.db.models import Count, Sum
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -16,8 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from shuup.admin.base import AdminModule, MenuEntry
 from shuup.admin.dashboard import DashboardMoneyBlock
 from shuup.admin.menu import ORDERS_MENU_CATEGORY
-from shuup.admin.utils.permissions import get_default_model_permissions
-from shuup.admin.utils.urls import admin_url
+from shuup.admin.utils.urls import admin_url, derive_model_url
 from shuup.front.models import StoredBasket
 
 
@@ -47,8 +45,7 @@ def get_unfinalized_cart_block(request, days=14):
         value=(data.get("sum") or 0),
         currency=shop.currency,
         icon="fa fa-calculator",
-        subtitle=_("Based on {b} carts over the last {d} days").format(
-            b=data.get("count"), d=days)
+        subtitle=_("Based on {b} carts over the last {d} days").format(b=data.get("count"), d=days),
     )
 
 
@@ -62,19 +59,14 @@ class CartAdminModule(AdminModule):
 
     def get_urls(self):
         return [
+            admin_url(r"^carts/$", "shuup.front.admin_module.carts.views.CartListView", name="cart.list"),
             admin_url(
-                "^carts/$",
-                "shuup.front.admin_module.carts.views.CartListView",
-                name="cart.list",
-                permissions=get_default_model_permissions(StoredBasket),
+                r"^carts/(?P<pk>\d+)/$", "shuup.front.admin_module.carts.views.CartDetailView", name="cart.detail"
             ),
         ]
 
     def get_menu_category_icons(self):
         return {self.name: "fa fa-cart"}
-
-    def get_required_permissions(self):
-        return get_default_model_permissions(StoredBasket)
 
     def get_menu_entries(self, request):
         return [
@@ -83,7 +75,9 @@ class CartAdminModule(AdminModule):
                 icon="fa fa-shopping-cart",
                 url="shuup_admin:cart.list",
                 category=ORDERS_MENU_CATEGORY,
-                subcategory="orders",
-                aliases=[_("Show carts")]
+                aliases=[_("Show carts")],
             ),
         ]
+
+    def get_model_url(self, object, kind, shop=None):
+        return derive_model_url(StoredBasket, "shuup_admin:cart", object, kind)

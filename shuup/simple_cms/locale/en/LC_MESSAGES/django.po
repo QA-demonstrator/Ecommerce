@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-04 16:19+0000\n"
+"POT-Creation-Date: 2020-11-09 17:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -34,10 +34,10 @@ msgstr ""
 msgid "New page"
 msgstr ""
 
-msgid "Available from"
+msgid "Available since"
 msgstr ""
 
-msgid "Available to"
+msgid "Available until"
 msgstr ""
 
 msgid "Template"
@@ -46,7 +46,7 @@ msgstr ""
 msgid "URL already exists."
 msgstr ""
 
-msgid "URL must be unique"
+msgid "URL must be unique."
 msgstr ""
 
 #, python-format
@@ -71,6 +71,10 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
+#, python-format
+msgid "%s has been marked deleted."
+msgstr ""
+
 msgid "Content in this placeholder is shown for this page only."
 msgstr ""
 
@@ -78,25 +82,40 @@ msgstr ""
 msgid "Content in this placeholder is shown for %(title)s only."
 msgstr ""
 
+msgid "Website"
+msgstr ""
+
+msgid "Article"
+msgstr ""
+
 msgid "shop"
 msgstr ""
 
-msgid "available from"
+msgid "supplier"
+msgstr ""
+
+msgid "available since"
 msgstr ""
 
 msgid ""
-"Set an available from date to restrict the page to be available only after a "
+"Set an available date to restrict the page to be available only after a "
 "certain date and time. This is useful for pages describing sales campaigns "
 "or other time-sensitive pages."
 msgstr ""
 
-msgid "available to"
+msgid "available until"
 msgstr ""
 
 msgid ""
-"Set an available to date to restrict the page to be available only after a "
+"Set an available date to restrict the page to be available only until a "
 "certain date and time. This is useful for pages describing sales campaigns "
 "or other time-sensitive pages."
+msgstr ""
+
+msgid "Available for permission groups"
+msgstr ""
+
+msgid "Select the permission groups that can have access to this page."
 msgstr ""
 
 msgid "created by"
@@ -118,29 +137,29 @@ msgid "visible in menu"
 msgstr ""
 
 msgid ""
-"Check this if this page should have a link in the top menu of the store "
-"front."
+"Enable this if this page should have a visible link in the top menu of the "
+"store front."
 msgstr ""
 
 msgid "parent"
 msgstr ""
 
 msgid ""
-"Set this to a parent page if this page should be subcategorized under "
-"another page."
+"Set this to a parent page if this page should be subcategorized (sub-menu) "
+"under another page."
 msgstr ""
 
-msgid "list children on page"
+msgid "display children on page"
 msgstr ""
 
-msgid "Check this if this page should list its children pages."
+msgid "Enable this if this page should display all of its children pages."
 msgstr ""
 
 msgid "show child page timestamps"
 msgstr ""
 
 msgid ""
-"Check this if you want to show timestamps on the child pages. Please note, "
+"Enable this if you want to show timestamps on the child pages. Please note, "
 "that this requires the children to be listed on the page as well."
 msgstr ""
 
@@ -178,7 +197,7 @@ msgstr ""
 msgid "render title"
 msgstr ""
 
-msgid "Check this if this page should have a visible title"
+msgid "Enable this if this page should have a visible title."
 msgstr ""
 
 msgid "page"
@@ -188,6 +207,47 @@ msgid "pages"
 msgstr ""
 
 msgid "Untitled"
+msgstr ""
+
+msgid "Image"
+msgstr ""
+
+msgid "The image of your object."
+msgstr ""
+
+msgid "type"
+msgstr ""
+
+msgid ""
+"The title of your object as it should appear within the graph, e.g. The Rock."
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "A one to two sentence description of your object."
+msgstr ""
+
+msgid "Section"
+msgstr ""
+
+msgid ""
+"A high-level section name, e.g. Technology. Only applicable when type is "
+"Article."
+msgstr ""
+
+msgid "Tags"
+msgstr ""
+
+msgid ""
+"Tag words associated with this article. Only applicable when type is Article."
+msgstr ""
+
+msgid "Article author"
+msgstr ""
+
+msgid ""
+"The name of the author for the article. Only applicable when type is Article."
 msgstr ""
 
 msgid "CMS Page Links"
@@ -206,6 +266,12 @@ msgid "Default Page"
 msgstr ""
 
 msgid "Page with sidebar"
+msgstr ""
+
+msgid ""
+"Fill the fields below to add extra OpenGraph information to the page meta.\n"
+"        If not informed, some values will be inferred from the page "
+"attributes."
 msgstr ""
 
 msgid "New Page"

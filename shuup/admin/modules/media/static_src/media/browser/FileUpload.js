@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,8 +19,7 @@ function queueView() {
     var className = "empty";
     if (queue.length >= 0) {
         className = (
-            _.all(queue, (file) => (file.status === "done" || file.status === "error")) ?
-                "done" : "busy"
+            _.every(queue, (file) => (file.status === "done" || file.status === "error")) ? "done" : "busy"
         );
     }
 
@@ -65,8 +64,12 @@ function handleFileXhrComplete(xhr, file, error) {
     var messageText = null;
     try {
         const responseJson = JSON.parse(xhr.responseText);
-        if (responseJson && responseJson.message) {
-            messageText = responseJson.message;
+        if (responseJson) {
+            if (responseJson.message) {
+                messageText = responseJson.message;
+            } else if (responseJson.error) {
+                messageText = responseJson.error;
+            }
         }
     } catch (e) {
         // invalid JSON? pffff.
@@ -74,10 +77,10 @@ function handleFileXhrComplete(xhr, file, error) {
     }
     if (window.Messages) {
         if (error && !messageText) {
-            messageText = gettext("Unexpected error while uploading files.");
+            messageText = gettext("Error! Unexpected error while uploading files.");
         }
         const response = {
-            error: (error ? gettext("Error:") + " " + file.name + ": " + messageText : null),
+            error: (error ? gettext("Error!") + " " + file.name + ": " + messageText : null),
             message: (!error ? messageText || gettext("Uploaded:") + " " + file.name : null)
         };
         handleResponseMessages(response);

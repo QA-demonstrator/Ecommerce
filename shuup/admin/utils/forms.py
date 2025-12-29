@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -22,7 +22,7 @@ def filter_form_field_choices(field, predicate, invert=False):
 
     :param field: Form field.
     :type field: django.forms.Field
-    :param predicate: Predicate
+    :param predicate: Predicate.
     :type predicate: function|Iterable
     :param invert: Invert the semantics of the predicate, i.e. items matching it will be rejected.
     :type invert: bool
@@ -33,7 +33,7 @@ def filter_form_field_choices(field, predicate, invert=False):
         allowed_values = set(predicate)
 
         def predicate(pair):
-            return (pair[0] in allowed_values)
+            return pair[0] in allowed_values
 
     if invert:
         choices = [pair for pair in field.choices if not predicate(pair)]
@@ -47,7 +47,7 @@ def add_form_errors_as_messages(request, form):
     """
     Add the form's errors, if any, into the request as messages.
 
-    :param request: Request to messagify
+    :param request: Request to messagify.
     :type request: django.http.HttpRequest
     :param form: The errorful form.
     :type form: django.forms.Form
@@ -67,18 +67,13 @@ def add_form_errors_as_messages(request, form):
 
 
 def flatatt_filter(attrs):
-    attrs = dict(
-        (key, value)
-        for (key, value)
-        in six.iteritems(attrs)
-        if key and value
-    )
+    attrs = dict((key, value) for (key, value) in six.iteritems(attrs) if key and value)
     return flatatt(attrs)
 
 
 def get_possible_name_fields_for_model(model):
     """
-    Get possible name fields for given model
+    Get possible name fields for given model.
 
     This function yields strings of field names that
     could possible be identified as name fields for model.
@@ -88,7 +83,7 @@ def get_possible_name_fields_for_model(model):
 
     :param model Class object of the model:
     :type model object:
-    :return: Yield strings of possible name fields
+    :return: Yield strings of possible name fields.
     :rtype: str
     """
 

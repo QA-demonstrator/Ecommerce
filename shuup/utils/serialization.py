@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
 import django.core.serializers.json
-from django.utils.encoding import force_text
 from django.utils.functional import Promise
+
+from shuup.utils.django_compat import force_text
 
 
 class ExtendedJSONEncoder(django.core.serializers.json.DjangoJSONEncoder):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -13,21 +13,23 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.http import HttpResponse
 from django.template import loader
 from django.utils import timezone, translation
-from django.utils.lru_cache import lru_cache
 from django.utils.translation import ugettext_lazy as _
+from functools import lru_cache
 
 from shuup.core.middleware import ExceptionMiddleware
-from shuup.core.models import Contact, get_company_contact, get_person_contact
+from shuup.core.models import AnonymousContact, Contact, get_company_contact, get_person_contact
 from shuup.core.shop_provider import get_shop
+from shuup.core.utils.users import should_force_anonymous_contact, should_force_person_contact
 from shuup.front.basket import get_basket
 from shuup.front.utils.user import is_admin_user
+from shuup.utils.django_compat import MiddlewareMixin, get_middleware_classes
 
 __all__ = ["ProblemMiddleware", "ShuupFrontMiddleware"]
 
 ProblemMiddleware = ExceptionMiddleware  # This class is only an alias for ExceptionMiddleware.
 
 
-class ShuupFrontMiddleware(object):
+class ShuupFrontMiddleware(MiddlewareMixin):
     """
     Handle Shuup specific tasks for each request and response.
 
@@ -49,7 +51,7 @@ class ShuupFrontMiddleware(object):
       ``request.person`` : :class:`shuup.core.models.Contact`
           :class:`~shuup.core.models.PersonContact` of currently logged
           in user or :class:`~shuup.core.models.AnonymousContact` if
-          there is no logged in user.
+          there is no logged-in user.
 
       ``request.customer`` : :class:`shuup.core.models.Contact`
           Customer contact used when creating Orders.  This can be same
@@ -63,6 +65,11 @@ class ShuupFrontMiddleware(object):
     """
 
     def process_request(self, request):
+        if settings.DEBUG and (
+            request.path.startswith(settings.MEDIA_URL) or request.path.startswith(settings.STATIC_URL)
+        ):
+            return None
+
         self._set_shop(request)
         self._set_person(request)
         self._set_customer(request)
@@ -78,18 +85,25 @@ class ShuupFrontMiddleware(object):
         request.shop = get_shop(request)
 
     def _set_person(self, request):
-        request.person = get_person_contact(request.user)
-        if not request.person.is_active:
-            messages.add_message(request, messages.INFO, _("Logged out since this account is inactive."))
-            logout(request)
-            # Usually logout is connected to the `refresh_on_logout`
-            # method via a signal and that already sets request.person
-            # to anonymous, but set it explicitly too, just to be sure
-            request.person = get_person_contact(None)
+        if should_force_anonymous_contact(request.user):
+            request.person = AnonymousContact()
+        else:
+            request.person = get_person_contact(request.user)
+            if not request.person.is_active:
+                messages.add_message(request, messages.INFO, _("Logged out since this account is inactive."))
+                logout(request)
+                # Usually logout is connected to the `refresh_on_logout`
+                # method via a signal and that already sets request.person
+                # to anonymous. But set it explicitly too, just to be sure.
+                request.person = get_person_contact(None)
 
     def _set_customer(self, request):
-        company = get_company_contact(request.user)
-        request.customer = (company or request.person)
+        if not request.person or should_force_person_contact(request.user):
+            company = None
+        else:
+            company = get_company_contact(request.user)
+
+        request.customer = company or request.person
         request.is_company_member = bool(company)
         request.customer_groups = (company or request.person).groups.all()
 
@@ -99,7 +113,17 @@ class ShuupFrontMiddleware(object):
     def _set_timezone(self, request):
         if request.person.timezone:
             timezone.activate(request.person.timezone)
-            # TODO: Fallback to request.shop.timezone (and add such field)
+        elif request.session.get("tz"):
+            timezone.activate(request.session["tz"])
+
+            if request.person:
+                request.person.timezone = request.session["tz"]
+                request.person.save(update_fields=["timezone"])
+
+        else:
+            timezone.activate(settings.TIME_ZONE)
+
+        request.TIME_ZONE = timezone.get_current_timezone_name()
 
     def _set_price_display_options(self, request):
         customer = request.customer
@@ -142,6 +166,7 @@ class ShuupFrontMiddleware(object):
     @lru_cache()
     def _get_front_urlpatterns_callbacks(self):
         from shuup.front.urls import urlpatterns
+
         return [urlpattern.callback for urlpattern in urlpatterns]
 
     def process_view(self, request, view_func, *view_args, **view_kwargs):
@@ -155,10 +180,11 @@ class ShuupFrontMiddleware(object):
 
     def _set_language(self, request):
         """
-        Set the language according to the shop preferences
-        If the current language is not in the available ones, change it to the first available
+        Set the language according to the shop preferences.
+        If the current language is not in the available ones, change it to the first available.
         """
         from shuup.front.utils.translation import get_language_choices
+
         current_language = translation.get_language()
         available_languages = [code for (code, name, local_name) in get_language_choices(request.shop)]
         if current_language not in available_languages:
@@ -170,10 +196,12 @@ class ShuupFrontMiddleware(object):
             request.LANGUAGE_CODE = translation.get_language()
 
     def _get_maintenance_response(self, request, view_func):
-        if settings.DEBUG:
-            # Allow media and static accesses in debug mode
-            if request.path.startswith("/media") or request.path.startswith("/static"):
-                return None
+        # Allow media and static accesses in debug mode
+        if settings.DEBUG and (
+            request.path.startswith(settings.MEDIA_URL) or request.path.startswith(settings.STATIC_URL)
+        ):
+            return None
+
         if getattr(view_func, "maintenance_mode_exempt", False):
             return None
         if "login" in view_func.__name__:
@@ -187,8 +215,8 @@ class ShuupFrontMiddleware(object):
 
 
 if (
-    "django.contrib.auth" in settings.INSTALLED_APPS and
-    "shuup.front.middleware.ShuupFrontMiddleware" in settings.MIDDLEWARE_CLASSES
+    "django.contrib.auth" in settings.INSTALLED_APPS
+    and "shuup.front.middleware.ShuupFrontMiddleware" in get_middleware_classes()
 ):
     user_logged_in.connect(ShuupFrontMiddleware.refresh_on_user_change, dispatch_uid="shuup_front_refresh_on_login")
     user_logged_out.connect(ShuupFrontMiddleware.refresh_on_logout, dispatch_uid="shuup_front_refresh_on_logout")

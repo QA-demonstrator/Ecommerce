@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -23,3 +23,6 @@ class SimpleOrderNotificationModule(AdminModule):
             text = """Simple Order Notifications can't send order notifications
 because it can't find a Jinja2 template engine. Name your Jinja2 template engine "jinja2" to resolve this."""
             yield Notification(text=text)
+
+    def get_required_permissions(self):
+        return ("Access order notification module",)

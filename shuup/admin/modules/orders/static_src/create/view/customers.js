@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -181,7 +181,7 @@ function renderCustomerAddressView(store, shop, customer) {
                     " " + gettext("Order for company")
                 ]),
                 m.component(HelpPopover, {
-                    content: gettext("Check this if the order is for a company or business with a tax ID.")
+                    content: gettext("Enable this if the order is for a company or business with a tax ID.")
                 })
             ])
         ]),

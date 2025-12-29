@@ -1,23 +1,30 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
+# Panu Tulimäki <panu@shuup.com>, 2020
+# William Lindholm <william.lindholm@shuup.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-03 09:44+0000\n"
-"PO-Revision-Date: 2017-03-02 06:33+0000\n"
-"Last-Translator: Frank Wickström <frwickst@gmail.com>\n"
-"Language-Team: Swedish (Sweden) (http://www.transifex.com/shuup/shuup/"
-"language/sv_SE/)\n"
-"Language: sv_SE\n"
+"POT-Creation-Date: 2021-08-03 16:47+0000\n"
+"PO-Revision-Date: 2021-08-03 19:14+0000\n"
+"Last-Translator: Christian Hess\n"
+"Language-Team: Swedish (Sweden) (http://www.transifex.com/shuup/shuup/language/sv_SE/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.1.1\n"
+"Language: sv_SE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Theme identifiers must match."
+msgstr "Temaidentifierare måste matcha."
+
+msgid "Either theme_settings or shop should be informed."
+msgstr "Antingen temainställningar eller butiker bör informeras."
 
 msgid "Global plugins"
 msgstr "Globala insticksmoduler"
@@ -43,6 +50,47 @@ msgstr "Inget aktiverat tema. Klicka här för att aktivera ett."
 msgid "Theming"
 msgstr "Ställ in tema"
 
+msgid "Shuup Extensible Theme Engine Fonts"
+msgstr ""
+
+msgid "Fonts"
+msgstr ""
+
+msgid "Allow the user to select fonts in admin."
+msgstr ""
+
+msgid "Shuup Extensible Theme Engine Snippets"
+msgstr "Shuup Extensible Theme Engine Snippets"
+
+msgid "Snippets"
+msgstr "Utdrag"
+
+msgid "Theme Custom CSS/JS"
+msgstr "Tema Anpassad CSS / JS"
+
+msgid ""
+"Select the themes that will have this snippet injected. Leave the field "
+"blank to inject in all themes."
+msgstr "Välj de teman som det här utdraget ska läggas med. Lämna fältet tomt för att lägga med i alla teman."
+
+msgid "Select the location of the page to inject the snippet."
+msgstr "Välj platsen för sidan där du vill injicera kodavsnittet."
+
+msgid "Name"
+msgstr ""
+
+msgid "Filter by name..."
+msgstr ""
+
+msgid "Location"
+msgstr "Plats"
+
+msgid "Filter by location..."
+msgstr "Filtrera efter plats ..."
+
+msgid "Type"
+msgstr "Typ"
+
 msgid "activate"
 msgstr "aktivera"
 
@@ -55,11 +103,94 @@ msgstr "Välj ett tema för din butik"
 msgid "Theme activated."
 msgstr "Tema aktiverat."
 
+msgid "Custom CSS/JS"
+msgstr "Anpassad CSS / JS"
+
+msgid "Woff"
+msgstr ""
+
+msgid "Woff2"
+msgstr ""
+
+msgid "TTF"
+msgstr ""
+
+msgid "SVG"
+msgstr ""
+
+msgid "EOT"
+msgstr ""
+
 msgid "Stylesheets"
 msgstr "Utseendemallar"
 
 msgid "The fonts, colors, and styles to use with your theme."
 msgstr "Typsnitt, färger och annan styling för ditt tema."
+
+msgid "Choose the primary color:"
+msgstr ""
+
+msgid "Choose the secondary color:"
+msgstr ""
+
+msgid "Choose the primary text color:"
+msgstr ""
+
+msgid "Choose the success (green) style primary color:"
+msgstr ""
+
+msgid "Choose the danger (red) style primary color:"
+msgstr ""
+
+msgid "Admin Header Font"
+msgstr ""
+
+msgid "Admin Body Font"
+msgstr ""
+
+msgid "Failed to render the plugin"
+msgstr ""
+
+msgid "Content in this box is shown to all user types without limitations."
+msgstr "Innehållet i denna ruta visas för alla användartyper utan begränsningar."
+
+#, python-format
+msgid ""
+"Content in this placeholder is shown for %(category_name)s category only."
+msgstr "Innehållet i denna platshållare visas endast för kategorin %(category_name)s."
+
+msgid "Content in this box is shown to guests (anonymous users) only."
+msgstr "Innehållet i denna ruta visas endast för gäster (anonyma användare)."
+
+msgid "Content in this box is shown to company contacts only."
+msgstr "Innehållet i denna ruta visas endast för företagskontakter."
+
+msgid ""
+"Content in this box is shown to all logged-in contacts (both person and "
+"company; not anonymous)."
+msgstr "Innehållet i denna ruta visas för alla inloggade kontakter (både person och företag; inte anonymt)."
+
+msgid "Content in this box is shown to person contacts only."
+msgstr "Innehållet i denna ruta visas endast för personkontakter."
+
+#, python-format
+msgid "Content in this placeholder is shown for %(product_name)s only."
+msgstr "Innehållet i denna platshållare visas endast för %(product_name)s."
+
+msgid "Shop '{}' has no active theme"
+msgstr "Butiken '{}' har inget aktivt tema"
+
+msgid "Inline JavaScript"
+msgstr "Inbyggd JavaScript"
+
+msgid "Inline CSS"
+msgstr "Inbyggd CSS"
+
+msgid "Inline HTML"
+msgstr "Inbyggd HTML"
+
+msgid "Inline Jinja HTML"
+msgstr ""
 
 msgid "current draft"
 msgstr "nuvarande utkast"
@@ -79,6 +210,9 @@ msgstr "vynamn"
 msgid "created on"
 msgstr "skapad den"
 
+msgid "modified on"
+msgstr ""
+
 msgid "status"
 msgstr "status"
 
@@ -95,8 +229,91 @@ msgstr "information"
 msgid "Theme configuration for %s"
 msgstr "Konfiguration för temat %s"
 
+msgid "Shop"
+msgstr ""
+
+msgid "name"
+msgstr ""
+
+msgid "Font family name"
+msgstr ""
+
+msgid "Font Family CSS Property"
+msgstr ""
+
+msgid ""
+"(Optional) Input css font family property directly. Ex: font-family: Roboto;"
+msgstr ""
+
+msgid "WOFF Font"
+msgstr ""
+
+msgid "WOFF2 Font"
+msgstr ""
+
+msgid "TTF font"
+msgstr ""
+
+msgid "SVG font"
+msgstr ""
+
+msgid "EOT font"
+msgstr ""
+
+msgid "Font Family"
+msgstr ""
+
+msgid "Font Families"
+msgstr ""
+
+msgid "primary color"
+msgstr ""
+
+msgid "secondary color"
+msgstr ""
+
+msgid "text color"
+msgstr ""
+
+msgid "success color"
+msgstr ""
+
+msgid "danger color"
+msgstr ""
+
+msgid "base font size"
+msgstr ""
+
+#, python-format
+msgid "Admin Theme configuration for %s"
+msgstr ""
+
+msgid "snippet name"
+msgstr ""
+
+msgid "Untitled"
+msgstr ""
+
+msgid "location"
+msgstr "plats"
+
+msgid "snippet type"
+msgstr "kodavsnitt typ"
+
+msgid "snippet"
+msgstr "kodavsnitt"
+
+msgid "themes"
+msgstr "teman"
+
+msgid "Snippet"
+msgstr "Kodavsnitt"
+
 msgid "Plugin"
 msgstr "Insticksmodul"
+
+msgid "Categories"
+msgstr "Kategorier"
 
 msgid "Category Links"
 msgstr "Kategorilänkar"
@@ -119,23 +336,29 @@ msgstr "Bildens webbadress"
 msgid "Full width"
 msgstr "Fullständig bredd"
 
-msgid "Set image to full width of cell"
-msgstr "Ställ in cellens bredd till samma som bildens"
+msgid "Set image to the full width of cell."
+msgstr "Ställ in bilden på cellens fulla bredd."
 
 msgid "Width (px)"
 msgstr "Bredd (px)"
 
-msgid "Leave blank for default width"
-msgstr "Lämna tomt för standardbredd"
+msgid "Leave blank for default width."
+msgstr "Lämna tomt för standardbredd."
 
 msgid "Height (px)"
 msgstr "Höjd (px)"
 
+msgid "Newest"
+msgstr "Nyaste"
+
+msgid "Best Selling"
+msgstr "Bästsäljande"
+
+msgid "Random"
+msgstr "Slumpmässig"
+
 msgid "Product Highlights"
 msgstr "Produkthöjdpunkter"
-
-msgid "Type"
-msgstr "Typ"
 
 msgid "Count"
 msgstr "Antal"
@@ -143,20 +366,58 @@ msgstr "Antal"
 msgid "Only show in-stock and orderable items"
 msgstr "Visas endast produkter som finns i lager och är beställningsbara"
 
+msgid ""
+"Warning: The final number of products can be lower than 'Count' as it will "
+"filter out unorderable products from a set of 'Count' products."
+msgstr "Varning: Det slutliga antalet produkter kan vara lägre än 'Räkna' eftersom det filtrerar bort beställbara produkter från en uppsättning 'Räkna' produkter."
+
 msgid "Product Cross Sells"
 msgstr "Produkters korsförsäljningar"
 
-msgid "category"
-msgstr "kategori"
+msgid "Show variation parents"
+msgstr "Visa variationföräldrar"
+
+msgid "Render variation parents instead of the children."
+msgstr "Render variationföräldrar istället för barnen."
+
+msgid "Category"
+msgstr "Kategori"
 
 msgid "Category Products Highlight"
 msgstr "Höjdpunkter från produktkategorier"
 
-msgid "Snippets"
-msgstr "Utdrag"
+msgid "Products"
+msgstr "Produkter"
+
+msgid "Select all products you want to show"
+msgstr "Välj alla produkter du vill visa"
+
+msgid "Product Selection"
+msgstr "Produktval"
+
+msgid "Product Highlights (asynchronous)"
+msgstr ""
+
+msgid "Cutoff days"
+msgstr ""
+
+msgid "Cache timeout (seconds)"
+msgstr ""
+
+msgid "Product Cross Sells (asynchronous)"
+msgstr ""
+
+msgid "Category Products Highlight (asynchronous)"
+msgstr ""
+
+msgid "Product Selection (asynchronous)"
+msgstr ""
 
 msgid "In-Place Snippet"
 msgstr "In-place utdrag"
+
+msgid "Resource snippet for start of head"
+msgstr ""
 
 msgid "Resource snippet for end of head"
 msgstr "Utdrag från slutet till början"
@@ -169,6 +430,10 @@ msgstr "Utdrag för slutet av sidan"
 
 msgid "URL"
 msgstr "Webbadress"
+
+#, python-format
+msgid "%(name)s Ordering"
+msgstr "%(name)s Beställning"
 
 msgid "Ordering"
 msgstr "Ordning"
@@ -207,6 +472,32 @@ msgstr "text"
 msgid "Click to edit placeholder: %s"
 msgstr "Klicka för att redigera platshållare: %s"
 
+msgid ""
+"This placeholder is global and content of this placeholder is shown on all "
+"pages."
+msgstr "Denna platshållare är global och innehållet i denna platshållare visas på alla sidor."
+
+msgid "End of head"
+msgstr "Slut på huvudet"
+
+msgid "Start of head"
+msgstr "Början på huvudet"
+
+msgid "End of body"
+msgstr "Slut på kroppen"
+
+msgid "Start of body"
+msgstr "Början av kroppen"
+
+msgid "Content start"
+msgstr "Innehåll start"
+
+msgid "Content end"
+msgstr "Innehållets slut"
+
+msgid "(Error while rendering.)"
+msgstr "(Fel vid rendering.)"
+
 msgid "Delete This Cell"
 msgstr "Ta bort denna cell"
 
@@ -219,8 +510,19 @@ msgstr "Det finns inget att konfigurera i denna insticksmodul"
 msgid "Save Plugin"
 msgstr "Spara insticksmodul"
 
+msgid ""
+"Remember to publish your changes for this placeholder when you are done, by "
+"clicking the Publish Changes button at the top."
+msgstr "Kom ihåg att publicera dina ändringar för denna platshållare när du är klar, genom att klicka på knappen Publicera ändringar högst upp."
+
 msgid "Edit Placeholder"
 msgstr "Redigera platshållare"
+
+msgid ""
+"Edit plugins inside this placeholder. By saving the individual plugin, the "
+"changes are saved as a draft, and only you are able to see the changes. To "
+"make your changes Public, Click the Publish Changes button."
+msgstr "Redigera plugins i den här platshållaren. Genom att spara det enskilda plugin, ändringarna sparas som ett utkast och endast du kan se ändringarna. För att göra dina ändringar offentliga, klicka på knappen Publicera ändringar."
 
 msgid "Add new cell"
 msgstr "Lägg till ny cell"
@@ -234,8 +536,14 @@ msgstr "Flytta rad"
 msgid "Add new row"
 msgstr "Lägg till ny rad"
 
-msgid "Theme Configuration"
-msgstr "Temats inställningar"
+msgid "Admin Theme Configuration"
+msgstr ""
+
+msgid "Change Theme"
+msgstr ""
+
+msgid "Shop Theme Configuration"
+msgstr ""
 
 msgid "No themes are installed."
 msgstr "Inga teman är installerat."
@@ -244,41 +552,44 @@ msgstr "Inga teman är installerat."
 msgid "Theme Configuration: %(name)s"
 msgstr "Temat inställningar: %(name)s"
 
+msgid "Theme Configuration"
+msgstr "Temats inställningar"
+
 msgid "There's nothing to configure in this theme."
 msgstr "Det finns inget att konfigurera i detta tema."
 
 msgid "Select theme"
 msgstr "Välj tema"
 
-msgid "Guide"
-msgstr "Guide"
+msgid "Theme Guide"
+msgstr "Temaguide"
 
-msgid "Actions"
-msgstr "Åtgärder"
+msgid "Theme screenshot"
+msgstr ""
 
 msgid "Author"
 msgstr "Skapare"
 
-msgid "Show guide"
-msgstr "Visa guide"
-
-msgid "Activate theme to show guide"
-msgstr "Aktivera tema för att visa guiden"
-
-msgid "No guide"
-msgstr "Ingen guide"
-
-msgid "Currently active"
-msgstr "Aktiv just nu"
+msgid "Configure"
+msgstr "Konfigurera"
 
 msgid "Activate"
 msgstr "Aktivera"
 
-msgid "Configure"
-msgstr "Konfigurera"
+msgid "Admin Theme"
+msgstr ""
+
+msgid "Edit Admin Theme"
+msgstr ""
 
 msgid "Theme Name"
 msgstr "Temats namn"
+
+msgid "Actions"
+msgstr "Åtgärder"
+
+msgid "Currently active"
+msgstr "Aktiv just nu"
 
 msgid "Revert Changes"
 msgstr "Återställ ändringar"
@@ -286,25 +597,28 @@ msgstr "Återställ ändringar"
 msgid "Publish Changes"
 msgstr "Publicera ändringar"
 
-msgid "No access to editing"
-msgstr "Ingen tillgång till redigering"
+msgid "No access to editing."
+msgstr "Ingen åtkomst till redigering."
 
 #, python-format
-msgid "Unknown command %s"
-msgstr "Okänt kommando %s"
+msgid "Unknown command: `%s`."
+msgstr "Okänt kommando: `%s`."
 
-msgid "Unable to determine current theme."
+msgid "Unable to determine the current theme."
 msgstr "Det går inte att bestämma det aktuella temat."
 
 #, python-format
-msgid "Cannot add more than %d cells in one row."
-msgstr "Det går inte att lägga till mer än %d celler på en rad."
+msgid "Can't add more than %d cells in one row."
+msgstr "Kan inte lägga till mer än %d celler i en rad."
 
 msgid "Published"
 msgstr "Publicerad"
 
 msgid "Reverted"
 msgstr "Tillbakarullad"
+
+msgid "Custom"
+msgstr ""
 
 msgid "Full Width"
 msgstr "Fullbredd"
@@ -332,6 +646,12 @@ msgstr "Cellbredd"
 
 msgid "Cell align"
 msgstr "Celljustering"
+
+msgid "Extra classes"
+msgstr "Extra klasser"
+
+msgid "Add extra CSS classes names to the cell"
+msgstr "Lägg till extra CSS-klassnamn i cellen"
 
 msgid "No Plugin"
 msgstr "Ingen insticksmodul"

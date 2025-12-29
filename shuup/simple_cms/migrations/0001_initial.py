@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
+import django.db.models.deletion
 import mptt.fields
-import shuup.core.fields
 import parler.models
 from django.conf import settings
-import django.db.models.deletion
+from django.db import migrations, models
+
+import shuup.core.fields
 
 
 class Migration(migrations.Migration):
@@ -33,7 +34,7 @@ class Migration(migrations.Migration):
                 ('level', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('created_by', models.ForeignKey(blank=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, null=True, verbose_name='created by')),
                 ('modified_by', models.ForeignKey(blank=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, null=True, verbose_name='modified by')),
-                ('parent', mptt.fields.TreeForeignKey(blank=True, related_name='children', to='shuup_simple_cms.Page', null=True, verbose_name='parent')),
+                ('parent', mptt.fields.TreeForeignKey(blank=True, on_delete=models.CASCADE, related_name='children', to='shuup_simple_cms.Page', null=True, verbose_name='parent')),
             ],
             options={
                 'verbose_name': 'page',
@@ -50,7 +51,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=256, verbose_name='title')),
                 ('url', models.CharField(default=None, null=True, unique=True, verbose_name='URL', blank=True, max_length=100)),
                 ('content', models.TextField(verbose_name='content')),
-                ('master', models.ForeignKey(related_name='translations', to='shuup_simple_cms.Page', null=True, editable=False)),
+                ('master', models.ForeignKey(on_delete=models.CASCADE, related_name='translations', to='shuup_simple_cms.Page', null=True, editable=False)),
             ],
             options={
                 'db_tablespace': '',

@@ -1,25 +1,29 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals, with_statement
 
 import datetime
+import django
 import itertools
-from operator import iand, ior
-
+import logging
 import six
+import warnings
 import xlrd
+from django.contrib.auth import get_user_model
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.db.models import AutoField, ForeignKey, Q
 from django.db.models.fields import BooleanField
 from django.db.models.fields.related import RelatedField
 from django.db.transaction import atomic
-from django.utils.text import force_text
 from django.utils.translation import ugettext_lazy as _
 from enumfields import EnumIntegerField
+from operator import iand, ior
+from typing import TYPE_CHECKING
 
 from shuup.importer._mapper import RelatedMapper
 from shuup.importer.exceptions import ImporterError
@@ -27,6 +31,13 @@ from shuup.importer.importing.meta import ImportMetaBase
 from shuup.importer.importing.session import DataImporterRowSession
 from shuup.importer.utils import copy_update, fold_mapping_name
 from shuup.importer.utils.importer import ImportMode
+from shuup.utils.django_compat import force_text
+
+if TYPE_CHECKING:  # pragma: no cover
+    from shuup.core.models import Shop, Supplier
+
+LOGGER = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class ImporterExampleFile(object):
@@ -40,31 +51,97 @@ class ImporterExampleFile(object):
         self.template_name = template_name
 
 
+class ImporterContext:
+    shop = None  # type: Shop
+    language = None  # str
+    supplier = None  # type: Supplier
+    user = None  # type: User
+
+    def __init__(self, shop: "Shop", language: str, supplier: "Supplier" = None, user: User = None, **kwargs):
+        self.shop = shop
+        self.language = language
+        self.supplier = supplier
+        self.user = user
+
+
 class DataImporter(object):
+    identifier = None
+    name = None
     meta_class_getter_name = "get_import_meta"
     meta_base_class = ImportMetaBase
     extra_matches = {}
+    custom_file_transformer = False
 
     unique_fields = {}
     unmatched_fields = set()
     relation_map_cache = {}
 
-    example_files = []      # list[ImporterExampleFile]
+    example_files = []  # list[ImporterExampleFile]
     help_template = None
 
     model = None
 
-    def __init__(self, data, shop, language):
-        self.shop = shop
+    @classmethod
+    def get_importer_context(
+        cls,
+        request=None,
+        shop: "Shop" = None,
+        language: str = None,
+        supplier: "Supplier" = None,
+        user: User = None,
+        **kwargs
+    ):
+        """
+        Returns a context object for the given `request`
+        that will be used on the importer process.
+
+        `request` parameter is deprecated
+
+        :rtype: ImporterContext
+        """
+        if request:
+            warnings.warn(
+                "Warning! `request` parameter is deprecated and will be removed in next major version.",
+                DeprecationWarning,
+            )
+
+        return ImporterContext(shop=shop, language=language, supplier=supplier, user=user, **kwargs)
+
+    def __init__(self, data, context):
+        """
+        :type context: ImporterContext
+        """
         self.data = data
         self.data_keys = data[0].keys()
-        self.language = language
+
+        self.shop = context.shop
+        self.language = context.language
+        self.context = context
 
         meta_class_getter = getattr(self.model, self.meta_class_getter_name, None)
         meta_class = meta_class_getter() if meta_class_getter else self.meta_base_class
-        self._meta = (meta_class(self, self.model) if meta_class else None)
+        self._meta = meta_class(self, self.model) if meta_class else None
 
         self.field_defaults = self._meta.get_import_defaults()
+
+        self.other_log_messages = []
+        self.new_objects = []
+        self.updated_objects = []
+        self.log_messages = []
+
+    @classmethod
+    def get_permission_identifier(cls):
+        return "{}:{}".format(cls.identifier, force_text(cls.name))
+
+    @classmethod
+    def transform_file(cls, mode, filename, data=None):
+        """
+        That method will be called if `cls.custom_file_transformer` is True
+        """
+        raise NotImplementedError(
+            "Error! Not implemented: `DataImporter` -> `transform_file()`. "
+            "Implement `transform_file()` function or set `custom_file_transformer` to False"
+        )
 
     def process_data(self):
         mapping = self.create_mapping()
@@ -95,6 +172,9 @@ class DataImporter(object):
 
                 # Assign into mapping
                 for name in names:
+                    if name in self._meta.fields_to_skip:
+                        continue
+
                     if map_base.get("translated"):
                         mapping[name] = copy_update(map_base, lang=self.language)
                     else:
@@ -106,7 +186,7 @@ class DataImporter(object):
 
     def map_data_to_fields(self, model_mapping):
         """
-        Map fields
+        Map fields.
 
         If field is not found it will be saved into unmapped
         :return:
@@ -116,10 +196,11 @@ class DataImporter(object):
 
         data_map = {}
         for field_name in sorted(self.data_keys):
-            if field_name.lower() == "ignore":
+            mfname = fold_mapping_name(field_name)
+
+            if mfname == "ignore" or mfname in self._meta.fields_to_skip:
                 continue
 
-            mfname = fold_mapping_name(field_name)
             mapped_value = model_mapping.get(mfname)
             if not mapped_value:
                 for fld, opt in six.iteritems(model_mapping):
@@ -182,7 +263,7 @@ class DataImporter(object):
         try:
             value = int(value)
             return cls.objects.get(pk=value)
-        except:
+        except (ObjectDoesNotExist, MultipleObjectsReturned):
             name_fields = ["name", "title"]
             query = Q()
 
@@ -191,6 +272,7 @@ class DataImporter(object):
                     field = "%s__%s" % (cls._parler_meta.root_rel_name, field)
                 else:
                     from django.core.exceptions import FieldDoesNotExist
+
                     try:
                         cls._meta.get_field(field)
                     except FieldDoesNotExist:
@@ -215,10 +297,8 @@ class DataImporter(object):
             new = False
             if self.import_mode == ImportMode.CREATE:
                 self.other_log_messages.append(
-                    _("Row ignored (object already exists (%(object_name)s with id: %(object_id)s).") % {
-                        "object_name": str(obj),
-                        "object_id": obj.pk
-                    }
+                    _("Row ignored (object already exists (%(object_name)s with id: %(object_id)s).")
+                    % {"object_name": str(obj), "object_id": obj.pk}
                 )
                 return (None, False)
 
@@ -242,6 +322,11 @@ class DataImporter(object):
         # ignore the row if there is a column 'ignore" with a valid value
         row_lower = {key.lower(): val for key, val in row.items()}
         if row_lower.get("ignore"):
+            return
+
+        row = self._meta.pre_process_row(row)
+
+        if self._meta.should_skip_row(row):
             return
 
         obj, new = self._resolve_obj(row)
@@ -316,11 +401,11 @@ class DataImporter(object):
             try:
                 value = field.to_python(value)
             except Exception as exc:
+                LOGGER.exception("Failed to convert field")
+
                 row_session.log(
-                    _("Error setting value for field %(field_name)s. (%(exception)s)") % {
-                        "field_name": (field.verbose_name or field.name),
-                        "exception": exc
-                    }
+                    _("Failed while setting value for field %(field_name)s. (%(exception)s)")
+                    % {"field_name": (field.verbose_name or field.name), "exception": exc}
                 )
             else:
                 value = self._meta.mutate_normal_field_set(row_session, field, value, original=orig_value)
@@ -338,10 +423,8 @@ class DataImporter(object):
         value = self.process_related_value(row_session, field, value, multi=True)
         if orig_value and not value:
             row_session.log(
-                _("Couldn't set value %(original_value)s for field %(field_name)s.") % {
-                    "original_value": orig_value,
-                    "field_name": (field.verbose_name or field.name)
-                }
+                _("Couldn't set value %(original_value)s for field %(field_name)s.")
+                % {"original_value": orig_value, "field_name": (field.verbose_name or field.name)}
             )
 
         row_session.defer("m2m_%s" % field.name, target, {field.name: value})
@@ -350,16 +433,15 @@ class DataImporter(object):
         value = self.process_related_value(row_session, field, value, multi=False)
         if orig_value and not value:
             row_session.log(
-                _("Couldn't set value %(original_value)s for field %(field_name)s.") % {
-                    "original_value": orig_value,
-                    "field_name": (field.verbose_name or field.name)
-                }
+                _("Couldn't set value %(original_value)s for field %(field_name)s.")
+                % {"original_value": orig_value, "field_name": (field.verbose_name or field.name)}
             )
         return value
 
     def save_row(self, new, row_session):
         self._meta.presave_hook(row_session)
         try:
+            row_session.instance.full_clean()
             row_session.save()
             self._meta.postsave_hook(row_session)
             (self.new_objects if new else self.updated_objects).append(row_session.instance)
@@ -370,16 +452,14 @@ class DataImporter(object):
                     func(fields, row_session)
 
             if row_session.log_messages:
-                self.log_messages.append({
-                    "instance": row_session.instance,
-                    "messages": row_session.log_messages
-                })
+                self.log_messages.append({"instance": row_session.instance, "messages": row_session.log_messages})
         except ImporterError as e:
+            LOGGER.exception(e.message)
             self.other_log_messages.append(e.message)
 
     def get_fields_for_mapping(self, only_non_mapped=True):
         """
-        Get fields for manual mapping
+        Get fields for manual mapping.
 
         :return: List of fields `module_name.Model:field` or empty list
         :rtype: list
@@ -401,8 +481,8 @@ class DataImporter(object):
         return fields
 
     def _get_map_base(self, field, mode):
-        is_translation = (mode == 2)
-        is_m2m = (mode == 1)
+        is_translation = mode == 2
+        is_m2m = mode == 1
         is_fk = isinstance(field, ForeignKey)
         is_enum_field = isinstance(field, EnumIntegerField)
         return {
@@ -421,7 +501,7 @@ class DataImporter(object):
 
     def _find_matching_object(self, row, shop):
         """
-        Find object that matches the given row and shop
+        Find object that matches the given row and shop.
 
         :return: Found object or ``None``
         """
@@ -440,7 +520,7 @@ class DataImporter(object):
 
             try:
                 return self.model.objects.get(and_query)
-            except:  # Found multiple or zero -- not okay
+            except (ObjectDoesNotExist, MultipleObjectsReturned):  # Found multiple or zero -- not okay
                 pass
 
             return self.model.objects.filter(or_query).first()
@@ -451,9 +531,16 @@ class DataImporter(object):
         return itertools.chain(
             zip(model._meta.local_fields, itertools.repeat(0)),
             zip(model._meta.local_many_to_many, itertools.repeat(1)),
-            zip((f for f in model._parler_meta.root_model._meta.get_fields()
-                 if f.name not in ("id", "master", "language_code")), itertools.repeat(2))
-            if hasattr(model, "_parler_meta") else ()
+            zip(
+                (
+                    f
+                    for f in model._parler_meta.root_model._meta.get_fields()
+                    if f.name not in ("id", "master", "language_code")
+                ),
+                itertools.repeat(2),
+            )
+            if hasattr(model, "_parler_meta")
+            else (),
         )
 
     def get_related_models(self):
@@ -461,17 +548,25 @@ class DataImporter(object):
 
     def get_row_model(self, row):
         """
-        Get model that matches the row
+        Get model that matches the row.
 
-        Can be used in cases where you have multiple types of data in same import
+        Can be used in cases where you have multiple types of data in same import.
 
-        :param row: A row dict
+        :param row: A row dict.
         """
         return self.model
 
+    def can_create_object(self, obj):
+        """
+        Returns whether the importer can create the given object.
+        This is useful to handle related objects creation and
+        skip them when needed.
+        """
+        return True
+
     @property
     def is_multi_model(self):
-        return (len(self.get_related_models()) > 1)
+        return len(self.get_related_models()) > 1
 
     def find_matching_model(self, row):
         if not self.is_multi_model:
@@ -480,12 +575,16 @@ class DataImporter(object):
 
     def process_related_value(self, row_session, field, value, multi, reverse=False):
         """
-        Process Related values
+        Process Related values.
 
-        :param field: Django Field object
+        :param field: Django Field object.
         :return: Found value
         """
-        to = field.rel.to
+        if django.VERSION < (1, 9):
+            to = field.rel.to
+        else:
+            to = field.remote_field.target_field
+
         mapper = self.relation_map_cache.get(to)
 
         if not mapper:
@@ -502,7 +601,7 @@ class DataImporter(object):
     @classmethod
     def get_help_context_data(cls, request):
         """
-        Returns the context data that should be used for help texts in admin
+        Returns the context data that should be used for help texts in admin.
         """
         return {}
 
@@ -523,9 +622,9 @@ class DataImporter(object):
     @classmethod
     def get_example_file_content(cls, example_file, request):
         """
-        Returns a binary file that will be served through the request
-        This base implementation just renders a template and returns the result as BytesIO or StringIO
-        Override this method to return a custom file content
+        Returns a binary file that will be served through the request.
+        This base implementation just renders a template and returns the result as BytesIO or StringIO.
+        Override this method to return a custom file content.
 
         :param request HttpRequest
         :rtype StringIO|BytesIO
@@ -533,10 +632,9 @@ class DataImporter(object):
         if example_file.template_name:
             from django.template import loader
             from six import StringIO
+
             file_content = StringIO()
-            file_content.write(loader.render_to_string(
-                template_name=example_file.template_name,
-                context={},
-                request=request)
+            file_content.write(
+                loader.render_to_string(template_name=example_file.template_name, context={}, request=request)
             )
             return file_content

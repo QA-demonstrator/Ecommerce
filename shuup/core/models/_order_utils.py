@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 import datetime
-
 from django.conf import settings
-from django.utils.encoding import force_text
 
+from shuup.utils.django_compat import force_text
 from shuup.utils.importing import load
 
 from ._counters import Counter, CounterType
@@ -29,6 +28,7 @@ def calc_reference_number_checksum(rn):
 def get_unique_reference_number(shop, id):
     from shuup import configuration
     from shuup.admin.modules.settings.consts import ORDER_REFERENCE_NUMBER_LENGTH_FIELD
+
     now = datetime.datetime.now()
     ref_length = configuration.get(shop, ORDER_REFERENCE_NUMBER_LENGTH_FIELD, settings.SHUUP_REFERENCE_NUMBER_LENGTH)
     dt = ("%06s%07d%04d" % (now.strftime("%y%m%d"), now.microsecond, id % 1000)).rjust(ref_length, "0")
@@ -41,13 +41,18 @@ def get_unique_reference_number_for_order(order):
 
 def get_running_reference_number(order):
     from shuup import configuration
-    from shuup.admin.modules.settings.consts import (ORDER_REFERENCE_NUMBER_PREFIX_FIELD,
-                                                     ORDER_REFERENCE_NUMBER_LENGTH_FIELD)
+    from shuup.admin.modules.settings.consts import (
+        ORDER_REFERENCE_NUMBER_LENGTH_FIELD,
+        ORDER_REFERENCE_NUMBER_PREFIX_FIELD,
+    )
+
     value = Counter.get_and_increment(CounterType.ORDER_REFERENCE)
     prefix = "%s" % configuration.get(
-        order.shop, ORDER_REFERENCE_NUMBER_PREFIX_FIELD, settings.SHUUP_REFERENCE_NUMBER_PREFIX)
+        order.shop, ORDER_REFERENCE_NUMBER_PREFIX_FIELD, settings.SHUUP_REFERENCE_NUMBER_PREFIX
+    )
     ref_length = configuration.get(
-        order.shop, ORDER_REFERENCE_NUMBER_LENGTH_FIELD, settings.SHUUP_REFERENCE_NUMBER_LENGTH)
+        order.shop, ORDER_REFERENCE_NUMBER_LENGTH_FIELD, settings.SHUUP_REFERENCE_NUMBER_LENGTH
+    )
 
     padded_value = force_text(value).rjust(ref_length - len(prefix), "0")
     reference_no = "%s%s" % (prefix, padded_value)
@@ -57,10 +62,12 @@ def get_running_reference_number(order):
 def get_shop_running_reference_number(order):
     from shuup import configuration
     from shuup.admin.modules.settings.consts import ORDER_REFERENCE_NUMBER_LENGTH_FIELD
+
     value = Counter.get_and_increment(CounterType.ORDER_REFERENCE)
     prefix = "%06d" % order.shop.pk
     ref_length = configuration.get(
-        order.shop, ORDER_REFERENCE_NUMBER_LENGTH_FIELD, settings.SHUUP_REFERENCE_NUMBER_LENGTH)
+        order.shop, ORDER_REFERENCE_NUMBER_LENGTH_FIELD, settings.SHUUP_REFERENCE_NUMBER_LENGTH
+    )
     padded_value = force_text(value).rjust(ref_length - len(prefix), "0")
     reference_no = "%s%s" % (prefix, padded_value)
     return reference_no + calc_reference_number_checksum(reference_no)
@@ -71,9 +78,10 @@ def get_reference_number(order):
     from shuup.admin.modules.settings.consts import ORDER_REFERENCE_NUMBER_METHOD_FIELD
 
     if order.reference_number:
-        raise ValueError("Order passed to get_reference_number() already has a reference number")
+        raise ValueError("Error! Order passed to function `get_reference_number()` already has a reference number.")
     reference_number_method = configuration.get(
-        order.shop, ORDER_REFERENCE_NUMBER_METHOD_FIELD, settings.SHUUP_REFERENCE_NUMBER_METHOD)
+        order.shop, ORDER_REFERENCE_NUMBER_METHOD_FIELD, settings.SHUUP_REFERENCE_NUMBER_METHOD
+    )
     if reference_number_method == "unique":
         return get_unique_reference_number_for_order(order)
     elif reference_number_method == "running":
@@ -89,7 +97,7 @@ def get_reference_number(order):
 
 def get_order_identifier(order):
     if order.identifier:
-        raise ValueError("Order passed to get_order_identifier() already has an identifier")
+        raise ValueError("Error! Order passed to function `get_order_identifier()` already has an identifier.")
     order_identifier_method = settings.SHUUP_ORDER_IDENTIFIER_METHOD
     if order_identifier_method == "id":
         return force_text(order.id)

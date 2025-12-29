@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,8 +9,12 @@
 import pytest
 
 from shuup.core.models import (
-    ProductMode, ProductVariationResult, ProductVariationVariable,
-    ProductVariationVariableValue, ShopProduct, ShopProductVisibility
+    ProductMode,
+    ProductVariationResult,
+    ProductVariationVariable,
+    ProductVariationVariableValue,
+    ShopProduct,
+    ShopProductVisibility,
 )
 from shuup.testing.factories import create_product, get_default_shop
 
@@ -22,9 +26,7 @@ def test_simple_variation():
     children = [create_product("SimpleVarChild-%d" % x) for x in range(10)]
     for child in children:
         child.link_to_parent(parent)
-        sp = ShopProduct.objects.create(
-            shop=shop, product=child, visibility=ShopProductVisibility.ALWAYS_VISIBLE
-        )
+        sp = ShopProduct.objects.create(shop=shop, product=child, visibility=ShopProductVisibility.ALWAYS_VISIBLE)
         assert child.is_variation_child()
         assert not sp.is_list_visible()  # Variation children are not list visible
 
@@ -104,7 +106,10 @@ def test_multivariable_variation():
     for combo in combinations:
         assert not combo["result_product_pk"]
         # Elide a combination (yellow/small) for testing:
-        if combo["variable_to_value"][color_var].identifier == "yellow" and combo["variable_to_value"][size_var].identifier == "small":
+        if (
+            combo["variable_to_value"][color_var].identifier == "yellow"
+            and combo["variable_to_value"][size_var].identifier == "small"
+        ):
             continue
         child = create_product("xyz-%s" % combo["sku_part"])
         child.link_to_parent(parent, combo["variable_to_value"])
@@ -117,8 +122,31 @@ def test_multivariable_variation():
     # Anything else should
     brown_color_value = ProductVariationVariableValue.objects.get(variable=color_var, identifier="brown")
     result1 = ProductVariationResult.resolve(parent, {color_var: brown_color_value, size_var: small_size_value})
-    result2 = ProductVariationResult.resolve(parent, {color_var.pk: brown_color_value.pk, size_var.pk: small_size_value.pk})
+    result2 = ProductVariationResult.resolve(
+        parent, {color_var.pk: brown_color_value.pk, size_var.pk: small_size_value.pk}
+    )
     assert result1 and result2
     assert result1.pk == result2.pk
 
     assert len(parent.get_available_variation_results()) == (3 * 4 - 1)
+
+
+@pytest.mark.django_db
+def test_parent_mode_changes_to_normal_when_no_valid_children():
+    shop = get_default_shop()
+    parent = create_product("SimpleVarParent")
+    children = [create_product("SimpleVarChild-%d" % x) for x in range(10)]
+    for child in children:
+        child.link_to_parent(parent)
+        ShopProduct.objects.create(shop=shop, product=child, visibility=ShopProductVisibility.ALWAYS_VISIBLE)
+    parent.verify_mode()
+    assert parent.variation_children.count() == 10
+    assert parent.mode == ProductMode.SIMPLE_VARIATION_PARENT
+
+    # Delete all variation children
+    [product.soft_delete() for product in parent.variation_children.all()]
+
+    # Parent has no non-deleted variation children so it's turned back into a normal product
+    parent.verify_mode()
+    assert parent.variation_children.filter(deleted=False).count() == 0
+    assert parent.mode == ProductMode.NORMAL

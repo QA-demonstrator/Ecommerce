@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -10,7 +10,7 @@ import pytest
 
 from shuup.core.models import Product
 from shuup.core.utils.product_caching_object import ProductCachingObject
-from shuup.testing.factories import create_product, get_default_shop_product, get_default_category
+from shuup.testing.factories import create_product, get_default_category, get_default_shop_product
 
 
 def test_product_caching_object_nulling():
@@ -75,7 +75,7 @@ def test_product_caching_object():
 def test_shopproduct_categories_manytomany():
     shop_product = get_default_shop_product()
     category = get_default_category()
-    shop_product.categories = [category]
+    shop_product.categories.set([category])
     assert shop_product.categories.first() == category
     assert category.shop_products.first() == shop_product
 
@@ -84,6 +84,6 @@ def test_shopproduct_categories_manytomany():
 def test_categories_shopproducts_manytomany():
     shop_product = get_default_shop_product()
     category = get_default_category()
-    category.shop_products = [shop_product]
+    category.shop_products.set([shop_product])
     assert category.shop_products.first() == shop_product
     assert shop_product.categories.first() == category

@@ -127,7 +127,7 @@ For the purposes of the following examples, your theme should be defined as foll
 **Case A**
     *Overriding a Shuup front template*
 
-    So the classic gray theme is satisfying but you are not happy with the
+    So the classic gray theme is satisfying, but you are not happy with the
     category page. You can find the current category template
     in ``shuup/front/templates/shuup/front/product/category.jinja``.
 
@@ -225,3 +225,10 @@ This text plugin has then default text "My example text".
   good out of the box. Just make sure the plugins you use are usable with
   your theme even with very basic Shuup installation. If you are unsure,
   provide these plugins as a part of your theme distribution.
+
+.. note::
+  All placeholder content is cached to keep the rendering efficient. This
+  means that content got from outside the plugin context needs to be
+  either fetched asynchronously (like product content) or you need to
+  make sure xtheme cache is bumped when your models affecting the
+  plugin content is changed (for example see simple_cms app config).

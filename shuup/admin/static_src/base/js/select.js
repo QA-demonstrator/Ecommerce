@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,30 +11,81 @@ import $ from 'jquery';
 import select2 from 'select2';
 select2($);
 
-export function activateSelect($select, model, searchMode, extraFilters = null, noExpand = false, attrs = {}) {
+export function activateSelect($select, model, searchMode, extraFilters = null, noExpand = false, attrs = {}, isObjectSelector = false) {
     if (!noExpand) {
         // make sure to expand the select2 to use all the available space
         $select.width("100%");
     }
 
-    if (model === undefined) {
-        return $select.select2(Object.assign({
-            language: "xx",
-        }, attrs));
+    const language = {
+        errorLoading: function () {
+            return gettext("The results could not be loaded");
+        },
+        inputTooLong: function (args) {
+            var overChars = args.input.length - args.maximum;
+            var message = ngettext(
+                "Please delete %s character",
+                "Please delete %s characters", overChars
+            );
+            return interpolate(message, [overChars]);
+        },
+        inputTooShort: function (args) {
+            var remainingChars = args.minimum - args.input.length;
+            return interpolate(gettext("Please enter %s or more characters"), [remainingChars]);
+        },
+        loadingMore: function () {
+            return gettext("Loading more results...");
+        },
+        maximumSelected: function (args) {
+            var message = ngettext(
+                "You can only select %s item",
+                "You can only select %s items", args.maximum
+            );
+            return interpolate(message, [args.maximum]);
+        },
+        noResults: function () {
+            return gettext("No results found");
+        },
+        searching: function () {
+            return gettext("Searching...");
+        }
+    };
+
+    if (!model) {
+        return $select.select2({
+            ...attrs,
+            language,
+        });
     }
+    let url = null;
+    if (isObjectSelector) {
+        url = window.ShuupAdminConfig.browserUrls.object_selector;
+    } else {
+        url = window.ShuupAdminConfig.browserUrls.select;
+    }
+    
     return $select.select2(Object.assign({
-        language: "xx",
-        minimumInputLength: 3,
+        language,
+        minimumInputLength: window.ShuupAdminConfig.settings.minSearchInputLength,
         ajax: {
-            url: window.ShuupAdminConfig.browserUrls.select,
+            url: url,
             dataType: "json",
             data: function (params) {
-                const data = {
-                    model: model,
-                    searchMode: searchMode,
-                    search: params.term,
-                };
                 // extraFilters is a fn that returns extra params for the query
+                let data = null;
+                if (isObjectSelector) {
+                    data = {
+                        selector: model,
+                        q: params.term,
+                        searchMode: searchMode,
+                    };
+                } else {
+                    data = {
+                        model: model,
+                        searchMode: searchMode,
+                        search: params.term,
+                    };
+                }
                 if (extraFilters) {
                     Object.assign(data, extraFilters(params));
                 }
@@ -59,50 +110,27 @@ export function activateSelects() {
             const model = select.data("model");
             const searchMode = select.data("search-mode");
             const noExpand = select.data("no-expand");
-            activateSelect(select, model, searchMode, noExpand);
-        }
-    });
-}
+            const placeholderText = select.data("placeholder");
+            let placeholder = null;
 
-function select2Local() {
-    // Handle localization with Django instead of using select2 localization files
-    $.fn.select2.amd.define("select2/i18n/xx", [], function () {
-        return {
-            errorLoading: function () {
-                return gettext("The results could not be loaded");
-            },
-            inputTooLong: function (args) {
-                var overChars = args.input.length - args.maximum;
-                var message = ngettext(
-                    "Please delete %s character",
-                    "Please delete %s characters", overChars
-                );
-                return interpolate(message, [overChars]);
-            },
-            inputTooShort: function (args) {
-                var remainingChars = args.minimum - args.input.length;
-                return interpolate(gettext("Please enter %s or more characters"), [remainingChars]);
-            },
-            loadingMore: function () {
-                return gettext("Loading more results...");
-            },
-            maximumSelected: function (args) {
-                var message = ngettext(
-                    "You can only select %s item",
-                    "You can only select %s items", args.maximum
-                );
-                return interpolate(message, [args.maximum]);
-            },
-            noResults: function () {
-                return gettext("No results found");
-            },
-            searching: function () {
-                return gettext("Searching...");
+            if (placeholderText) {
+                placeholder = {
+                    id: null,
+                    text: placeholderText
+                };
             }
-        };
+
+            // do not set clear when there is no placeholder to use
+            const allowClear = placeholder ? select.data("allow-clear") : null;
+            const attrs = {
+                placeholder,
+                allowClear
+            };
+            const isObjectSelector = select.hasClass("object-selector")
+            activateSelect(select, model, searchMode, null, noExpand, attrs, isObjectSelector);
+        }
     });
 }
 
 window.activateSelects = activateSelects;
 activateSelects();
-select2Local();

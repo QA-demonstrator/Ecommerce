@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,19 +9,17 @@ from __future__ import unicode_literals
 
 import hashlib
 import itertools
-from collections import defaultdict
-
 import six
+from collections import defaultdict
 from django.db import models
-from django.utils.encoding import (
-    force_bytes, force_text, python_2_unicode_compatible
-)
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from enumfields import Enum, EnumIntegerField
 from parler.models import TranslatableModel, TranslatedFields
 
 from shuup.core.fields import InternalIdentifierField
+from shuup.utils.django_compat import force_bytes, force_text
 from shuup.utils.models import SortableMixin
 
 
@@ -30,71 +28,86 @@ class ProductVariationLinkStatus(Enum):
     VISIBLE = 1
 
     class Labels:
-        INVISIBLE = _('invisible')
-        VISIBLE = _('visible')
+        INVISIBLE = _("invisible")
+        VISIBLE = _("visible")
 
 
 @python_2_unicode_compatible
 class ProductVariationVariable(TranslatableModel, SortableMixin):
     product = models.ForeignKey(
-        "Product", related_name='variation_variables', on_delete=models.CASCADE, verbose_name=_("product"))
+        "Product", related_name="variation_variables", on_delete=models.CASCADE, verbose_name=_("product")
+    )
     identifier = InternalIdentifierField(unique=False)
     translations = TranslatedFields(
-        name=models.CharField(max_length=128, verbose_name=_('name')),
+        name=models.CharField(max_length=128, verbose_name=_("name")),
     )
 
     class Meta:
-        verbose_name = _('variation variable')
-        verbose_name_plural = _('variation variables')
-        unique_together = (("product", "identifier", ),)
-        ordering = ('ordering', )
+        verbose_name = _("variation variable")
+        verbose_name_plural = _("variation variables")
+        unique_together = (
+            (
+                "product",
+                "identifier",
+            ),
+        )
+        ordering = ("ordering",)
 
     def __str__(self):
-        return self.safe_translation_getter("name") or self.identifier or repr(self)
+        return force_text(self.safe_translation_getter("name") or self.identifier or repr(self))
 
 
 @python_2_unicode_compatible
 class ProductVariationVariableValue(TranslatableModel, SortableMixin):
     variable = models.ForeignKey(
-        ProductVariationVariable, related_name='values', on_delete=models.CASCADE, verbose_name=_("variation variable"))
+        ProductVariationVariable, related_name="values", on_delete=models.CASCADE, verbose_name=_("variation variable")
+    )
     identifier = InternalIdentifierField(unique=False)
 
     translations = TranslatedFields(
-        value=models.CharField(max_length=128, verbose_name=_('value')),
+        value=models.CharField(max_length=128, verbose_name=_("value")),
     )
 
     class Meta:
-        verbose_name = _('variation value')
-        verbose_name_plural = _('variation values')
-        unique_together = (("variable", "identifier", ),)
-        ordering = ('ordering', )
+        verbose_name = _("variation value")
+        verbose_name_plural = _("variation values")
+        unique_together = (
+            (
+                "variable",
+                "identifier",
+            ),
+        )
+        ordering = ("ordering",)
 
     def __str__(self):
-        return self.safe_translation_getter("value") or self.identifier or repr(self)
+        return force_text(self.safe_translation_getter("value") or self.identifier or repr(self))
 
 
 class ProductVariationResult(models.Model):
     product = models.ForeignKey(
-        "Product", related_name='variation_result_supers', on_delete=models.CASCADE, verbose_name=_("product"))
+        "Product", related_name="variation_result_supers", on_delete=models.CASCADE, verbose_name=_("product")
+    )
     combination_hash = models.CharField(max_length=40, unique=True, db_index=True, verbose_name=_("combination hash"))
     result = models.ForeignKey(
-        "Product", related_name='variation_result_subs', on_delete=models.CASCADE, verbose_name=_("result"))
+        "Product", related_name="variation_result_subs", on_delete=models.CASCADE, verbose_name=_("result")
+    )
     status = EnumIntegerField(
-        ProductVariationLinkStatus, db_index=True, default=ProductVariationLinkStatus.VISIBLE, verbose_name=_("status"))
+        ProductVariationLinkStatus, db_index=True, default=ProductVariationLinkStatus.VISIBLE, verbose_name=_("status")
+    )
 
     @classmethod
     def resolve(cls, parent_product, combination):
         pvr = cls.objects.filter(
             product=parent_product,
             combination_hash=hash_combination(combination),
-            status=ProductVariationLinkStatus.VISIBLE
+            status=ProductVariationLinkStatus.VISIBLE,
         ).first()
         if pvr:
             return pvr.result
 
     class Meta:
-        verbose_name = _('variation result')
-        verbose_name_plural = _('variation results')
+        verbose_name = _("variation result")
+        verbose_name_plural = _("variation results")
 
 
 def hash_combination(combination):
@@ -150,7 +163,8 @@ def get_all_available_combinations(product):
     values_by_variable = defaultdict(list)
     values = (
         ProductVariationVariableValue.objects.filter(variable__product=product)
-        .prefetch_related("variable").order_by("ordering")
+        .prefetch_related("translations", "variable", "variable__translations")
+        .order_by("ordering")
     )
     for val in values:
         values_by_variable[val.variable].append(val)
@@ -171,5 +185,5 @@ def get_all_available_combinations(product):
             "hash": hash,
             "text_description": text_description,
             "sku_part": sku_part,
-            "result_product_pk": results.get(hash)
+            "result_product_pk": results.get(hash),
         }

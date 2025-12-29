@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -10,5 +10,9 @@ from shuup.core.models import ShopProduct
 
 
 class CatalogFilterCachedShopProduct(models.Model):
-    filter = models.ForeignKey('CatalogFilter', related_name='cached_shop_products', db_index=True)
-    shop_product = models.ForeignKey(ShopProduct, related_name='cached_catalog_campaign_filters', db_index=True)
+    filter = models.ForeignKey(
+        on_delete=models.CASCADE, to="CatalogFilter", related_name="cached_shop_products", db_index=True
+    )
+    shop_product = models.ForeignKey(
+        on_delete=models.CASCADE, to=ShopProduct, related_name="cached_catalog_campaign_filters", db_index=True
+    )

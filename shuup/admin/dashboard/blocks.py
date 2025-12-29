@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from babel.numbers import format_currency, format_number
 from django.template import loader
-from django.utils.encoding import force_text
 
+from shuup.utils.django_compat import force_text
 from shuup.utils.i18n import get_current_babel_locale
 from shuup.utils.numbers import parse_decimal_string
 
@@ -77,10 +77,7 @@ class DashboardChartBlock(DashboardBlock):
     default_size = "medium"
     BLOCK_TEMPLATE = """
     <div class="color-block block-purple">
-        <div class="block-header">
-            <div class="text-wrap"><span>%(title)s</span></div>
-            <div class="icon-wrap"><i class="fa %(icon)s"></i></div>
-        </div>
+        <h2 class="block-title">%(title)s</h2>
         <div class="block-content">
             <canvas id="chart-%(id)s" height="250"></canvas>
         </div>
@@ -112,6 +109,6 @@ class DashboardChartBlock(DashboardBlock):
             "title": force_text(chart.title),
             "id": self.id,
             "config": chart.get_config_json(),
-            "icon": "fa-line-chart"
+            "icon": "fa-line-chart",
         }
         return content

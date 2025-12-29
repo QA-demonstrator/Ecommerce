@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-from collections import OrderedDict
-
 import six
+from collections import OrderedDict
 from django.forms import BaseFormSet
 
 
@@ -26,9 +25,14 @@ class FormDef(object):
 
     def instantiate(self, prefix, group_initial=None, **extra_kwargs):
         kwargs = {"prefix": prefix}
-        if not isinstance(self.form_class, BaseFormSet):
+        if not issubclass(self.form_class, BaseFormSet):
             # FormSets don't support `empty_permitted` (they'll deal with it themselves)
             kwargs["empty_permitted"] = not self.required
+            if not self.required:
+                # FIXME: Above would raise ValueError: The empty_permitted and
+                # use_required_attribute arguments may not both be True with
+                # Django 2.2.
+                kwargs["use_required_attribute"] = False
 
         kwargs.update(self.kwargs)
         kwargs.update(extra_kwargs)
@@ -36,10 +40,7 @@ class FormDef(object):
             prefix_with_dash = "%s-" % prefix
             # Only copy keys from initial that begin with this form's prefix
             new_initial = dict(
-                (k[len(prefix_with_dash):], v)
-                for (k, v)
-                in group_initial.items()
-                if k.startswith(prefix_with_dash)
+                (k[len(prefix_with_dash) :], v) for (k, v) in group_initial.items() if k.startswith(prefix_with_dash)
             )
             # But any explicitly passed kwargs shall be copied as-is
             new_initial.update(kwargs.get("initial", {}))
@@ -50,9 +51,9 @@ class FormDef(object):
 
 
 class FormGroup(object):
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, initial=None):
+    def __init__(self, data=None, files=None, auto_id="id_%s", prefix=None, initial=None):
         self.form_defs = OrderedDict()
-        self.is_bound = (data is not None or files is not None)
+        self.is_bound = data is not None or files is not None
         self.data = data
         self.files = files
         self.prefix = prefix
@@ -73,11 +74,9 @@ class FormGroup(object):
                 prefix = "%s_%s" % (self.prefix, name)
             else:
                 prefix = name
+
             self._forms[name] = form_def.instantiate(
-                prefix=prefix,
-                data=self.data,
-                files=self.files,
-                group_initial=self.initial
+                prefix=prefix, data=self.data, files=self.files, group_initial=self.initial
             )
 
     @property
@@ -92,6 +91,7 @@ class FormGroup(object):
                 # won't hide.  Why not use `raise_from`? Because Django's technical 500 page doesn't understand chained
                 # exceptions and we'd end up with an utterly useless traceback.
                 import sys
+
                 tb = sys.exc_info()[2]
                 # Turns out the type argument is ignored in six's Py3 emulation of reraising if the value argument is
                 # is non-None. However that might not be the case for Python 2, so just to err on the safe side of

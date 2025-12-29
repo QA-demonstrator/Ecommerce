@@ -1,30 +1,29 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-import sys
-
 import six
+import sys
+from django.conf import settings
 from jinja2.environment import Environment, Template
 from jinja2.utils import concat, internalcode
 
 from shuup.apps.provides import get_provide_objects
 from shuup.xtheme._theme import get_middleware_current_theme
 from shuup.xtheme.editing import add_edit_resources
-from shuup.xtheme.resources import (
-    inject_resources, RESOURCE_CONTAINER_VAR_NAME, ResourceContainer
-)
+from shuup.xtheme.resources import RESOURCE_CONTAINER_VAR_NAME, ResourceContainer, inject_resources
 
 
 class XthemeTemplate(Template):
     """
     A subclass of Jinja templates with additional post-processing magic.
     """
+
     def render(self, *args, **kwargs):
         """
         Render the template and postprocess it.
@@ -37,12 +36,20 @@ class XthemeTemplate(Template):
         ctx = self.new_context(vars)
         try:
             content = concat(self.root_render_func(ctx))
+            if ctx and ctx.name and ctx.name in settings.SHUUP_XTHEME_EXCLUDE_TEMPLATES_FROM_RESOUCE_INJECTION:
+                return content
+
             return self._postprocess(ctx, content)
         except Exception:
             exc_info = sys.exc_info()
         return self.environment.handle_exception(exc_info, True)
 
     def _postprocess(self, context, content):
+        # if the context contains the `allow_resource_injection` key and
+        # it's value is False, we don't inject resources in the content
+        if context and context.get("allow_resource_injection", True) is False:
+            return content
+
         for inject_func in get_provide_objects("xtheme_resource_injection"):
             if callable(inject_func):
                 inject_func(context, content)
@@ -132,5 +139,5 @@ class XthemeEnvironment(Environment):
         if not theme:
             return name
         theme_template = "%s/%s" % ((theme.template_dir or theme.identifier), name)
-        default_template = (("%s/%s" % (theme.default_template_dir, name)) if theme.default_template_dir else None)
+        default_template = ("%s/%s" % (theme.default_template_dir, name)) if theme.default_template_dir else None
         return [theme_template, default_template, name] if default_template else [theme_template, name]

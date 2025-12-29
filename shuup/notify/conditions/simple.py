@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ from shuup.utils.text import camel_case
 
 class NonEmpty(Condition):
     identifier = "non_empty"
-    description = _(u"Check whether the bound value `value` exists and is non-empty and non-zero.")
+    description = _("Check whether the bound value `value` exists and is non-empty and non-zero.")
     name = _("Non-Empty")
     v = Binding("Value")
 
@@ -28,7 +28,7 @@ class NonEmpty(Condition):
 
 class Empty(Condition):
     identifier = "empty"
-    description = _(u"Check whether the bound value `value` is empty or zero.")
+    description = _("Check whether the bound value `value` is empty or zero.")
     name = _("Empty")
     v = Binding("Value")
 
@@ -59,7 +59,16 @@ class CaseInsensitiveStringEqual(Condition):
         value2 = self.get_value(context, "v2")
         value1 = six.text_type(value1).lower().strip()
         value2 = six.text_type(value2).lower().strip()
-        return (value1 == value2)
+        return value1 == value2
+
+
+class BooleanValuesEqual(Condition):
+    identifier_suffix = "equal"
+
+    def test(self, context):
+        value1 = bool(self.get_value(context, "v1"))
+        value2 = bool(self.get_value(context, "v2"))
+        return value1 == value2
 
 
 def construct_simple(base, var_type):
@@ -71,7 +80,7 @@ def construct_simple(base, var_type):
             "v1": Binding(suffixed_type_name("1"), type=var_type),
             "v2": Binding(suffixed_type_name("2"), type=var_type, constant_use=ConstantUse.VARIABLE_OR_CONSTANT),
         },
-        "identifier": identifier
+        "identifier": identifier,
     }
     return type(class_name, (base,), class_ns)
 
@@ -79,4 +88,4 @@ def construct_simple(base, var_type):
 LanguageEqual = construct_simple(CaseInsensitiveStringEqual, Language)
 TextEqual = construct_simple(CaseInsensitiveStringEqual, Text)
 IntegerEqual = construct_simple(BaseEqual, Integer)
-BooleanEqual = construct_simple(BaseEqual, Boolean)
+BooleanEqual = construct_simple(BooleanValuesEqual, Boolean)

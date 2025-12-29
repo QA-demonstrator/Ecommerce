@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-25 21:31+0000\n"
+"POT-Creation-Date: 2021-05-19 16:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -19,13 +19,16 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "Generated-By: Babel 2.1.1\n"
 
-msgid "Plain text"
-msgstr ""
-
 msgid "HTML"
 msgstr ""
 
+msgid "Plain text"
+msgstr ""
+
 msgid "Subject"
+msgstr ""
+
+msgid "Email Template"
 msgstr ""
 
 msgid "Email Body"
@@ -38,6 +41,21 @@ msgid "Recipient"
 msgstr ""
 
 msgid "Reply-To"
+msgstr ""
+
+msgid "Carbon Copy (CC)"
+msgstr ""
+
+msgid "Blind Carbon Copy (BCC)"
+msgstr ""
+
+msgid "From email"
+msgstr ""
+
+msgid ""
+"Override the default from email to be used. It can either be binded to a "
+"variable or be a constant like support@store.com or even \"Store Support\" "
+"<support@store.com>."
 msgstr ""
 
 msgid "Language"
@@ -60,6 +78,9 @@ msgstr ""
 msgid "Show notification scripts"
 msgstr ""
 
+msgid "Email Templates"
+msgstr ""
+
 msgid "Event"
 msgstr ""
 
@@ -79,7 +100,7 @@ msgid "Choose whether this script should be activated when its event fires."
 msgstr ""
 
 msgid ""
-"Warning: Changing the event for an existing script may have unexpected "
+"Warning! Changing the event for an existing script may have unexpected "
 "effects."
 msgstr ""
 
@@ -87,6 +108,13 @@ msgid "Template"
 msgstr ""
 
 msgid "Bind to Variable"
+msgstr ""
+
+msgid "This field is missing content."
+msgstr ""
+
+#, python-format
+msgid "%s has been marked deleted."
 msgstr ""
 
 msgid "Edit Script Contents"
@@ -98,7 +126,18 @@ msgstr ""
 msgid "Edit Template"
 msgstr ""
 
+msgid "Delete"
+msgstr ""
+
+#, python-format
+msgid "Are you sure you wish to delete \"%s\" notification?"
+msgstr ""
+
 msgid "Save"
+msgstr ""
+
+#, python-format
+msgid "%s has been deleted."
 msgstr ""
 
 msgid "Name"
@@ -113,16 +152,16 @@ msgstr ""
 msgid "New From Template"
 msgstr ""
 
-msgid "Script created from template!"
+msgid "Script created from template."
 msgstr ""
 
-msgid "Template Script not found!"
+msgid "Template Script not found."
 msgstr ""
 
-msgid "Templated script not found!"
+msgid "Templated script not found."
 msgstr ""
 
-msgid "Script updated!"
+msgid "Script updated."
 msgstr ""
 
 msgid ""
@@ -186,6 +225,11 @@ msgstr ""
 msgid "critical"
 msgstr ""
 
+msgid ""
+"Enter the base HTML template to be used in emails. Mark the place to inject "
+"the email content using the variable `%html_body%` inside the body."
+msgstr ""
+
 msgid "shop"
 msgstr ""
 
@@ -228,6 +272,30 @@ msgstr ""
 msgid "the template identifier used to create this script"
 msgstr ""
 
+msgid "Password Reset"
+msgstr ""
+
+msgid "This event is triggered when password reset is requested."
+msgstr ""
+
+msgid "Site name"
+msgstr ""
+
+msgid "User secret"
+msgstr ""
+
+msgid "User to recover"
+msgstr ""
+
+msgid "Token"
+msgstr ""
+
+msgid "Recovery URL"
+msgstr ""
+
+msgid "To Email"
+msgstr ""
+
 msgid "The subject of the email"
 msgstr ""
 
@@ -261,6 +329,37 @@ msgid ""
 "customer."
 msgstr ""
 
+msgid ""
+"\n"
+"<p>Hi {{ user_to_recover.get_full_name() }},</p>\n"
+"\n"
+"<p>In case you've forgotten, your username is {{ user_to_recover.username }}."
+"</p>\n"
+"<p>You're receiving this email because you requested a password reset for "
+"your user account at {{ site_name }}.</p>\n"
+"<p>Please go to the following page and choose a new password:</p>\n"
+"<br>\n"
+"<a href=\"{{ recovery_url }}\">{{ recovery_url }}</a>\n"
+msgstr ""
+
+msgid "Send Password Reset Link"
+msgstr ""
+
+msgid ""
+"\n"
+"        Send an email to user when their account password reset is "
+"requested\n"
+"    "
+msgstr ""
+
+msgid ""
+"\n"
+"        This script will send an email to user once their account password "
+"reset is\n"
+"        requested either by admin, staff or user.\n"
+"    "
+msgstr ""
+
 msgid "Edit Script Information"
 msgstr ""
 
@@ -291,16 +390,16 @@ msgstr ""
 msgid "Edit Step"
 msgstr ""
 
-msgid "Done"
+msgid "Active shop:"
+msgstr ""
+
+msgid "Save changes"
 msgstr ""
 
 msgid "Please correct the errors below."
 msgstr ""
 
 msgid "Variables"
-msgstr ""
-
-msgid "Save changes"
 msgstr ""
 
 msgid "Script Template: {}"

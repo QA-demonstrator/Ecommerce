@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -13,9 +13,7 @@ from django.utils.translation import activate
 
 from shuup.admin.modules.services.forms import PaymentMethodForm
 from shuup.admin.modules.shops.forms import ShopBaseForm, ShopWizardForm
-from shuup.testing.factories import (
-    get_default_payment_method, get_default_shop
-)
+from shuup.testing.factories import get_default_payment_method, get_default_shop
 from shuup.testing.utils import apply_request_middleware
 from shuup_tests.utils.forms import get_form_data
 
@@ -74,8 +72,9 @@ def test_default_language_english():
 
 @pytest.mark.django_db
 def test_model_form_partially_translated(rf, admin_user):
-    with override_settings(**{"LANGUAGES": (("en", "en"), ("fi", "fi"), ("ja", "ja")),
-                              "PARLER_DEFAULT_LANGUAGE_CODE": "en"}):
+    with override_settings(
+        **{"LANGUAGES": (("en", "en"), ("fi", "fi"), ("ja", "ja")), "PARLER_DEFAULT_LANGUAGE_CODE": "en"}
+    ):
         activate("en")
         get_default_shop()
         request = apply_request_middleware(rf.get("/"), user=admin_user)
@@ -94,10 +93,11 @@ def test_model_form_partially_translated(rf, admin_user):
         payment_method = form.save()
 
         # Add description for Finnish and and name in Finnish should be required
-        data["description__fi"] = "Some description"
-        form = PaymentMethodForm(data=data, instance=payment_method, request=request, languages=settings.LANGUAGES)
-        form.full_clean()
-        assert not form.is_valid() and form.errors
+        with override_settings(**{"PARLER_DEFAULT_LANGUAGE_CODE": "fi"}):
+            data["description__fi"] = "Some description"
+            form = PaymentMethodForm(data=data, instance=payment_method, request=request, languages=settings.LANGUAGES)
+            form.full_clean()
+            assert not form.is_valid() and form.errors
 
         test_name_fi = "Some method name in finnish"
         data["name__fi"] = test_name_fi

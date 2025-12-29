@@ -4,8 +4,9 @@
 # 
 # Translators:
 # Aarni Koskela, 2015
+# Andreas Modinos <andreas@shuup.com>, 2021
 # Antti Mäki <antti@anttimaki.com>, 2015
-# Eetu Häivälä <eetu.haivala@anders.fi>, 2015
+# Eetu Häivälä, 2015
 # Heikki Saari <heikki.saari@anders.fi>, 2016
 # Janne Tammi <janne@shuup.com>, 2016
 # Janne Tammi <janne@shuup.com>, 2015
@@ -13,9 +14,9 @@
 # Juha Kujala, 2017
 # Juha Kujala, 2015-2016
 # Juha Louhiranta <charni@gmail.com>, 2015
-# Panu Tulimäki <panu@shuup.com>, 2016,2018
-# Rauli L. <rauli.laine@iki.fi>, 2015-2016
-# Rauli L. <rauli.laine@iki.fi>, 2016
+# Panu Tulimäki <panu@shuup.com>, 2016,2018,2020
+# Rauli Laine <rauli.laine@iki.fi>, 2015-2016
+# Rauli Laine <rauli.laine@iki.fi>, 2016
 # Shuup Admin <admin@shuup.com>, 2015-2016
 # Shuup Admin <admin@shuup.com>, 2016
 # Teemu Selkälä <teemu.selkala@anders.fi>, 2015
@@ -25,9 +26,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-21 23:57+0000\n"
-"PO-Revision-Date: 2018-09-28 21:19+0000\n"
-"Last-Translator: Panu Tulimäki <panu@shuup.com>\n"
+"POT-Creation-Date: 2021-08-03 16:47+0000\n"
+"PO-Revision-Date: 2021-08-03 19:14+0000\n"
+"Last-Translator: Christian Hess\n"
 "Language-Team: Finnish (Finland) (http://www.transifex.com/shuup/shuup/language/fi_FI/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -36,11 +37,11 @@ msgstr ""
 "Language: fi_FI\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Theme identifier must match"
-msgstr "Teeman tunnus pitää täsmätä"
+msgid "Theme identifiers must match."
+msgstr "Teeman tunnisteiden on vastattava toisiaan."
 
-msgid "Either theme_settings or shop should be informed"
-msgstr "Joko teeman asetukset tai kauppa tulee olla saatavilla"
+msgid "Either theme_settings or shop should be informed."
+msgstr "Joko teema_asetukset tai kauppa tulee ilmoittaa."
 
 msgid "Global plugins"
 msgstr "Globaali liitännäinen"
@@ -66,6 +67,15 @@ msgstr "Teema ei ole aktiivinen. Klikkaa tästä aktivoidaksesi teema."
 msgid "Theming"
 msgstr "Teemat"
 
+msgid "Shuup Extensible Theme Engine Fonts"
+msgstr ""
+
+msgid "Fonts"
+msgstr ""
+
+msgid "Allow the user to select fonts in admin."
+msgstr ""
+
 msgid "Shuup Extensible Theme Engine Snippets"
 msgstr "Shuup laajennettava teemamoottori koodinpätkät"
 
@@ -82,6 +92,12 @@ msgstr "Valitse teemat, joihin tämä koodinpätkä liitetään. Jätä tyhjäks
 
 msgid "Select the location of the page to inject the snippet."
 msgstr "Valitse koodinpätkän sijainti sivulla."
+
+msgid "Name"
+msgstr ""
+
+msgid "Filter by name..."
+msgstr ""
 
 msgid "Location"
 msgstr "Sijainti"
@@ -107,31 +123,72 @@ msgstr "Teema aktivoitu."
 msgid "Custom CSS/JS"
 msgstr "Kustomoitu CSS/JS"
 
+msgid "Woff"
+msgstr ""
+
+msgid "Woff2"
+msgstr ""
+
+msgid "TTF"
+msgstr ""
+
+msgid "SVG"
+msgstr ""
+
+msgid "EOT"
+msgstr ""
+
 msgid "Stylesheets"
 msgstr "Tyylit"
 
 msgid "The fonts, colors, and styles to use with your theme."
 msgstr "Teemasi käyttämät fontit, värit ja tyylit."
 
-msgid "Content in this placeholder is shown without limitations."
-msgstr "Tämä sisältöalue näytetään ilman rajoituksia."
+msgid "Choose the primary color:"
+msgstr ""
+
+msgid "Choose the secondary color:"
+msgstr ""
+
+msgid "Choose the primary text color:"
+msgstr ""
+
+msgid "Choose the success (green) style primary color:"
+msgstr ""
+
+msgid "Choose the danger (red) style primary color:"
+msgstr ""
+
+msgid "Admin Header Font"
+msgstr ""
+
+msgid "Admin Body Font"
+msgstr ""
+
+msgid "Failed to render the plugin"
+msgstr ""
+
+msgid "Content in this box is shown to all user types without limitations."
+msgstr "Tämän ruudun sisältö näytetään kaikille käyttäjätyypeille rajoituksetta."
 
 #, python-format
 msgid ""
 "Content in this placeholder is shown for %(category_name)s category only."
 msgstr "Tämä sisältöalue näytetään vain kategorialle %(category_name)s."
 
-msgid "Content in this placeholder is shown for guests."
-msgstr "Tämä sisältöalue näytetään vain vieraille."
+msgid "Content in this box is shown to guests (anonymous users) only."
+msgstr "Tämän kentän sisältö näytetään vain vieraille (tuntemattomille käyttäjille)."
 
-msgid "Content in this placeholder is shown for company contacts."
-msgstr "Tämä sisältöalue näytetään vain yrityksille."
+msgid "Content in this box is shown to company contacts only."
+msgstr "Tämän ruudun sisältö näytetään vain yrityksen yhteyshenkilöille."
 
-msgid "Content in this placeholder is shown for all logged in contacts."
-msgstr "Sisältöalue näytetään vain kirjautuneille kontakteille."
+msgid ""
+"Content in this box is shown to all logged-in contacts (both person and "
+"company; not anonymous)."
+msgstr "Tämän ruudun sisältö näytetään kaikille kirjautuneille yhteyshenkilöille (sekä henkilöille että yrityksille; ei nimettömille)."
 
-msgid "Content in this placeholder is shown for person contacts."
-msgstr "Sisältöalue näytetään vain henkilöasiakkaille."
+msgid "Content in this box is shown to person contacts only."
+msgstr "Tämän kentän sisältö näytetään vain henkilöiden yhteyshenkilöille."
 
 #, python-format
 msgid "Content in this placeholder is shown for %(product_name)s only."
@@ -148,6 +205,9 @@ msgstr "CSS-upotus"
 
 msgid "Inline HTML"
 msgstr "HTML-upotus"
+
+msgid "Inline Jinja HTML"
+msgstr ""
 
 msgid "current draft"
 msgstr "nykyinen vedos"
@@ -167,6 +227,9 @@ msgstr "näytä nimi"
 msgid "created on"
 msgstr "luotu"
 
+msgid "modified on"
+msgstr ""
+
 msgid "status"
 msgstr "tila"
 
@@ -183,6 +246,71 @@ msgstr "data"
 msgid "Theme configuration for %s"
 msgstr "Teeman %s asetukset"
 
+msgid "Shop"
+msgstr ""
+
+msgid "name"
+msgstr ""
+
+msgid "Font family name"
+msgstr ""
+
+msgid "Font Family CSS Property"
+msgstr ""
+
+msgid ""
+"(Optional) Input css font family property directly. Ex: font-family: Roboto;"
+msgstr ""
+
+msgid "WOFF Font"
+msgstr ""
+
+msgid "WOFF2 Font"
+msgstr ""
+
+msgid "TTF font"
+msgstr ""
+
+msgid "SVG font"
+msgstr ""
+
+msgid "EOT font"
+msgstr ""
+
+msgid "Font Family"
+msgstr ""
+
+msgid "Font Families"
+msgstr ""
+
+msgid "primary color"
+msgstr ""
+
+msgid "secondary color"
+msgstr ""
+
+msgid "text color"
+msgstr ""
+
+msgid "success color"
+msgstr ""
+
+msgid "danger color"
+msgstr ""
+
+msgid "base font size"
+msgstr ""
+
+#, python-format
+msgid "Admin Theme configuration for %s"
+msgstr ""
+
+msgid "snippet name"
+msgstr ""
+
+msgid "Untitled"
+msgstr ""
+
 msgid "location"
 msgstr "sijainti"
 
@@ -198,11 +326,11 @@ msgstr "teemat"
 msgid "Snippet"
 msgstr "Koodinpätkä"
 
-msgid "Snippet for {} in {}"
-msgstr "Koodinpätkä {} {}"
-
 msgid "Plugin"
 msgstr "Lisäosa"
+
+msgid "Categories"
+msgstr "Luokat"
 
 msgid "Category Links"
 msgstr "Kategorialinkit"
@@ -225,14 +353,14 @@ msgstr "Kuvan linkin URL-osoite"
 msgid "Full width"
 msgstr "Täysi leveys"
 
-msgid "Set image to full width of cell"
-msgstr "Aseta kuva solun levyiseksi"
+msgid "Set image to the full width of cell."
+msgstr "Aseta kuva solun koko leveydelle."
 
 msgid "Width (px)"
 msgstr "Leveys (pikseliä)"
 
-msgid "Leave blank for default width"
-msgstr "Jätä tyhjäksi oletusleveydelle"
+msgid "Leave blank for default width."
+msgstr "Jätä tyhjä oletusleveydeksi."
 
 msgid "Height (px)"
 msgstr "Korkeus (pikseliä)"
@@ -252,26 +380,61 @@ msgstr "Tuotenostot"
 msgid "Count"
 msgstr "Lukumäärä"
 
-msgid "Only show sale items"
-msgstr "Näytä vain myynnissä olevat tuotteet"
-
-msgid "Show only products that have discounts"
-msgstr "Näytä vain alennuksessa olevat tuotteet"
-
 msgid "Only show in-stock and orderable items"
 msgstr "Näytä vain varastossa olevat sekä tilattavat tuotteet"
+
+msgid ""
+"Warning: The final number of products can be lower than 'Count' as it will "
+"filter out unorderable products from a set of 'Count' products."
+msgstr "Varoitus: Tuotteiden lopullinen määrä voi olla pienempi kuin Count, koska se suodattaa tilaamattomat tuotteet Count-tuotteiden joukosta."
 
 msgid "Product Cross Sells"
 msgstr "Tuotteiden ristiinmyynti"
 
-msgid "category"
-msgstr "kategoria"
+msgid "Show variation parents"
+msgstr "Näytä muunnelmat vanhemmat"
+
+msgid "Render variation parents instead of the children."
+msgstr "Tee vaihtelevia vanhempia lasten sijasta."
+
+msgid "Category"
+msgstr "Kategoria"
 
 msgid "Category Products Highlight"
 msgstr "Kategoriatuotenostot"
 
+msgid "Products"
+msgstr "Tuotteet"
+
+msgid "Select all products you want to show"
+msgstr "Valitse kaikki tuotteet, jotka haluat näyttää"
+
+msgid "Product Selection"
+msgstr "Tuotteen valinta"
+
+msgid "Product Highlights (asynchronous)"
+msgstr ""
+
+msgid "Cutoff days"
+msgstr ""
+
+msgid "Cache timeout (seconds)"
+msgstr "Puskurin aikakatkaisu (sekunneissa)"
+
+msgid "Product Cross Sells (asynchronous)"
+msgstr ""
+
+msgid "Category Products Highlight (asynchronous)"
+msgstr ""
+
+msgid "Product Selection (asynchronous)"
+msgstr ""
+
 msgid "In-Place Snippet"
 msgstr "Kohdalla olevat koodinpätkät"
+
+msgid "Resource snippet for start of head"
+msgstr ""
 
 msgid "Resource snippet for end of head"
 msgstr "Resurssikoodinpätkä HEAD-osion loppuun"
@@ -284,6 +447,10 @@ msgstr "Resurssi BODY-osion loppuun"
 
 msgid "URL"
 msgstr "URL"
+
+#, python-format
+msgid "%(name)s Ordering"
+msgstr "%(name)s Tilaaminen"
 
 msgid "Ordering"
 msgstr "Järjestys"
@@ -345,6 +512,9 @@ msgstr "Sisällön alku"
 msgid "Content end"
 msgstr "Sisällön loppu"
 
+msgid "(Error while rendering.)"
+msgstr "(Virhe hahmonnettaessa.)"
+
 msgid "Delete This Cell"
 msgstr "Poista tämä solu"
 
@@ -383,8 +553,14 @@ msgstr "Siirrä rivi"
 msgid "Add new row"
 msgstr "Lisää uusi rivi"
 
-msgid "Theme Configuration"
-msgstr "Teeman asetukset"
+msgid "Admin Theme Configuration"
+msgstr ""
+
+msgid "Change Theme"
+msgstr ""
+
+msgid "Shop Theme Configuration"
+msgstr ""
 
 msgid "No themes are installed."
 msgstr "Teemoja ei ole asennettu"
@@ -393,23 +569,35 @@ msgstr "Teemoja ei ole asennettu"
 msgid "Theme Configuration: %(name)s"
 msgstr "Teeman asetukset: %(name)s"
 
+msgid "Theme Configuration"
+msgstr "Teeman asetukset"
+
 msgid "There's nothing to configure in this theme."
 msgstr "Teemalla ei ole asetuksia."
 
 msgid "Select theme"
 msgstr "Valitse teema"
 
-msgid "Click here to configure the theme"
-msgstr "Klikkaa tätä asentaaksesi teeman"
+msgid "Theme Guide"
+msgstr "Teemaopas"
+
+msgid "Theme screenshot"
+msgstr ""
 
 msgid "Author"
 msgstr "Tekijä"
 
-msgid "Show guide"
-msgstr "Näytä ohjeistus"
+msgid "Configure"
+msgstr "Määritä"
 
 msgid "Activate"
 msgstr "Aktivoi"
+
+msgid "Admin Theme"
+msgstr ""
+
+msgid "Edit Admin Theme"
+msgstr ""
 
 msgid "Theme Name"
 msgstr "Teeman nimi"
@@ -426,25 +614,28 @@ msgstr "Palauta muutokset"
 msgid "Publish Changes"
 msgstr "Julkaise muutokset"
 
-msgid "No access to editing"
-msgstr "Ei oikeuksia editointiin"
+msgid "No access to editing."
+msgstr "Ei pääsyä muokkaukseen."
 
 #, python-format
-msgid "Unknown command %s"
-msgstr "Tuntematon komento %s"
+msgid "Unknown command: `%s`."
+msgstr "Tuntematon komento: `%s`."
 
-msgid "Unable to determine current theme."
-msgstr "Nykyistä teemaa ei voitu määrittää."
+msgid "Unable to determine the current theme."
+msgstr "Nykyistä teemaa ei voida määrittää."
 
 #, python-format
-msgid "Cannot add more than %d cells in one row."
-msgstr "Rivissä ei voi olla enempää kuin %d solua."
+msgid "Can't add more than %d cells in one row."
+msgstr "Yhdelle riville voi lisätä enintään %d solua."
 
 msgid "Published"
 msgstr "Julkaistu"
 
 msgid "Reverted"
 msgstr "Palautettu"
+
+msgid "Custom"
+msgstr ""
 
 msgid "Full Width"
 msgstr "Täysi leveys"

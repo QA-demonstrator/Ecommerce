@@ -14,8 +14,14 @@
   "license": "OSL-3.0",
   "private": true,
   "dependencies": {
+    "@babel/cli": "7.12.7",
+    "@babel/core": "7.12.7",
+    "@babel/preset-env": "7.12.7",
     "babel-preset-env": "^1.7.0",
-    "parcel-bundler": "^1.9.7",
-    "shuup-static-build-tools": "file:../../lib/shuup_static_build_tools"
+    "parcel-bundler": "^1.12.4",
+    "shuup-static-build-tools": "^1.0.5"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3"
   }
 }

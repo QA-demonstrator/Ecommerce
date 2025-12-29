@@ -1,7 +1,7 @@
 /**
  * This file is part of Shuup.
  *
- * Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+ * Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
  *
  * This source code is licensed under the OSL-3.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,8 +17,8 @@ const DND_UPLOAD_HINT = (
 );
 
 const responsiveUploadHint = [
-    m("div.visible-sm.visible-xs", m.trust(NO_DND_UPLOAD_HINT)),
-    m("div.visible-md.visible-lg", m.trust(DND_UPLOAD_HINT))
+    m("div.d-block.d-lg-none", m.trust(NO_DND_UPLOAD_HINT)),
+    m("div.d-none.d-lg-block", m.trust(DND_UPLOAD_HINT))
 ];
 
 export default responsiveUploadHint;

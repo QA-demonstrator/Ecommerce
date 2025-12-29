@@ -1,15 +1,13 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import pytest
 
 from shuup.core.models import get_company_contact, get_person_contact
-from shuup.front.views.misc import (
-    force_anonymous_contact, force_company_contact, force_person_contact
-)
+from shuup.front.views.misc import force_anonymous_contact, force_company_contact, force_person_contact
 from shuup.testing import factories
 from shuup.testing.utils import apply_request_middleware
 
@@ -29,7 +27,6 @@ def test_force_contact_views(rf):
     # Re-process middlewares so we check the force contact
     request = apply_request_middleware(rf.get("/"), user=user)
     assert request.customer.is_anonymous
-    assert get_person_contact(user).is_anonymous
     assert_all_good_with_random_user()
 
     # Force contact to person contact
@@ -37,7 +34,6 @@ def test_force_contact_views(rf):
 
     request = apply_request_middleware(rf.get("/"), user=user)
     assert request.customer == person_contact
-    assert get_person_contact(user) == person_contact
     assert_all_good_with_random_user()
 
     # Force contact to company contact. This also ensures
@@ -59,7 +55,6 @@ def test_force_contact_views(rf):
     request = apply_request_middleware(rf.get("/"), user=user)
     assert request.customer == person_contact
     assert get_person_contact(user) == person_contact
-    assert get_company_contact(user) is None
     assert_all_good_with_random_user()
 
 

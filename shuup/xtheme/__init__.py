@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -8,11 +8,15 @@ from shuup.apps import AppConfig
 from shuup.utils import update_module_attributes
 
 from ._theme import (
-    get_current_theme, get_middleware_current_theme, get_theme_by_identifier,
-    get_theme_cache_key, set_current_theme, set_middleware_current_theme,
-    Theme
+    Theme,
+    get_current_theme,
+    get_middleware_current_theme,
+    get_theme_by_identifier,
+    get_theme_cache_key,
+    set_current_theme,
+    set_middleware_current_theme,
 )
-from .plugins._base import Plugin, templated_plugin_factory, TemplatedPlugin
+from .plugins._base import Plugin, TemplatedPlugin, templated_plugin_factory
 
 __all__ = [
     "Plugin",
@@ -24,7 +28,7 @@ __all__ = [
     "templated_plugin_factory",
     "get_theme_cache_key",
     "get_middleware_current_theme",
-    "set_middleware_current_theme"
+    "set_middleware_current_theme",
 ]
 
 XTHEME_GLOBAL_VIEW_NAME = "_XthemeGlobalView"
@@ -43,6 +47,11 @@ class XThemeAppConfig(AppConfig):
             "shuup.xtheme.plugins.products:ProductsFromCategoryPlugin",
             "shuup.xtheme.plugins.products:ProductHighlightPlugin",
             "shuup.xtheme.plugins.products:ProductCrossSellsPlugin",
+            "shuup.xtheme.plugins.products:ProductSelectionPlugin",
+            "shuup.xtheme.plugins.products_async:ProductsFromCategoryPlugin",
+            "shuup.xtheme.plugins.products_async:ProductHighlightPlugin",
+            "shuup.xtheme.plugins.products_async:ProductCrossSellsPlugin",
+            "shuup.xtheme.plugins.products_async:ProductSelectionPlugin",
             "shuup.xtheme.plugins.snippets:SnippetsPlugin",
             "shuup.xtheme.plugins.social_media_links:SocialMediaLinksPlugin",
             "shuup.xtheme.plugins.text:TextPlugin",
@@ -57,12 +66,18 @@ class XThemeAppConfig(AppConfig):
         ],
         "admin_module": [
             "shuup.xtheme.admin_module:XthemeAdminModule",
-            "shuup.xtheme.admin_module:XthemeSnippetsAdminModule"
+            "shuup.xtheme.admin_module:XthemeFontsAdminModule",
+            "shuup.xtheme.admin_module:XthemeSnippetsAdminModule",
         ],
-        "xtheme_resource_injection": [
-            "shuup.xtheme.resources:inject_global_snippet"
+        "admin_object_selector": [
+            "shuup.xtheme.object_selector:FontAdminObjectSelector",
         ],
+        "xtheme_resource_injection": ["shuup.xtheme.resources:inject_global_snippet"],
+        "admin_template_injector": ["shuup.xtheme.admin_injector.XthemeAdminTemplateInjector"],
     }
+
+    def ready(self):
+        import shuup.xtheme.signal_handlers  # noqa: F401
 
 
 default_app_config = "shuup.xtheme.XThemeAppConfig"

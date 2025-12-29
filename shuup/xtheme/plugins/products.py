@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django import forms
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, ugettext_lazy as _
 from enumfields import Enum
 
-from shuup.core.models import Category, ProductCrossSell, ProductCrossSellType
+from shuup.core.catalog import ProductCatalog, ProductCatalogContext
+from shuup.core.models import Product, ProductCrossSell, ProductCrossSellType, ProductMode, ShopProductVisibility
 from shuup.front.template_helpers.general import (
-    get_best_selling_products, get_newest_products,
-    get_products_for_categories, get_random_products
+    get_best_selling_products,
+    get_newest_products,
+    get_products_for_categories,
+    get_random_products,
 )
 from shuup.front.template_helpers.product import map_relation_type
 from shuup.xtheme import TemplatedPlugin
 from shuup.xtheme.plugins.forms import GenericPluginForm, TranslatableField
-from shuup.xtheme.plugins.widgets import XThemeModelChoiceField
+from shuup.xtheme.plugins.widgets import XThemeSelect2ModelChoiceField, XThemeSelect2ModelMultipleChoiceField
 
 
 class HighlightType(Enum):
@@ -35,64 +38,87 @@ class ProductHighlightPlugin(TemplatedPlugin):
     identifier = "product_highlight"
     name = _("Product Highlights")
     template_name = "shuup/xtheme/plugins/highlight_plugin.jinja"
+    cacheable = True
     fields = [
         ("title", TranslatableField(label=_("Title"), required=False, initial="")),
-        ("type", forms.ChoiceField(
-            label=_("Type"),
-            choices=HighlightType.choices(),
-            initial=HighlightType.NEWEST.value
-        )),
+        (
+            "type",
+            forms.ChoiceField(label=_("Type"), choices=HighlightType.choices(), initial=HighlightType.NEWEST.value),
+        ),
         ("count", forms.IntegerField(label=_("Count"), min_value=1, initial=4)),
-        ("sale_items_only", forms.BooleanField(
-            label=_("Only show sale items"),
-            initial=False, required=False,
-            help_text=_("Show only products that have discounts")
-        )),
-        ("orderable_only", forms.BooleanField(
-            label=_("Only show in-stock and orderable items"),
-            initial=True, required=False
-        ))
+        (
+            "orderable_only",
+            forms.BooleanField(
+                label=_("Only show in-stock and orderable items"),
+                help_text=_(
+                    "Warning: The final number of products can be lower than 'Count' "
+                    "as it will filter out unorderable products from a set of 'Count' products."
+                ),
+                initial=True,
+                required=False,
+            ),
+        ),
     ]
+
+    def get_cache_key(self, context, **kwargs) -> str:
+        title = self.get_translated_value("title")
+        highlight_type = self.config.get("type", HighlightType.NEWEST.value)
+        count = self.config.get("count", 4)
+        orderable_only = self.config.get("orderable_only", True)
+        return str((get_language(), title, highlight_type, orderable_only, count))
 
     def get_context_data(self, context):
         highlight_type = self.config.get("type", HighlightType.NEWEST.value)
         count = self.config.get("count", 4)
         orderable_only = self.config.get("orderable_only", True)
-        sale_items_only = self.config.get("sale_items_only", False)
 
         if highlight_type == HighlightType.NEWEST.value:
-            products = get_newest_products(context, count, orderable_only, sale_items_only)
+            products = get_newest_products(context, count, orderable_only)
         elif highlight_type == HighlightType.BEST_SELLING.value:
             products = get_best_selling_products(
                 context,
                 count,
                 orderable_only=orderable_only,
-                sale_items_only=sale_items_only
             )
         elif highlight_type == HighlightType.RANDOM.value:
-            products = get_random_products(context, count, orderable_only, sale_items_only)
+            products = get_random_products(context, count, orderable_only)
         else:
             products = []
 
-        return {
-            "request": context["request"],
-            "title": self.get_translated_value("title"),
-            "products": products
-        }
+        return {"request": context["request"], "title": self.get_translated_value("title"), "products": products}
 
 
 class ProductCrossSellsPlugin(TemplatedPlugin):
     identifier = "product_cross_sells"
     name = _("Product Cross Sells")
     template_name = "shuup/xtheme/plugins/cross_sells_plugin.jinja"
+    cacheable = True
     required_context_variables = ["product"]
     fields = [
         ("title", TranslatableField(label=_("Title"), required=False, initial="")),
         ("type", ProductCrossSell.type.field.formfield()),
         ("count", forms.IntegerField(label=_("Count"), min_value=1, initial=4)),
-        ("orderable_only", forms.BooleanField(label=_("Only show in-stock and orderable items"),
-                                              initial=True,
-                                              required=False))
+        (
+            "use_variation_parents",
+            forms.BooleanField(
+                label=_("Show variation parents"),
+                help_text=_("Render variation parents instead of the children."),
+                initial=False,
+                required=False,
+            ),
+        ),
+        (
+            "orderable_only",
+            forms.BooleanField(
+                label=_("Only show in-stock and orderable items"),
+                initial=True,
+                required=False,
+                help_text=_(
+                    "Warning: The final number of products can be lower than 'Count' "
+                    "as it will filter out unorderable products from a set of 'Count' products."
+                ),
+            ),
+        ),
     ]
 
     def __init__(self, config):
@@ -106,6 +132,14 @@ class ProductCrossSellsPlugin(TemplatedPlugin):
             config["type"] = type
         super(ProductCrossSellsPlugin, self).__init__(config)
 
+    def get_cache_key(self, context, **kwargs) -> str:
+        title = self.get_translated_value("title")
+        relation_type = self.config.get("type")
+        count = self.config.get("count", 4)
+        orderable_only = self.config.get("orderable_only", True)
+        use_variation_parents = self.config.get("use_variation_parents", False)
+        return str((get_language(), title, relation_type, orderable_only, count, use_variation_parents))
+
     def get_context_data(self, context):
         count = self.config.get("count", 4)
         product = context.get("product", None)
@@ -118,6 +152,7 @@ class ProductCrossSellsPlugin(TemplatedPlugin):
         return {
             "request": context["request"],
             "title": self.get_translated_value("title"),
+            "use_variation_parents": self.config.get("use_variation_parents", False),
             "product": product,
             "type": type,
             "count": count,
@@ -133,18 +168,12 @@ class ProductsFromCategoryForm(GenericPluginForm):
                 value.initial = self.plugin.config.get(name, value.initial)
                 self.fields[name] = value
 
-        self.fields["category"] = XThemeModelChoiceField(
-            label=_("category"),
-            queryset=Category.objects.all_except_deleted(shop=getattr(self.request, "shop")),
-            required=False,
-            initial=self.plugin.config.get("category") if self.plugin else None
+        self.fields["category"] = XThemeSelect2ModelChoiceField(
+            model="shuup.category",
+            label=_("Category"),
+            required=True,
+            initial=self.plugin.config.get("category") if self.plugin else None,
         )
-
-    def clean(self):
-        cleaned_data = super(ProductsFromCategoryForm, self).clean()
-        carousel = cleaned_data.get("category")
-        cleaned_data["category"] = carousel.pk if hasattr(carousel, "pk") else None
-        return cleaned_data
 
 
 class ProductsFromCategoryPlugin(TemplatedPlugin):
@@ -152,38 +181,103 @@ class ProductsFromCategoryPlugin(TemplatedPlugin):
     name = _("Category Products Highlight")
     template_name = "shuup/xtheme/plugins/highlight_plugin.jinja"
     editor_form_class = ProductsFromCategoryForm
+    cacheable = True
     fields = [
         ("title", TranslatableField(label=_("Title"), required=False, initial="")),
         ("count", forms.IntegerField(label=_("Count"), min_value=1, initial=4)),
-        "category",
-        ("sale_items_only", forms.BooleanField(
-            label=_("Only show sale items"),
-            initial=False, required=False,
-            help_text=_("Show only products that have discounts")
-        )),
-        ("orderable_only", forms.BooleanField(
-            label=_("Only show in-stock and orderable items"),
-            initial=True, required=False
-        ))
+        (
+            "orderable_only",
+            forms.BooleanField(
+                label=_("Only show in-stock and orderable items"),
+                initial=True,
+                required=False,
+                help_text=_(
+                    "Warning: The final number of products can be lower than 'Count' "
+                    "as it will filter out unorderable products from a set of 'Count' products."
+                ),
+            ),
+        ),
     ]
+
+    def get_cache_key(self, context, **kwargs) -> str:
+        title = self.get_translated_value("title")
+        category_id = self.config.get("category")
+        count = self.config.get("count")
+        orderable_only = self.config.get("orderable_only", True)
+        return str((get_language(), title, category_id, orderable_only, count))
 
     def get_context_data(self, context):
         products = []
         category_id = self.config.get("category")
         count = self.config.get("count")
         orderable_only = self.config.get("orderable_only", True)
-        sale_items_only = self.config.get("sale_items_only", False)
 
         if category_id:
             products = get_products_for_categories(
-                context,
-                [category_id],
-                n_products=count,
-                orderable_only=orderable_only,
-                sale_items_only=sale_items_only
+                context, [category_id], n_products=count, orderable_only=orderable_only
             )
-        return {
-            "request": context["request"],
-            "title": self.get_translated_value("title"),
-            "products": products
-        }
+        return {"request": context["request"], "title": self.get_translated_value("title"), "products": products}
+
+
+class ProductSelectionConfigForm(GenericPluginForm):
+    """
+    A configuration form for the ProductSelectionPlugin
+    """
+
+    def populate(self):
+        """
+        A custom populate method to display product choices
+        """
+        for field in self.plugin.fields:
+            if isinstance(field, tuple):
+                name, value = field
+                value.initial = self.plugin.config.get(name, value.initial)
+                self.fields[name] = value
+
+        self.fields["products"] = XThemeSelect2ModelMultipleChoiceField(
+            model="shuup.product",
+            label=_("Products"),
+            help_text=_("Select all products you want to show"),
+            required=True,
+            initial=self.plugin.config.get("products"),
+            extra_widget_attrs={"data-search-mode": "main"},
+        )
+
+
+class ProductSelectionPlugin(TemplatedPlugin):
+    """
+    A plugin that renders a selection of products
+    """
+
+    identifier = "product_selection"
+    name = _("Product Selection")
+    template_name = "shuup/xtheme/plugins/product_selection_plugin.jinja"
+    editor_form_class = ProductSelectionConfigForm
+    cacheable = True
+    fields = [("title", TranslatableField(label=_("Title"), required=False, initial=""))]
+
+    def get_cache_key(self, context, **kwargs) -> str:
+        title = self.get_translated_value("title")
+        products = self.config.get("products")
+        return str((get_language(), title, products))
+
+    def get_context_data(self, context):
+        request = context["request"]
+        products = self.config.get("products")
+        products_qs = Product.objects.none()
+
+        if products:
+            catalog = ProductCatalog(
+                ProductCatalogContext(
+                    shop=request.shop,
+                    user=getattr(request, "user", None),
+                    contact=getattr(request, "customer", None),
+                    purchasable_only=True,
+                    visibility=ShopProductVisibility.LISTED,
+                )
+            )
+            products_qs = catalog.get_products_queryset().filter(
+                pk__in=products, mode__in=ProductMode.get_parent_modes()
+            )
+
+        return {"request": request, "title": self.get_translated_value("title"), "products": products_qs}

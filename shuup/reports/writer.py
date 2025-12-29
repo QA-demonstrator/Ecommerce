@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from __future__ import unicode_literals
-
-from decimal import Decimal
-from pprint import pformat
-
+import bleach
+import csv
 import six
 from babel.dates import format_datetime
+from datetime import datetime
+from decimal import Decimal
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
 from django.http import HttpResponse
 from django.template.defaultfilters import floatformat
 from django.template.loader import render_to_string
-from django.utils.encoding import force_text, smart_text
+from django.utils.encoding import smart_text
 from django.utils.functional import Promise
 from django.utils.html import conditional_escape, escape
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from io import StringIO
+from pprint import pformat
 from six import BytesIO
 
 from shuup.apps.provides import get_provide_objects
-from shuup.core.pricing import TaxfulPrice, TaxlessPrice
-from shuup.utils.i18n import get_current_babel_locale
+from shuup.utils.django_compat import force_text
+from shuup.utils.i18n import format_money, get_current_babel_locale, get_locally_formatted_datetime
+from shuup.utils.money import Money
 from shuup.utils.pdf import render_html_to_pdf
 
 try:
@@ -44,7 +47,7 @@ class ReportWriter(object):
     writer_type = "base"
 
     def __init__(self):
-        self.title = u""
+        self.title = ""
 
     def __unicode__(self):
         return self.writer_type
@@ -53,22 +56,22 @@ class ReportWriter(object):
         return self.writer_type
 
     def write_heading(self, text):
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `ReportWriter` -> `write_heading()`.")
 
     def write_text(self, text):
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `ReportWriter` -> `write_text()`.")
 
     def write_data_table(self, report, report_data, has_totals=True):
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `ReportWriter` -> `write_data_table()`.")
 
     def write_template(self, template_name, env):
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `ReportWriter` -> `write_template()`.")
 
     def next_page(self):
         pass
 
     def get_rendered_output(self):
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `ReportWriter` -> `get_rendered_output()`.")
 
     def _render_report(self, report):
         if not report.rendered:
@@ -77,7 +80,8 @@ class ReportWriter(object):
                 "{title} {start} - {end}".format(
                     title=report.title,
                     start=format_datetime(report_data["start"], format="short", locale=get_current_babel_locale()),
-                    end=format_datetime(report_data["end"], format="short", locale=get_current_babel_locale()))
+                    end=format_datetime(report_data["end"], format="short", locale=get_current_babel_locale()),
+                )
             )
             report.ensure_texts()
             self.write_data_table(report, report_data["data"], has_totals=report_data["has_totals"])
@@ -117,10 +121,74 @@ class ReportWriter(object):
 
     def get_filename(self, report):
         fmt_data = dict(report.options, time=now().isoformat())
-        return "%s%s" % (
-            (report.filename_template % fmt_data).replace(":", "_"),
-            self.extension
-        )
+        return "%s%s" % ((report.filename_template % fmt_data).replace(":", "_"), self.extension)
+
+
+def format_data(data, format_iso_dates=False, format_money_values=False):
+    if data is None:
+        return ""
+
+    elif isinstance(data, Money):
+        if format_money_values:
+            return format_money(data)
+        return float(data.as_rounded().value)
+
+    elif isinstance(data, Decimal):
+        exponent = abs(data.normalize().as_tuple().exponent)
+        # Limit the amount of decimals to 10
+        return floatformat(data, min(exponent, 10))
+
+    elif callable(data):
+        return force_text(data())
+
+    elif isinstance(data, Promise):
+        return force_text(data)
+
+    elif isinstance(data, models.Model):
+        return force_text(data)
+
+    elif isinstance(data, datetime):
+        if format_iso_dates:
+            return data.isoformat()
+        return get_locally_formatted_datetime(data)
+
+    return data
+
+
+def remove_unsafe_chars(data):
+    if isinstance(data, str):
+        return "".join([char for char in data if char not in ("=", "+", "-")])
+
+    return data
+
+
+class CSVReportWriter(ReportWriter):
+    content_type = "text/csv"
+    extension = ".csv"
+    writer_type = "csv"
+
+    def __init__(self):
+        super(CSVReportWriter, self).__init__()
+        self.data = []
+
+    def write_heading(self, text):
+        self.data.append([text])
+
+    def write_data_table(self, report, report_data, has_totals=True):
+        self.data.append([c["title"] for c in report.schema])
+        for datum in report_data:
+            datum = report.read_datum(datum)
+            self.data.append([format_data(remove_unsafe_chars(data), format_iso_dates=True) for data in datum])
+
+        if has_totals:
+            for datum in report.get_totals(report_data):
+                datum = report.read_datum(datum)
+                self.data.append([format_data(remove_unsafe_chars(data)) for data in datum])
+
+    def get_rendered_output(self):
+        f = StringIO()
+        csv.writer(f).writerows(self.data)
+        return f.getvalue().encode()
 
 
 class ExcelReportWriter(ReportWriter):
@@ -136,16 +204,24 @@ class ExcelReportWriter(ReportWriter):
     def next_page(self):
         self.worksheet = self.workbook.create_sheet()
 
+    def _convert_row_to_string(self):
+        # change the format of the last row to string if that is a formula
+        for cell in self.worksheet[self.worksheet.max_row]:
+            if cell.data_type == "f":
+                cell.data_type = "s"
+
     def write_data_table(self, report, report_data, has_totals=True):
         self.worksheet.append([c["title"] for c in report.schema])
         for datum in report_data:
             datum = report.read_datum(datum)
-            self.worksheet.append(datum)
+            self.worksheet.append([format_data(remove_unsafe_chars(data)) for data in datum])
+            self._convert_row_to_string()
 
         if has_totals:
             for datum in report.get_totals(report_data):
                 datum = report.read_datum(datum)
-                self.worksheet.append(datum)
+                self.worksheet.append([format_data(remove_unsafe_chars(data)) for data in datum])
+                self._convert_row_to_string()
 
     def write_page_heading(self, text):
         self.worksheet.append([text])
@@ -155,7 +231,7 @@ class ExcelReportWriter(ReportWriter):
         self.worksheet.append([text])
 
     def write_text(self, text):
-        self.worksheet.append([text])
+        self.worksheet.append(text)
 
     def get_rendered_output(self):
         bio = BytesIO()
@@ -168,21 +244,41 @@ class HTMLReportWriter(ReportWriter):
     extension = ".html"
     writer_type = "html"
 
-    INLINE_TEMPLATE = u"""
-    <style type="text/css">%(style)s</style>
+    INLINE_TEMPLATE = """
+<body>
     %(body)s
+</body>
     """.strip()
 
-    TEMPLATE = u"""
+    TEMPLATE = (
+        """
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>%(title)s</title>
 %(extrahead)s
-</head>""".strip() + INLINE_TEMPLATE + u"""</html>"""
+<style type="text/css">%(style)s</style>
+</head>""".strip()
+        + INLINE_TEMPLATE
+        + """</html>"""
+    )
 
-    styles = u"""@page { prince-shrink-to-fit: auto }""".strip()
-    extra_header = u""
+    # styles = """@page { prince-shrink-to-fit: auto }""".strip()
+    styles = """
+@page { size: 8.5in 11in }
+body { max-width: 95%}
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+table, th, td {
+  word-break: break-all;
+  word-wrap: break-word;
+}
+    """.strip()
+
+    extra_header = ""
 
     def __init__(self):
         super(HTMLReportWriter, self).__init__()
@@ -192,17 +288,7 @@ class HTMLReportWriter(ReportWriter):
         self.output.append(mark_safe(content))
 
     def _w(self, content):
-        if content is not None:
-            if isinstance(content, TaxlessPrice) or isinstance(content, TaxfulPrice):
-                content = floatformat(content.amount.value, 2)
-
-            if isinstance(content, Decimal):
-                content = floatformat(content, 2)
-
-            if isinstance(content, Promise):
-                content = force_text(content)
-
-            self.output.append(content)
+        self.output.append(bleach.clean(str(format_data(content, format_money_values=True)), strip=True))
 
     def _w_tag(self, tag, content):
         self._w_raw("<%s>" % tag)
@@ -213,7 +299,7 @@ class HTMLReportWriter(ReportWriter):
         self._w_raw("<hr>")
 
     def write_data_table(self, report, report_data, has_totals=True):
-        self._w_raw("<table class=\"table table-striped table-bordered\">")
+        self._w_raw('<table class="table table-striped table-bordered">')
         self._w_raw("<thead><tr>")
         for c in report.schema:
             self._w_tag("th", c["title"])
@@ -248,9 +334,9 @@ class HTMLReportWriter(ReportWriter):
         self._w_tag(tag, text)
 
     def get_rendered_output(self):
-        body = u"".join(conditional_escape(smart_text(piece)) for piece in self.output)
+        body = "".join(conditional_escape(smart_text(piece)) for piece in self.output)
         styles = self.styles
-        extrahead = (self.extra_header or u"")
+        extrahead = self.extra_header or ""
 
         if self.inline:
             template = self.INLINE_TEMPLATE
@@ -298,10 +384,13 @@ class JSONReportWriter(ReportWriter):
     def write_data_table(self, report, report_data, has_totals=True):
         table = {
             "columns": report.schema,
-            "data": [dict(
-                (c["key"], force_text(val)) for (c, val)  # TODO: do not force all text
-                in zip(report.schema, report.read_datum(datum))
-            ) for datum in report_data]
+            "data": [
+                dict(
+                    (c["key"], format_data(val, format_iso_dates=True))
+                    for (c, val) in zip(report.schema, report.read_datum(datum))
+                )
+                for datum in report_data
+            ],
         }
 
         if has_totals:
@@ -316,7 +405,7 @@ class JSONReportWriter(ReportWriter):
         pass
 
     def get_rendered_output(self):
-        return DjangoJSONEncoder().encode(self.data)
+        return DjangoJSONEncoder(indent=4).encode(self.data)
 
 
 class PprintReportWriter(JSONReportWriter):
@@ -330,8 +419,9 @@ class PprintReportWriter(JSONReportWriter):
 
 class ReportWriterPopulator(object):
     """
-    A class which populates the report writers map
+    A class which populates the report writers map.
     """
+
     report_writers_map = {}
 
     def populate(self):
@@ -356,18 +446,19 @@ class ReportWriterPopulator(object):
 
     @property
     def populated_map(self):
-        """ Returns the populated map """
+        """ Returns the populated map. """
         return self.report_writers_map
 
 
 def get_writer_names():
-    """ Get the registered writer names """
+    """ Get the registered writer names. """
     return set([k for k, v in six.iteritems(REPORT_WRITERS_MAP) if v])
 
 
 def get_writer_instance(writer_name):
     """
-    Get a report writer instance by name
+    Get a report writer instance by name.
+
     :type writer_name: str
     :param writer_name: the name of the report writer
     :rtype: ReportWriter
@@ -379,14 +470,15 @@ def get_writer_instance(writer_name):
 
 def populate_default_writers(writer_populator):
     """
-    Populate the default report writers
+    Populate the default report writers.
+
     :type writer_populator: ReportWriterPopulator
     """
     writer_populator.register("html", HTMLReportWriter)
     writer_populator.register("pdf", PDFReportWriter)
     writer_populator.register("json", JSONReportWriter)
     writer_populator.register("pprint", PprintReportWriter)
-    writer_populator.register("html", HTMLReportWriter)
+    writer_populator.register("csv", CSVReportWriter)
 
     if openpyxl:
         writer_populator.register("excel", ExcelReportWriter)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 import logging
 from collections import defaultdict
-
 from django import forms
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
@@ -38,15 +37,18 @@ class MethodWidget(forms.Widget):
         self.basket = None
         self.request = None
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         return mark_safe(
-            render_to_string("shuup/front/checkout/method_choice.jinja", {
-                "field_name": self.field_name,
-                "grouped_methods": _get_methods_grouped_by_service_provider(self.choices),
-                "current_value": value,
-                "basket": self.basket,
-                "request": self.request
-            })
+            render_to_string(
+                "shuup/front/checkout/method_choice.jinja",
+                {
+                    "field_name": self.field_name,
+                    "grouped_methods": _get_methods_grouped_by_service_provider(self.choices),
+                    "current_value": value,
+                    "basket": self.basket,
+                    "request": self.request,
+                },
+            )
         )
 
 
@@ -72,19 +74,19 @@ class MethodsForm(forms.Form):
         self.fields["shipping_method"] = forms.ModelChoiceField(
             queryset=ShippingMethod.objects.all(),
             widget=MethodWidget(),
-            label=_('shipping method'),
-            required=configuration.get(self.shop, SHIPPING_METHOD_REQUIRED_CONFIG_KEY, True)
+            label=_("shipping method"),
+            required=configuration.get(self.shop, SHIPPING_METHOD_REQUIRED_CONFIG_KEY, True),
         )
         self.fields["payment_method"] = forms.ModelChoiceField(
             queryset=PaymentMethod.objects.all(),
             widget=MethodWidget(),
-            label=_('payment method'),
-            required=configuration.get(self.shop, PAYMENT_METHOD_REQUIRED_CONFIG_KEY, True)
+            label=_("payment method"),
+            required=configuration.get(self.shop, PAYMENT_METHOD_REQUIRED_CONFIG_KEY, True),
         )
         self.limit_method_fields()
 
     def limit_method_fields(self):
-        basket = self.basket  # type: shuup.front.basket.objects.BaseBasket
+        basket = self.basket  # noqa (F821) type: shuup.front.basket.objects.BaseBasket
         for field_name, methods in (
             ("shipping_method", basket.get_available_shipping_methods()),
             ("payment_method", basket.get_available_payment_methods()),
@@ -97,12 +99,11 @@ class MethodsForm(forms.Form):
             field.widget.request = self.request
             if field.choices:
                 field.initial = field.choices[0]
-                field.required = True
 
 
 class MethodsPhase(CheckoutPhaseViewMixin, FormView):
     identifier = "methods"
-    title = _(u"Shipping & Payment")
+    title = _("Shipping & Payment")
     template_name = "shuup/front/checkout/methods.jinja"
     form_class = MethodsForm
 
@@ -112,17 +113,20 @@ class MethodsPhase(CheckoutPhaseViewMixin, FormView):
 
         if shipping_required and not self.storage.get("shipping_method_id"):
             return False
-        elif payment_required and not self.storage.get("payment_method_id"):
+        if payment_required and not self.storage.get("payment_method_id"):
             return False
 
-        return self.storage.has_any(["shipping_method_id", "payment_method_id"])
+        return True
 
     def process(self):
-        shipping_method = ShippingMethod.objects.filter(pk=self.storage["shipping_method_id"]).first()
-        payment_method = PaymentMethod.objects.filter(pk=self.storage["payment_method_id"]).first()
+        shipping_method = ShippingMethod.objects.filter(pk=self.storage.get("shipping_method_id")).first()
+        payment_method = PaymentMethod.objects.filter(pk=self.storage.get("payment_method_id")).first()
 
-        self.basket.shipping_method_id = shipping_method.pk if shipping_method else None
-        self.basket.payment_method_id = payment_method.pk if payment_method else None
+        self.basket.shipping_method = shipping_method if shipping_method else None
+        self.basket.payment_method = payment_method if payment_method else None
+
+        # force recalculate lines
+        self.basket.uncache()
 
     def get_form_kwargs(self):
         kwargs = super(MethodsPhase, self).get_form_kwargs()
@@ -134,12 +138,19 @@ class MethodsPhase(CheckoutPhaseViewMixin, FormView):
     def form_valid(self, form):
         for field_name in ["shipping_method", "payment_method"]:
             storage_key = "%s_id" % field_name
+            value = None
 
-            if form.fields[field_name].required:
+            if form.cleaned_data.get(field_name):
                 value = form.cleaned_data[field_name].id
-            else:
-                value = None
+
             self.storage[storage_key] = value
+
+        # For some tax calculations we need this to get processed beforehand
+        self.process()
+        self.basket.save()
+        self.basket.calculate_taxes(force_recalculate=True)
+        if form.has_changed():
+            self.basket.storage.add_log_entry(self.basket, _("Saved services."))
 
         return super(MethodsPhase, self).form_valid(form)
 
@@ -166,7 +177,7 @@ class _MethodDependentCheckoutPhase(CheckoutPhaseViewMixin):
         """
         :rtype: shuup.core.models.Service
         """
-        raise NotImplementedError("Not implemented")
+        raise NotImplementedError("Error! Not implemented: `_MethodDependentCheckoutPhase` -> `get_method()`.")
 
     def get_method_checkout_phase_object(self):
         """
@@ -206,7 +217,7 @@ class _MethodDependentCheckoutPhase(CheckoutPhaseViewMixin):
     @property
     def title(self):
         phase_obj = self.get_method_checkout_phase_object()
-        return (phase_obj.title if phase_obj else "")
+        return phase_obj.title if phase_obj else ""
 
     def dispatch(self, request, *args, **kwargs):
         # This should never be called if the object doesn't exist, hence no checks

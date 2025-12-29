@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -18,6 +18,7 @@ class SocialMediaLinksPluginForm(GenericPluginForm):
     entry in the plugin's icon_classes attribute, which maps social media site names
     to font-awesome icon classes by default.
     """
+
     def populate(self):
         """
         Populates form with default plugin fields as well as any social media link type
@@ -30,14 +31,28 @@ class SocialMediaLinksPluginForm(GenericPluginForm):
         for name, icon_class in sorted(icon_classes.items()):
             url = links[name]["url"] if name in links else ""
             ordering = links[name]["ordering"] if name in links else None
-            self.fields[name] = forms.URLField(
-                label=name, required=False,
+            self.fields[name] = forms.CharField(
+                max_length=300,
+                label=name,
+                required=False,
                 widget=forms.TextInput(attrs={"placeholder": _("URL")}),
-                initial=url)
+            )
             self.fields["%s-ordering" % name] = forms.IntegerField(
-                label="", required=False, min_value=0, max_value=len(icon_classes)*2,
-                initial=ordering, widget=forms.NumberInput(attrs={"placeholder": _("Ordering")}))
-        super(SocialMediaLinksPluginForm, self).populate()
+                label=_("%(name)s Ordering") % {"name": name},
+                required=False,
+                min_value=0,
+                max_value=len(icon_classes) * 2,
+                widget=forms.NumberInput(attrs={"placeholder": _("Ordering")}),
+            )
+
+        super().populate()
+
+        # We set the initial after calling super, to avoid it shadowing our initial data.
+        for name, icon_class in icon_classes.items():
+            url = links[name]["url"] if name in links else ""
+            ordering = links[name]["ordering"] if name in links else None
+            self.initial[name] = url
+            self.initial["%s-ordering" % name] = ordering
 
     def clean(self):
         """
@@ -47,10 +62,10 @@ class SocialMediaLinksPluginForm(GenericPluginForm):
         (``links``).
         """
         cleaned_data = super(SocialMediaLinksPluginForm, self).clean()
-        cleaned_data['links'] = {
+        cleaned_data["links"] = {
             link_name: {
-                'url': cleaned_data.pop(link_name),
-                'ordering': cleaned_data.pop(link_name + '-ordering', 0),
+                "url": cleaned_data.pop(link_name),
+                "ordering": cleaned_data.pop(link_name + "-ordering", 0),
             }
             for link_name in self.plugin.icon_classes.keys()
             if cleaned_data.get(link_name)
@@ -62,6 +77,7 @@ class SocialMediaLinksPlugin(TemplatedPlugin):
     """
     An xtheme plugin for displaying site links to common social media sites.
     """
+
     identifier = "social_media_links"
     name = _("Social Media Links")
     template_name = "shuup/xtheme/plugins/social_media_links.jinja"
@@ -69,20 +85,36 @@ class SocialMediaLinksPlugin(TemplatedPlugin):
     fields = [
         ("topic", TranslatableField(label=_("Topic"), required=False, initial="")),
         ("text", TranslatableField(label=_("Title"), required=False, initial="")),
-        ("icon_size", forms.ChoiceField(label=_("Icon Size"), required=False, choices=[
-            ("", _("Default")),
-            ("lg", _("Large")),
-            ("2x", "2x"),
-            ("3x", "3x"),
-            ("4x", "4x"),
-            ("5x", "5x"),
-        ], initial="")),
-        ("alignment", forms.ChoiceField(label=_("Alignment"), required=False, choices=[
-            ("", _("Default")),
-            ("left", _("Left")),
-            ("center", _("Center")),
-            ("right", _("Right")),
-        ], initial="")),
+        (
+            "icon_size",
+            forms.ChoiceField(
+                label=_("Icon Size"),
+                required=False,
+                choices=[
+                    ("", _("Default")),
+                    ("lg", _("Large")),
+                    ("2x", "2x"),
+                    ("3x", "3x"),
+                    ("4x", "4x"),
+                    ("5x", "5x"),
+                ],
+                initial="",
+            ),
+        ),
+        (
+            "alignment",
+            forms.ChoiceField(
+                label=_("Alignment"),
+                required=False,
+                choices=[
+                    ("", _("Default")),
+                    ("left", _("Left")),
+                    ("center", _("Center")),
+                    ("right", _("Right")),
+                ],
+                initial="",
+            ),
+        ),
     ]
 
     icon_classes = {
@@ -127,8 +159,4 @@ class SocialMediaLinksPlugin(TemplatedPlugin):
         """
         links = self.config.get("links", {})
 
-        return sorted([
-            (v["ordering"] or 0, self.icon_classes[k], v["url"])
-            for (k, v)
-            in links.items()
-        ])
+        return sorted([(v["ordering"] or 0, self.icon_classes[k], v["url"]) for (k, v) in links.items()])

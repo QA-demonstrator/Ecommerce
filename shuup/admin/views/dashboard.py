@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
 from django.views.generic.base import TemplateView
 
@@ -18,6 +17,7 @@ from shuup.admin.utils.permissions import get_missing_permissions
 from shuup.admin.utils.tour import is_tour_complete
 from shuup.admin.utils.wizard import setup_wizard_complete
 from shuup.core.telemetry import try_send_telemetry
+from shuup.utils.django_compat import reverse
 
 
 class DashboardView(TemplateView):

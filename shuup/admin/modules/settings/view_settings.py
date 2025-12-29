@@ -1,9 +1,10 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import django
 import six
 from django.apps import apps
 from django.conf import settings
@@ -11,19 +12,11 @@ from django.db.models import BooleanField, CharField, ForeignKey
 from enumfields import EnumIntegerField
 
 from shuup import configuration
-from shuup.admin.utils.picotable import (
-    ChoicesFilter, Column, TextFilter, true_or_false_filter
-)
+from shuup.admin.utils.picotable import ChoicesFilter, Column, TextFilter, true_or_false_filter
 from shuup.apps.provides import get_provide_objects
 from shuup.utils.importing import load
 
-INVALID_FIELDS = [
-    "ptr",
-    "ctype",
-    "key",
-    "label"
-    "master"
-]
+INVALID_FIELDS = ["ptr", "ctype", "key", "label" "master"]
 
 
 class ViewSettings(object):
@@ -50,7 +43,7 @@ class ViewSettings(object):
                 # backwards compatibility
                 int(config)
                 old_mode = True
-            except:
+            except Exception:
                 old_mode = False
 
             column.ordering = config.get("ordering", 9999) if not old_mode else 9999
@@ -120,10 +113,17 @@ class ViewSettings(object):
         return columns
 
     def _add_m2m_columns(self, all_models, columns, defaults, identifier, known_names, model):
+        models_from_all_models = [model for identifier, model in all_models]
         for field in model._meta.local_many_to_many:
             if field.name in defaults:
                 continue
-            if field.rel.to in all_models:
+
+            if django.VERSION < (1, 9):
+                to = field.rel.to
+            else:
+                to = field.remote_field.target_field
+
+            if to in models_from_all_models:
                 continue  # no need to have these...
 
             column = self._get_column(model, field, known_names, identifier)
@@ -131,14 +131,19 @@ class ViewSettings(object):
                 columns.append(column)
 
     def _add_local_columns(self, all_models, columns, defaults, identifier, known_names, model):
+        models_from_all_models = [model for identifier, model in all_models]
         for field in model._meta.local_fields:
             if field.name in defaults:
                 continue
             if field.name == "id" and model != self.model:
                 continue
 
-            if isinstance(field, ForeignKey) and field.rel.to in all_models:
-                continue  # no need to have these...
+            if django.VERSION < (1, 9):
+                if isinstance(field, ForeignKey) and field.rel.to in models_from_all_models:
+                    continue  # no need to have these...
+            else:
+                if isinstance(field, ForeignKey) and field.remote_field.target_field in models_from_all_models:
+                    continue  # no need to have these...
 
             column = self._get_column(model, field, known_names, identifier)
             if column:
@@ -148,15 +153,15 @@ class ViewSettings(object):
         for field in model._parler_meta.root_model._meta.get_fields():
             if field.name in defaults:
                 continue
-            if field.name in ["id", "master"]:  # we don't want duplicate id's
+            if field.name in ["id", "master", "language_code"]:  # exclude these fields
                 continue
             column = self._get_translated_column(model, field, known_names, identifier)
             columns.append(column)
 
     def _get_translated_column(self, model, field, known_names, identifier):
         field_name = field.verbose_name.title()
-        if field_name in known_names:
-            field_name = "%s %s" % (model.__name__, field_name)
+        if identifier:
+            field_name = "%s %s" % (identifier.replace("_", " ").capitalize(), field_name)
 
         # take the first extension, usually we should not have more then one
         translation_rel_name = model._parler_meta._extensions[0].rel_name
@@ -169,11 +174,11 @@ class ViewSettings(object):
         display = "%s__%s" % (identifier, field.name) if identifier else field.name
 
         column = Column(
-            "%s_%s" % (model.__name__.lower(), field.name),
+            "%s_%s" % ((identifier if identifier else model.__name__.lower()), field.name),
             field_name,
             sort_field=display,
             display=display,
-            filter_config=TextFilter(filter_field=filter_field, placeholder=field_name)
+            filter_config=TextFilter(filter_field=filter_field, placeholder=field_name),
         )
         return self.handle_special_column(field, column)[0]
 
@@ -190,21 +195,19 @@ class ViewSettings(object):
             return None
 
         field_name = field.verbose_name.title()
-        if field_name in known_names:
-            field_name = "%s %s" % (model.__name__, field_name)
+        if identifier:
+            field_name = "%s %s" % (identifier.replace("_", " ").capitalize(), field_name)
 
         display = "%s__%s" % (identifier, field.name) if identifier else field.name
 
         column = Column(
-            "%s_%s" % (model.__name__.lower(), field.name),
-            field_name,
-            display=display
+            "%s_%s" % ((identifier if identifier else model.__name__.lower()), field.name), field_name, display=display
         )
 
         column, is_special = self.handle_special_column(field, column)
         if not is_special:
             if isinstance(field, CharField):
-                column.filter_config = TextFilter(placeholder=field_name)
+                column.filter_config = TextFilter(filter_field=field.name, placeholder=field_name)
             if isinstance(field, EnumIntegerField):
                 column.filter_config = ChoicesFilter(field.choices)
             if isinstance(field, BooleanField):

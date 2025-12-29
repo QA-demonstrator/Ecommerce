@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -11,8 +11,24 @@ import enumfields
 from django import forms
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import validate_email
 from django.utils.text import camel_case_to_spaces
 from django.utils.translation import ugettext_lazy as _
+
+
+class MultiEmailField(forms.Field):
+    """
+    From https://docs.djangoproject.com/en/1.11/ref/forms/validation/#form-field-default-cleaning
+    """
+
+    def validate(self, value):
+        """Check if value consists only of valid emails."""
+        # Use the parent's handling of required fields, etc.
+        super().validate(value)
+        if value:
+            for email in value.split(","):
+                if email:
+                    validate_email(email)
 
 
 class Type(object):
@@ -26,9 +42,9 @@ class Type(object):
         The kwargs are passed directly to the field
         constructor.
 
-        :param kwargs: Kwargs for field constructor
+        :param kwargs: Kwargs for field constructor.
         :type kwargs: dict
-        :return: Form field
+        :return: Form field.
         :rtype: django.forms.Field
         """
         return forms.CharField(**kwargs)
@@ -94,7 +110,7 @@ class Email(_String):
     identifier = "email"
 
     def get_field(self, **kwargs):
-        return forms.EmailField(**kwargs)
+        return MultiEmailField(**kwargs)
 
 
 class URL(_String):
@@ -120,7 +136,7 @@ class Model(Type):
 
     def __init__(self, model_label):
         """
-        :param model_label: Model label in Django `app.Model` format (e.g. `shuup.Order`)
+        :param model_label: Model label in Django `app.Model` format (e.g. `shuup.Order`).
         :type model_label: str
         """
         self.model_label = model_label
@@ -156,7 +172,7 @@ class Enum(Type):
     def name(self):
         if self.enum_class:
             return camel_case_to_spaces(self.enum_class.__class__.__name__)
-        return u"<Invalid Enum>"
+        return "<Invalid Enum>"
 
     def __init__(self, enum_class):
         self.enum_class = enum_class

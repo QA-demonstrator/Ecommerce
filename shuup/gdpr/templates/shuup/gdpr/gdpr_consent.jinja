@@ -11,7 +11,7 @@
         <a href="#" id="privacy-preferences-btn">{{ _("Privacy Preferences") }}</a>
         <button class="btn btn-info" id="agree-btn">
             <i class="fa fa-check"></i>
-            {{ _("I Agree") }}
+            {{ _("I Understand") }}
         </button>
     </div>
 </div>
@@ -70,7 +70,13 @@
                                         {% else %}
                                             <div class="gdpr-switch">
                                                 <label>
-                                                    <input type="checkbox" name="cookie_category_{{ gdpr_cookie.id }}" />
+                                                    <input
+                                                        type="checkbox"
+                                                        name="cookie_category_{{ gdpr_cookie.id }}"
+                                                        {% if gdpr_cookie.default_active %}
+                                                        checked
+                                                        {% endif %}
+                                                    />
                                                     <div class="switch-slider round"></div>
                                                 </label>
                                             </div>

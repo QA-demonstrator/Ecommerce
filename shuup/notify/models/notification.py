@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.core.urlresolvers import NoReverseMatch, reverse
 from django.db import models
 from django.db.models import Q
 from django.utils.timezone import now
@@ -18,6 +17,7 @@ from jsonfield.fields import JSONField
 
 from shuup.core.fields import InternalIdentifierField
 from shuup.notify.enums import Priority, RecipientType
+from shuup.utils.django_compat import NoReverseMatch, is_anonymous, reverse
 
 
 class NotificationManager(models.Manager):
@@ -25,12 +25,12 @@ class NotificationManager(models.Manager):
         """
         :type user: django.contrib.auth.models.AbstractUser
         """
-        if not user or user.is_anonymous():
+        if not (user and not is_anonymous(user)):
             return self.none()
 
-        q = (Q(recipient_type=RecipientType.SPECIFIC_USER) & Q(recipient=user))
+        q = Q(recipient_type=RecipientType.SPECIFIC_USER) & Q(recipient=user)
 
-        if getattr(user, 'is_superuser', False):
+        if getattr(user, "is_superuser", False):
             q |= Q(recipient_type=RecipientType.ADMINS)
 
         return self.filter(q)
@@ -43,24 +43,34 @@ class Notification(models.Model):
     """
     A model for persistent notifications to be shown in the admin, etc.
     """
-    shop = models.ForeignKey("shuup.Shop", verbose_name=_("shop"))
-    recipient_type = EnumIntegerField(RecipientType, default=RecipientType.ADMINS, verbose_name=_('recipient type'))
+
+    shop = models.ForeignKey(on_delete=models.CASCADE, to="shuup.Shop", verbose_name=_("shop"))
+    recipient_type = EnumIntegerField(RecipientType, default=RecipientType.ADMINS, verbose_name=_("recipient type"))
     recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True, related_name="+", on_delete=models.SET_NULL,
-        verbose_name=_('recipient')
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+        verbose_name=_("recipient"),
     )
-    created_on = models.DateTimeField(auto_now_add=True, editable=False, verbose_name=_('created on'))
-    message = models.CharField(max_length=140, editable=False, default="", verbose_name=_('message'))
+    created_on = models.DateTimeField(auto_now_add=True, editable=False, verbose_name=_("created on"))
+    message = models.CharField(max_length=140, editable=False, default="", verbose_name=_("message"))
     identifier = InternalIdentifierField(unique=False)
-    priority = EnumIntegerField(Priority, default=Priority.NORMAL, db_index=True, verbose_name=_('priority'))
+    priority = EnumIntegerField(Priority, default=Priority.NORMAL, db_index=True, verbose_name=_("priority"))
     _data = JSONField(blank=True, null=True, editable=False, db_column="data")
 
-    marked_read = models.BooleanField(db_index=True, editable=False, default=False, verbose_name=_('marked read'))
+    marked_read = models.BooleanField(db_index=True, editable=False, default=False, verbose_name=_("marked read"))
     marked_read_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True, editable=False, related_name="+", on_delete=models.SET_NULL,
-        verbose_name=_('marked read by')
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        editable=False,
+        related_name="+",
+        on_delete=models.SET_NULL,
+        verbose_name=_("marked read by"),
     )
-    marked_read_on = models.DateTimeField(null=True, blank=True, verbose_name=_('marked read on'))
+    marked_read_on = models.DateTimeField(null=True, blank=True, verbose_name=_("marked read on"))
 
     objects = NotificationManager()
 
@@ -72,7 +82,7 @@ class Notification(models.Model):
 
     def save(self, *args, **kwargs):
         if self.recipient_type == RecipientType.SPECIFIC_USER and not self.recipient_id:
-            raise ValueError("With RecipientType.SPECIFIC_USER, recipient is required")
+            raise ValueError("Error! With `RecipientType.SPECIFIC_USER`, recipient is required.")
         super(Notification, self).save(*args, **kwargs)
 
     def mark_read(self, user):
@@ -81,7 +91,7 @@ class Notification(models.Model):
         self.marked_read = True
         self.marked_read_by = user
         self.marked_read_on = now()
-        self.save(update_fields=('marked_read', 'marked_read_by', 'marked_read_on'))
+        self.save(update_fields=("marked_read", "marked_read_by", "marked_read_on"))
         return True
 
     @property
@@ -104,16 +114,16 @@ class Notification(models.Model):
     @url.setter
     def url(self, value):
         if self.pk:
-            raise ValueError("URL can't be set on a saved notification")
+            raise ValueError("Error! URL can't be set on a saved notification.")
         self.data["_url"] = value
 
     def set_reverse_url(self, **reverse_kwargs):
         if self.pk:
-            raise ValueError("URL can't be set on a saved notification")
+            raise ValueError("Error! URL can't be set on a saved notification.")
 
         try:
             reverse(**reverse_kwargs)
         except NoReverseMatch:  # pragma: no cover
-            raise ValueError("Invalid reverse URL parameters")
+            raise ValueError("Error! Invalid reverse URL parameters.")
 
         self.data["_url"] = reverse_kwargs

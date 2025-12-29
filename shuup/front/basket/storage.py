@@ -1,24 +1,28 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
+import logging
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from shuup.core.basket.storage import BaseDatabaseBasketStorage, BasketStorage
 from shuup.front.models import StoredBasket
+from shuup.utils.analog import LogEntryKind
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DirectSessionBasketStorage(BasketStorage):
     def __init__(self):
         if settings.SESSION_SERIALIZER == "django.contrib.sessions.serializers.JSONSerializer":  # pragma: no cover
             raise ImproperlyConfigured(
-                "DirectSessionBasketStorage will not work with the JSONSerializer session serializer."
+                "Error! `DirectSessionBasketStorage` will not work with the JSONSerializer session serializer."
             )
 
     def save(self, basket, data):
@@ -41,7 +45,7 @@ class DictStoredBasket(object):
         self.shop_id = shop_id
         self.currency = currency
         self.prices_include_tax = prices_include_tax
-        self.data = (data or {})
+        self.data = data or {}
 
     @classmethod
     def from_basket_and_data(cls, basket, data):
@@ -74,7 +78,12 @@ class DatabaseBasketStorage(BaseDatabaseBasketStorage):
         return "basket_%s_key" % basket.basket_name
 
     def get_basket_kwargs(self, basket):
-        return basket.request.session.get(self._get_session_key(basket))
+        # Lets first try to get basket kwargs from basket request session
+        basket_kwargs = basket.request.session.get(self._get_session_key(basket))
+        if not basket_kwargs:
+            # Fallback to basket customer and key combination
+            basket_kwargs = {"key": basket.key}
+        return basket_kwargs
 
     def save(self, basket, data):
         stored_basket = super(DatabaseBasketStorage, self).save(basket, data)
@@ -97,3 +106,24 @@ class DatabaseBasketStorage(BaseDatabaseBasketStorage):
 
     def basket_exists(self, key, shop):
         return self.model.objects.filter(key=key, shop=shop).exists()
+
+    def _get_key_for_logs(self, basket):
+        basket_kwargs = self.get_basket_kwargs(basket)
+        return "%s%s" % ("stored_basket_key:", basket_kwargs["key"])
+
+    def add_log_entry(self, basket, message, extra={}, kind=LogEntryKind.NOTE):
+        try:
+            if getattr(basket, "shop", None):
+                identifier = self._get_key_for_logs(basket)
+                basket.shop.add_log_entry(kind=kind, identifier=identifier, message=message, extra=extra)
+        except Exception:
+            # This might get called on important checkout related flows it is not
+            # good idea to interrupt the business if for some reason this logging
+            # fails.
+            LOGGER.error("Adding log entry to stored basket failed.")
+
+    def get_log_entries(self, basket):
+        identifier = self._get_key_for_logs(basket)
+        if getattr(basket, "shop", None):
+            return basket.shop.log_entries.filter(identifier=identifier)
+        return []

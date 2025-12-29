@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from __future__ import unicode_literals
-
-from django.utils.encoding import force_text
+import hashlib
+import logging
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext, ugettext_lazy as _
 
+from shuup.core import cache
+from shuup.utils.django_compat import force_text
 from shuup.xtheme.plugins._base import Plugin
+
+LOGGER = logging.getLogger(__name__)
 
 
 class LayoutCell(object):
@@ -23,13 +26,13 @@ class LayoutCell(object):
         """
         Initialize a layout cell with a given plugin, config and sizing configuration.
 
-        :param plugin_identifier: Plugin identifier string
+        :param plugin_identifier: Plugin identifier string.
         :type plugin_identifier: str
-        :param config: Config dict
+        :param config: Config dict.
         :type config: dict|None
-        :param sizes: Size dict
+        :param sizes: Size dict.
         :type sizes: dict|None
-        :param align: Align string
+        :param align: Align string.
         :type align: str
         """
         self.theme = theme
@@ -54,7 +57,7 @@ class LayoutCell(object):
         """
         Get the name of the plugin in this cell for display purposes.
 
-        :return: Plugin name string
+        :return: Plugin name string.
         :rtype: str
         """
         plugin_class = self.plugin_class
@@ -64,7 +67,7 @@ class LayoutCell(object):
         """
         Instantiate the plugin with the current config.
 
-        :return: Instantiated plugin (if a class is available)
+        :return: Instantiated plugin (if a class is available).
         :rtype: Plugin|None
         """
         plugin_class = self.plugin_class
@@ -72,13 +75,13 @@ class LayoutCell(object):
             return plugin_class(config=self.config)
         return None
 
-    def render(self, context):
+    def render(self, context, cache_key_prefix=None):
         """
-        Return the plugin's rendered contents.
+        Return the plugin's rendered content.
 
         :param context: Jinja2 rendering context.
         :type context: jinja2.runtime.Context
-        :return: string of content
+        :return: string of content.
         :rtype: str
         """
         if not self.plugin_identifier:
@@ -86,19 +89,43 @@ class LayoutCell(object):
         plugin_inst = self.instantiate_plugin()
         if plugin_inst is None:
             return mark_safe("<!-- %s? -->" % self.plugin_identifier)
-        if plugin_inst.is_context_valid(context=context):
-            return plugin_inst.render(context=context)
-        else:
-            return ""
+
+        try:
+            if plugin_inst.is_context_valid(context=context):
+                # check whether the plugin can be cached
+                cacheabled = getattr(plugin_inst, "cacheable", False)
+                cache_key = (
+                    plugin_inst.get_cache_key(context)
+                    if hasattr(plugin_inst, "get_cache_key")
+                    else plugin_inst.identifier
+                )
+                hash_key = hashlib.sha1(f"{cache_key_prefix}-{cache_key}".encode("utf-8")).hexdigest()
+                full_cache_key = f"shuup_xtheme_cell:{hash_key}"
+                cached_content = cache.get(full_cache_key)
+                if cached_content is not None:
+                    return cached_content
+
+                content = plugin_inst.render(context=context)
+                if cacheabled:
+                    cache.set(full_cache_key, content)
+                return content
+            else:
+                return ""
+
+        except Exception:
+            # catch any error while trying to render the cell
+            LOGGER.exception(f"Failed to render the plugin: {self.plugin_identifier}")
+            error_msg = gettext("Failed to render the plugin")
+            return mark_safe(mark_safe(f'<small class="plugin-render-error">{error_msg}</small>'))
 
     @classmethod
     def unserialize(cls, theme, data):
         """
         Unserialize a dict of layout cell data into a new cell.
 
-        :param data: Layout cell data dict
+        :param data: Layout cell data dict.
         :type data: dict
-        :return: New cell
+        :return: New cell.
         :rtype: LayoutCell
         """
         return cls(
@@ -107,29 +134,34 @@ class LayoutCell(object):
             config=data.get("config"),
             sizes=data.get("sizes"),
             align=data.get("align", ""),
-            extra_classes=data.get("extra_classes", "")
+            extra_classes=data.get("extra_classes", ""),
         )
 
     def serialize(self):
         """
         Serialize this cell into a dict.
 
-        :return: Layout cell data dict
+        :return: Layout cell data dict.
         :rtype: dict
         """
-        return dict((k, v) for (k, v) in (
-            ("plugin", self.plugin_identifier),
-            ("config", self.config),
-            ("sizes", self.sizes),
-            ("align", self.align),
-            ("extra_classes", self.extra_classes),
-        ) if k and v)
+        return dict(
+            (k, v)
+            for (k, v) in (
+                ("plugin", self.plugin_identifier),
+                ("config", self.config),
+                ("sizes", self.sizes),
+                ("align", self.align),
+                ("extra_classes", self.extra_classes),
+            )
+            if k and v
+        )
 
 
 class LayoutRow(object):
     """
     A single row in a layout. Maps to Bootstrap's `row` class.
     """
+
     # TODO: Add responsive hiding to full rows?
 
     def __init__(self, theme, cells=None):
@@ -164,9 +196,9 @@ class LayoutRow(object):
         """
         Unserialize a dict of layout row data into a new row, along with all cell children.
 
-        :param data: Layout row data dict
+        :param data: Layout row data dict.
         :type data: dict
-        :return: New row
+        :return: New row.
         :rtype: LayoutRow
         """
         cells = [LayoutCell.unserialize(theme, cell_data) for cell_data in data["cells"]]
@@ -176,20 +208,18 @@ class LayoutRow(object):
         """
         Serialize this row into a dict.
 
-        :return: Layout row data dict
+        :return: Layout row data dict.
         :rtype: dict
         """
-        return {
-            "cells": [c.serialize() for c in self]
-        }
+        return {"cells": [c.serialize() for c in self]}
 
     def add_cell(self, sizes=None):
         """
         Add an empty cell to this row. Used by the editor API.
 
-        :param sizes: An optional size dict, see `LayoutCell`
+        :param sizes: An optional size dict, see `LayoutCell`.
         :type sizes: dict|None
-        :return: The new layout cell
+        :return: The new layout cell.
         :rtype: LayoutCell
         """
         cell = LayoutCell(self.theme, plugin_identifier=None, sizes=sizes)
@@ -201,6 +231,7 @@ class Layout(object):
     """
     The layout (row, cell and plugin configuration) for a single placeholder.
     """
+
     identifier = "xtheme-default-layout"
     row_class = "row"
     cell_class_template = "col-%(breakpoint)s-%(width)s"
@@ -221,34 +252,34 @@ class Layout(object):
 
     def get_help_text(self, context):
         """
-        Help text for this placeholder shown at the top of the
+        Help text for this placeholder box shown at the top of the
         editable layout.
 
-        :param context: Jinja2 rendering context
+        :param context: Jinja2 rendering context.
         :type context: jinja2.runtime.Context
-        :return: Help text for this layout
+        :return: Help text for this layout.
         :rtype: str
         """
-        return _("Content in this placeholder is shown without limitations.")
+        return _("Content in this box is shown to all user types without limitations.")
 
     def is_valid_context(self, context):
         """
-        :param context: Jinja2 rendering context
+        :param context: Jinja2 rendering context.
         :type context: jinja2.runtime.Context
-        :return: Whether the current context is valid for this layout
+        :return: Whether the current context is valid for this layout.
         :rtype: bool
         """
         return True
 
     def get_layout_data_suffix(self, context):
         """
-        Layout data suffix which is used to save layout data to view config
+        Layout data suffix which is used to save layout data to view config.
 
         With layout data suffix you can define data keys that is only available
         for certain contexts. Make sure that you validate the context for
         variables that is used to form this suffix.
 
-        :param context: Jinja2 rendering context
+        :param context: Jinja2 rendering context.
         :type context: jinja2.runtime.Context
         :rtype: str
         """
@@ -259,37 +290,30 @@ class Layout(object):
         """
         Unserialize a dict of layout data into a new layout, with all rows and cells.
 
-        :param data: Layout data dict
+        :param data: Layout data dict.
         :type data: dict
-        :param placeholder_name: Placeholder name if none is specified in the data
+        :param placeholder_name: Placeholder name if none is specified in the data.
         :type placeholder_name: str
-        :return: New layout
+        :return: New layout.
         :rtype: Layout
         """
         rows = [LayoutRow.unserialize(theme, row_data) for row_data in data["rows"]]
-        return cls(
-            theme,
-            placeholder_name=data.get("name") or placeholder_name,
-            rows=rows
-        )
+        return cls(theme, placeholder_name=data.get("name") or placeholder_name, rows=rows)
 
     def serialize(self):
         """
         Serialize this layout into a dict.
 
-        :return: Layout data dict
+        :return: Layout data dict.
         :rtype: dict
         """
-        return {
-            "rows": [r.serialize() for r in self.rows],
-            "name": self.placeholder_name
-        }
+        return {"rows": [r.serialize() for r in self.rows], "name": self.placeholder_name}
 
     def __iter__(self):
         """
         Iterate over the rows in this layout.
 
-        :return: Iterable of rows
+        :return: Iterable of rows.
         :rtype: Iterable[LayoutRow]
         """
         return iter(self.rows)
@@ -309,7 +333,7 @@ class Layout(object):
         This is internally used by `LayoutPartExtension`, but could just as well be
         used to programmatically create layouts for whichever purpose.
 
-        :return: The newly created row
+        :return: The newly created row.
         :rtype: LayoutRow
         """
         return self.insert_row()
@@ -341,11 +365,11 @@ class Layout(object):
         This is internally used by `LayoutPartExtension`, but could just as well be
         used to programmatically create layouts for whichever purpose.
 
-        :param plugin_identifier: Plugin identifier string
+        :param plugin_identifier: Plugin identifier string.
         :type plugin_identifier: str
-        :param config: Configuration dict
+        :param config: Configuration dict.
         :type config: dict
-        :return: The configured cell
+        :return: The configured cell.
         :rtype: LayoutCell
         """
         if not self.rows:
@@ -363,11 +387,11 @@ class Layout(object):
 
         If the coordinates are out of range, returns None.
 
-        :param x: X (horizontal) coordinate
+        :param x: X (horizontal) coordinate.
         :type x: int
-        :param y: Y (vertical) coordinate
+        :param y: Y (vertical) coordinate.
         :type y: int
-        :return: Layout cell
+        :return: Layout cell.
         :rtype: LayoutCell|None
         """
         x = int(x)
@@ -384,9 +408,9 @@ class Layout(object):
 
         If `y` is None, the row in inserted at the end.
 
-        :param y: Y coordinate
+        :param y: Y coordinate.
         :type y: int
-        :return: The new layout row
+        :return: The new layout row.
         :rtype: LayoutRow
         """
         if y is None:
@@ -404,7 +428,7 @@ class Layout(object):
 
         If `y` is out of bounds, nothing is done.
 
-        :param y: Y coordinate
+        :param y: Y coordinate.
         :type y: int
         :return: Was something done?
         :rtype: bool
@@ -415,23 +439,17 @@ class Layout(object):
 
         self.rows.pop(y)
 
-        if len(self.rows) == 0:
-            # In case is deleting last row we don't want the
-            # placeholder defaults to kick in. Instead let's add
-            # empty row here to prevent that.
-            self.rows.append(LayoutRow(self.theme))
-
         return True
 
     def move_row_to_index(self, from_y, to_y):
         """
         Move the y'th row to the specified zero-based index.
 
-        If `y` or index is out of bounds, nothing is done.
+        If `y` or index are out of bounds, nothing is done.
 
-        :param from_y: current Y coordinate
+        :param from_y: current Y coordinate.
         :type from_y: int
-        :param to_y: new Y coordinate
+        :param to_y: new Y coordinate.
         :type to_y: int
         :return: Was something done?
         :rtype: bool
@@ -449,13 +467,13 @@ class Layout(object):
 
         If the coordinates are out of range, nothing is done.
 
-        :param from_x: X (horizontal) coordinate of the cell to move
+        :param from_x: X (horizontal) coordinate of the cell to move.
         :type from_x: int
-        :param from_y: Y (vertical) coordinate of the cell to move
+        :param from_y: Y (vertical) coordinate of the cell to move.
         :type from_y: int
-        :param to_x: X (horizontal) coordinate of the cell after moving
+        :param to_x: X (horizontal) coordinate of the cell after moving.
         :type to_x: int
-        :param to_y: Y (vertical) coordinate of the cell after moving
+        :param to_y: Y (vertical) coordinate of the cell after moving.
         :type to_y: int
         :return: Was something done?
         :rtype: bool
@@ -465,7 +483,7 @@ class Layout(object):
         to_x = int(to_x)
         to_y = int(to_y)
 
-        if not (0 <= from_y < len(self.rows)) or not(0 <= from_x < len(self.rows[from_y])):
+        if not (0 <= from_y < len(self.rows)) or not (0 <= from_x < len(self.rows[from_y])):
             return False
         if not (0 <= to_y < len(self.rows)) or not (0 <= to_x <= len(self.rows[to_y])):
             return False
@@ -481,9 +499,9 @@ class Layout(object):
 
         If the coordinates are out of range, nothing is done.
 
-        :param x: X (horizontal) coordinate
+        :param x: X (horizontal) coordinate.
         :type x: int
-        :param y: Y (vertical) coordinate
+        :param y: Y (vertical) coordinate.
         :type y: int
         :return: Was something done?
         :rtype: bool

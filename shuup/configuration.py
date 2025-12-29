@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -26,10 +26,10 @@ configuration.
 from __future__ import unicode_literals
 
 from shuup.core import cache
-from shuup.core.models import ConfigurationItem
+from shuup.core.models import ConfigurationItem, EncryptedConfigurationItem
 
 
-def set(shop, key, value):
+def set(shop, key, value, encrypted=False):
     """
     Set configuration item value for a shop or globally.
 
@@ -44,8 +44,10 @@ def set(shop, key, value):
     :param value: Value to set.  Note: Must be JSON serializable.
     :type value: Any
     """
-    ConfigurationItem.objects.update_or_create(
-        shop=shop, key=key, defaults={"value": value})
+    if not encrypted:
+        ConfigurationItem.objects.update_or_create(shop=shop, key=key, defaults={"value": value})
+    else:
+        EncryptedConfigurationItem.objects.update_or_create(shop=shop, key=key, defaults={"value": value})
     if shop:
         cache.set(_get_cache_key(shop), None)
     else:
@@ -118,6 +120,8 @@ def _get_configuration_from_db(shop):
     """
     configuration = {}
     for conf_item in ConfigurationItem.objects.filter(shop=shop):
+        configuration[conf_item.key] = conf_item.value
+    for conf_item in EncryptedConfigurationItem.objects.filter(shop=shop):
         configuration[conf_item.key] = conf_item.value
     return configuration
 

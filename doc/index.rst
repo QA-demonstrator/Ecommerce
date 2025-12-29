@@ -23,6 +23,7 @@ Developing Shuup
 ----------------
 
 * :doc:`howto/getting_started_dev`
+* :doc:`ref/admin_module`
 * :doc:`ref/data_model`
 * :doc:`ref/provides`
 * :doc:`ref/services`
@@ -30,12 +31,13 @@ Developing Shuup
 * :doc:`api/modules`
 * :doc:`ref/notify_specification`
 * :doc:`ref/prices_and_taxes`
+* :doc:`ref/product_catalog`
 * :doc:`ref/campaigns`
 * :doc:`ref/units`
 * :doc:`ref/formpart`
-* :doc:`web_api`
 * :doc:`howto/basic_admin_tasks`
 * :doc:`howto/dev_tools`
+* :doc:`ref/performance_optimizations`
 
 
 Extending Shuup

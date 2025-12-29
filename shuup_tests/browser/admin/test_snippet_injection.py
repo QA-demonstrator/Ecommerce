@@ -1,29 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-
 import pytest
-from django.core.urlresolvers import reverse
+from django.test import override_settings
 
+from shuup.core import cache
 from shuup.testing import factories
 from shuup.testing.browser_utils import (
-    click_element, wait_until_appeared, wait_until_condition
+    click_element,
+    initialize_admin_browser_test,
+    wait_until_appeared,
+    wait_until_condition,
 )
-from shuup.testing.browser_utils import initialize_admin_browser_test
-from shuup.core import cache
+from shuup.utils.django_compat import reverse
 from shuup.xtheme import get_current_theme
 from shuup.xtheme.models import Snippet
 
 pytestmark = pytest.mark.skipif(os.environ.get("SHUUP_BROWSER_TESTS", "0") != "1", reason="No browser tests run.")
 
 
-@pytest.mark.browser
-@pytest.mark.djangodb
+@pytest.mark.django_db
+@pytest.mark.skipif(os.environ.get("SHUUP_TESTS_CI", "0") == "1", reason="Disable when run in CI.")
 def test_xtheme_snippet_injection(browser, admin_user, live_server, settings):
     shop = factories.get_default_shop()
     initialize_admin_browser_test(browser, live_server, settings)
@@ -33,7 +35,9 @@ def test_xtheme_snippet_injection(browser, admin_user, live_server, settings):
     wait_until_condition(browser, lambda x: x.is_text_present("New Snippet"))
     browser.execute_script("$(\"[name='location']\").val('body_end').trigger('change')")
     browser.execute_script("$(\"[name='snippet_type']\").val('inline_js').trigger('change')")
-    browser.execute_script("window.CodeMirror.editors['id_snippet-snippet'].setValue('alert(\"works\")');")
+    browser.execute_script(
+        "window.ShuupCodeMirror.editors[document.getElementById('id_snippet-snippet')].setValue('alert(\"works\")');"
+    )
     click_element(browser, "button[type='submit']")
     wait_until_appeared(browser, "div[class='message success']")
 

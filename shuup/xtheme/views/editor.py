@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import json
-
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.middleware.csrf import get_token
+from django.utils.html import escape
 from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView
@@ -52,7 +52,7 @@ class EditorView(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):  # doccov: ignore
         if not could_edit(request):
-            raise Problem(_("No access to editing"))
+            raise Problem(_("No access to editing."))
         self._populate_vars()
         if self.default_layout:
             self.view_config.save_default_placeholder_layout(self.placeholder_name, self.default_layout)
@@ -71,7 +71,7 @@ class EditorView(TemplateView):
         if command:
             dispatcher = getattr(self, "dispatch_%s" % command, None)
             if not callable(dispatcher):
-                raise Problem(_("Unknown command %s") % command)
+                raise Problem(_("Unknown command: `%s`.") % escape(command))
             dispatch_kwargs = dict(request.POST.items())
             rv = dispatcher(**dispatch_kwargs)
             if rv:
@@ -84,15 +84,19 @@ class EditorView(TemplateView):
             self.form.save()
             self.save_layout()
 
+            # after we save the new layout configs, make sure to reload the saved data in forms
+            # so the returned get() response contains updated data
+            self.build_form()
+
             if request.POST.get("publish") == "1":
                 return self.dispatch_publish()
 
-        return super(EditorView, self).get(request, *args, **kwargs)
+        return self.get(request, *args, **kwargs)
 
     def _populate_vars(self):
         theme = get_theme_by_identifier(self.request.GET["theme"], self.request.shop)
         if not theme:
-            raise Problem(_("Unable to determine current theme."))
+            raise Problem(_("Unable to determine the current theme."))
         view_name = self.request.GET["view"]
         global_type = self.request.GET.get("global_type", None)
         self.view_config = ViewConfig(
@@ -120,7 +124,7 @@ class EditorView(TemplateView):
             layout_cls=layout_cls,
             placeholder_name=self.placeholder_name,
             default_layout=self.default_layout,
-            layout_data_key=self.layout_data_key
+            layout_data_key=self.layout_data_key,
         )
         (x, y) = self.current_cell_coords = (
             int(self.request.GET.get("x", -1)),
@@ -133,27 +137,20 @@ class EditorView(TemplateView):
         if not self.current_cell:
             self.form = None
             return
-        kwargs = {
-            "layout_cell": self.current_cell,
-            "theme": self.view_config.theme,
-            "request": self.request
-        }
+        kwargs = {"layout_cell": self.current_cell, "theme": self.view_config.theme, "request": self.request}
         if self.request.method == "POST":
             kwargs["data"] = self.request.POST
             kwargs["files"] = self.request.FILES
         self.form = LayoutCellFormGroup(**kwargs)
 
     def save_layout(self, layout=None):
-        self.view_config.save_placeholder_layout(
-            layout_data_key=self.layout_data_key,
-            layout=(layout or self.layout)
-        )
+        self.view_config.save_placeholder_layout(layout_data_key=self.layout_data_key, layout=(layout or self.layout))
         self.changed = True
 
     def dispatch_add_cell(self, y, **kwargs):
         y = int(y)
         if len(self.layout.rows[y].cells) >= ROW_CELL_LIMIT:
-            raise ValueError(_("Cannot add more than %d cells in one row.") % ROW_CELL_LIMIT)
+            raise ValueError(_("Can't add more than %d cells in one row.") % ROW_CELL_LIMIT)
 
         if not (0 <= y < len(self.layout.rows)):
             # No need to raise an exception, really.

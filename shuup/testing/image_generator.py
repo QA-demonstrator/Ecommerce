@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import math
 import random
-
 from PIL import Image, ImageDraw
 
 PALATABLE_PALETTES = [
@@ -26,7 +25,7 @@ PALATABLE_PALETTES = [
     [(219, 88, 0), (255, 144, 0), (240, 198, 0), (142, 161, 6), (89, 99, 30)],
     [(176, 49, 105), (224, 138, 66), (241, 209, 156), (143, 169, 153), (80, 49, 59)],
     [(168, 20, 97), (91, 23, 71), (14, 25, 43), (101, 113, 159), (190, 169, 169)],
-    [(42, 61, 91), (231, 126, 71), (255, 108, 14), (204, 184, 134), (221, 197, 123)]
+    [(42, 61, 91), (231, 126, 71), (255, 108, 14), (204, 184, 134), (221, 197, 123)],
 ]
 
 
@@ -49,7 +48,9 @@ class BaseImageGenerator(object):
         self.drawers = [getattr(self, n) for n in dir(self) if n.startswith("draw_")]
 
     def generate(self):  # pragma: no cover
-        raise NotImplementedError("Should be implemented in subclass, this.")
+        raise NotImplementedError(
+            "Error! Not implemented: `BaseImageGenerator` -> `generate()`. " "Should be implemented in subclass, this."
+        )
 
     def draw_circle(self, x, y, w, h, color):
         r = min(w, h) / 2
@@ -109,11 +110,7 @@ class RingImageGenerator(BaseImageGenerator):
             self.draw_circle(x=x, y=y, w=s, h=s, color=tuple(rgb))
 
 
-generators = [
-    RandomImageGenerator,
-    ModernArtImageGenerator,
-    RingImageGenerator
-]
+generators = [RandomImageGenerator, ModernArtImageGenerator, RingImageGenerator]
 
 
 def generate_image(width, height, palette=None, seed=None, supersample=2):

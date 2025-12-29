@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -15,10 +15,10 @@ and decoding process can be customized however necessary.
 
 from __future__ import unicode_literals
 
-import datetime
-import decimal
 from enum import Enum
 
+import datetime
+import decimal
 import django.utils.dateparse as dateparse
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import six
@@ -38,7 +38,7 @@ def encode_enum(enum_val):
     spec = "%s:%s" % (enum_cls.__module__, enum_cls.__name__)
     try:
         if load(spec) != enum_cls:
-            raise ImproperlyConfigured("That's not the same class!")
+            raise ImproperlyConfigured("Error! That's not the same class.")
     except ImproperlyConfigured:  # Also raised by `load`
         return enum_val.value  # Fall back to the bare value.
     return [spec, enum_val.value]
@@ -63,15 +63,11 @@ class TagRegistry(object):
             else:
                 decoder = classes
         if not callable(decoder):
-            raise ValueError("Decoder %r for tag %r is not callable" % (decoder, tag))
+            raise ValueError("Error! Decoder `%r` for tag `%r` is not callable." % (decoder, tag))
         if not callable(encoder):
-            raise ValueError("Encoder %r for tag %r is not callable" % (encoder, tag))
+            raise ValueError("Error! Encoder `%r` for tag `%r` is not callable." % (encoder, tag))
 
-        self.tags[tag] = {
-            "classes": classes,
-            "encoder": encoder,
-            "decoder": decoder
-        }
+        self.tags[tag] = {"classes": classes, "encoder": encoder, "decoder": decoder}
 
     def encode(self, obj, default):
         for tag, info in six.iteritems(self.tags):

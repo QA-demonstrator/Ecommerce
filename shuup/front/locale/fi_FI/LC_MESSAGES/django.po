@@ -4,8 +4,9 @@
 # 
 # Translators:
 # Aarni Koskela, 2015
+# Andreas Modinos <andreas@shuup.com>, 2020
 # Antti Mäki <antti@anttimaki.com>, 2015
-# Eetu Häivälä <eetu.haivala@anders.fi>, 2015
+# Eetu Häivälä, 2015
 # Heikki Saari <heikki.saari@anders.fi>, 2016
 # Janne Tammi <janne@shuup.com>, 2015,2017
 # Janne Tammi <janne@shuup.com>, 2015
@@ -14,23 +15,23 @@
 # Juha Kujala, 2017
 # Juha Kujala, 2015-2016
 # Juha Louhiranta <charni@gmail.com>, 2015
-# Panu Tulimäki <panu@shuup.com>, 2016,2018
-# Rauli L. <rauli.laine@iki.fi>, 2015
-# Rauli L. <rauli.laine@iki.fi>, 2015
+# Panu Tulimäki <panu@shuup.com>, 2016,2018,2020
+# Rauli Laine <rauli.laine@iki.fi>, 2015
+# Rauli Laine <rauli.laine@iki.fi>, 2015
 # Shuup Admin <admin@shuup.com>, 2015-2016
 # Shuup Admin <admin@shuup.com>, 2016
 # Teemu Selkälä <teemu.selkala@anders.fi>, 2015
 # Tomi Järvi <tomi@jarvi.pro>, 2015
 # Tomi Järvi <tomi@jarvi.pro>, 2015
 # Tuomas Suutari <tuomas.suutari@anders.fi>, 2015
-# Tuomas Suutari <tuomas.suutari@shoop.io>, 2017
+# Tuomas Suutari <tuomas.suutari@anders.fi>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-16 22:09+0000\n"
-"PO-Revision-Date: 2018-09-04 16:07+0000\n"
-"Last-Translator: Panu Tulimäki <panu@shuup.com>\n"
+"POT-Creation-Date: 2021-07-14 15:24+0000\n"
+"PO-Revision-Date: 2021-07-14 20:24+0000\n"
+"Last-Translator: Transifex Bot <>\n"
 "Language-Team: Finnish (Finland) (http://www.transifex.com/shuup/shuup/language/fi_FI/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -53,14 +54,22 @@ msgstr "Ostoskorit"
 msgid "Show carts"
 msgstr "Näytä ostoskorit"
 
-msgid "Created on"
-msgstr "Luotu"
+msgid "Cart Inactivity Delay (hours)"
+msgstr "Ostoskorin käyttämättömyyden viive (tuntia)"
+
+msgid ""
+"Set the number of hours the cart must be inactive before it's displayed in "
+"Orders > Carts"
+msgstr "Määritä, kuinka monta tuntia ostokorin on oltava käyttämättä, ennen kuin se siirtyy 'Tilaukset > Ostoskorit'-osiossa."
+
+msgid "Key"
+msgstr ""
 
 msgid "Last updated on"
 msgstr "Viimeksi päivitetty"
 
-msgid "Abandoned"
-msgstr "Hylätty"
+msgid "Completed"
+msgstr ""
 
 msgid "yes"
 msgstr "kyllä"
@@ -71,17 +80,20 @@ msgstr "ei"
 msgid "Shop"
 msgstr "Kauppa"
 
-msgid "Product count"
-msgstr "Tuotteiden määrä"
+msgid "Supplier"
+msgstr ""
 
 msgid "Customer"
 msgstr "Asiakas"
 
-msgid "Orderer"
-msgstr "Tilaaja"
+msgid "Product count"
+msgstr "Tuotteiden määrä"
 
 msgid "Total"
 msgstr "Yhteensä"
+
+msgid "Created on"
+msgstr "Luotu"
 
 msgid "Ordered"
 msgstr "Tilattu"
@@ -122,6 +134,14 @@ msgstr "Yrityksen veronumeron validointi"
 msgid "Company tax number format is validated for European countries."
 msgstr "Yrityksen veronumerot validoidaan Euroopan maille."
 
+msgid "Override shop's default configuration"
+msgstr "Ohita kaupan oletuskokoonpano"
+
+msgid ""
+"If checked, this configuration will be used instead of the shop's default "
+"configuration."
+msgstr "Käytä kokoonpanoa kaupan oletusasetusten sijaan."
+
 msgid "Available languages in storefront"
 msgstr "Saatavilla olevat kielet"
 
@@ -130,15 +150,11 @@ msgid ""
 " that all languages should be available."
 msgstr "Valitse kielet jotka haluat olevan saatavilla asiakkaillesi. Tyhjä valinta tarkoittaa, että kaikki saatavilla olevat kielet on aktivoituna."
 
-#, python-format
-msgid "Basket loading failed: Incompatible basket (%s)"
-msgstr "Korin lataaminen epäonnistui: epäyhteensopiva kori (%s)"
-
 msgid "Try to remove some products from the basket and order them separately."
 msgstr "Yritä poistaa tuotteita korista ja tilaa ne erikseen."
 
 #, python-format
-msgid "Products in basket cannot be shipped together. %s"
+msgid "Products in basket can't be shipped together. %s"
 msgstr "Korin tuotteita ei voida toimittaa yhdessä. %s"
 
 #, python-format
@@ -156,6 +172,9 @@ msgstr "Käytä tallennettua osoitetta"
 
 msgid "Addresses"
 msgstr "Osoitteet"
+
+msgid "Saved addresses."
+msgstr ""
 
 msgid "Checkout as Guest"
 msgstr "Tilaa vieraana"
@@ -186,6 +205,9 @@ msgstr "Tuotteen saatavuus on muuttunut. Ole hyvä ja tarkista ostoskori ennen t
 msgid "Confirmation"
 msgstr "Vahvistus"
 
+msgid "Starting to create order."
+msgstr ""
+
 msgid "Empty Basket"
 msgstr "Tyhjä ostoskori"
 
@@ -197,6 +219,9 @@ msgstr "maksutapa"
 
 msgid "Shipping & Payment"
 msgstr "Toimitukset & Maksaminen"
+
+msgid "Saved services."
+msgstr ""
 
 msgid "Sort products by name"
 msgstr "Järjestä tuotteet nimen mukaan"
@@ -213,8 +238,8 @@ msgstr "Nimet - A-Z"
 msgid "Name - Z-A"
 msgstr "Nimet - Z-A"
 
-msgid "Check this to allow products to be sortable by product name."
-msgstr "Valitse tämä, mikäli haluat, että tuotteita voi järjestää tuotenimellä."
+msgid "Enable this to allow products to be sortable by product name."
+msgstr "Salli tuotteiden järjestäminen tuotenimen perusteella."
 
 msgid ""
 "Use a numeric value to set the order in which the the filter will appear on "
@@ -234,9 +259,9 @@ msgid "Price - High to Low"
 msgstr "Hinta - Suurimmasta pienimpään"
 
 msgid ""
-"Check this to allow products to be sortable by price (from low to high and "
-"high to low)."
-msgstr "Valitse tämä, mikäli tuotteet ovat järjestettävissä hinnan mukaan (alimmasta ylimpään ja ylimmästä alimpaan)"
+"Enable this to allow products to be sortable by price (from low to high; "
+"from high to low)."
+msgstr "Salli tuotteiden järjestäminen hinnan mukaan (edullisemmasta kalliimpaan, tai käänteisesti)."
 
 msgid "Sort products by date created"
 msgstr "Järjestä tuotteet luontipäivän mukaan"
@@ -248,8 +273,8 @@ msgid "Date created"
 msgstr "Luontipäivä"
 
 msgid ""
-"Check this to allow products to be sortable from newest to oldest products."
-msgstr "Valitse tämä, mikäli haluat, että tuotteet on järjestettävissä uusimmasta vanhimpaan."
+"Enable this to allow products to be sortable from newest to oldest products."
+msgstr "Salli tuotteiden järjestäminen uudemmasta vanhempaan."
 
 msgid ""
 "Use a numeric value to set the order in which the filter will appear on the "
@@ -266,8 +291,8 @@ msgid "Date created - oldest first"
 msgstr "Luontipäivä - vanhin ensin"
 
 msgid ""
-"Check this to allow products to be sortable from oldest to newest products."
-msgstr "Valitse tämä, mikäli haluat, että tuotteet voi järjestää vanhimmasta uusimpaan."
+"Enable this to allow products to be sortable from oldest to newest products."
+msgstr "Salli tuotteiden järjestäminen vanhemmista uudempiin."
 
 msgid "Filter products by manufacturer"
 msgstr "Suodata tuotteet valmistajan perusteella."
@@ -279,9 +304,9 @@ msgid "Manufacturers"
 msgstr "Valmistajat"
 
 msgid ""
-"Check this to allow products to be filterable by manufacturer for this "
+"Enable this to allow products to be filterable by manufacturer for this "
 "category."
-msgstr "Valitse tämä, mikäli haluat, että tuotteita voi suodattaa valmistajan mukaan tässä tuoteryhmässä."
+msgstr "Salli tuoteryhmän tuotteiden suodattaminen valmistajan mukaan."
 
 msgid ""
 "Use a numeric value to set the order in which the manufacturer filters will "
@@ -298,9 +323,9 @@ msgid "Categories"
 msgstr "Kategoriat"
 
 msgid ""
-"Check this to allow products to be filterable by any visible product "
+"Enable this to allow products to be filterable by any visible product "
 "category. "
-msgstr "Valitse tämä salliaksesi tuotteiden suodattamisen minkä tahansa näkyvän tuoteryhmän perusteella."
+msgstr "Salli tuotteiden suodattaminen minkä tahansa tuoteryhmän mukaan."
 
 msgid ""
 "Use a numeric value to set the order in which the category list filters will"
@@ -317,9 +342,9 @@ msgid "Products per page"
 msgstr "Tuotteita per sivu"
 
 msgid ""
-"Check this to allow the customer to be able to select the number of products"
-" to display."
-msgstr "Valitse tämä, mikäli haluat asiakkaiden pystyvän valitsemaan näytettävien tuotteiden määrän."
+"Enable this to allow the customer to be able to select the number of "
+"products to display."
+msgstr "Salli käyttäjän asettaa sivulla näytettävien tuotteiden lukumäärä."
 
 msgid ""
 "Use a numeric value to set the order in which the page size filter will "
@@ -333,9 +358,9 @@ msgid "Ordering for filter by variation"
 msgstr "Järjestysnumero variaatiosuodattimelle"
 
 msgid ""
-"Check this to allow products to be filterable by their different variations."
-" For example, size or color."
-msgstr "Valitse tämä, mikäli haluat, että asiakaasi voivat suodattaa tuotteita eri variaatioiden, esimerkiksi koon tai värin perusteella."
+"Enable this to allow products to be filterable by their different "
+"variations. For example, size or color."
+msgstr "Salli tuotteiden suodattaminen muunneltavien ominaisuuksien kuten koon tai värin perusteella."
 
 msgid ""
 "Use a numeric value to set the order in which the variation filters will "
@@ -352,10 +377,10 @@ msgid "Price"
 msgstr "Hinta"
 
 msgid ""
-"Check this to allow products to be filtered by price. Prices will be listed "
-"in groups from the price range minimum to price range maximum in increments "
-"of the configured price range step."
-msgstr "Valitse tämä, mikäli haluat, että asiakkaasi voivat suodattaa tuotteita hinnan perusteella. Hinnat näytetään ryhmiteltynä minimin ja maksimin rajoissa sen perusteella, mitä on määritelty hintavälin askeleissa."
+"Enable this to allow products to be filtered by price. Prices will be listed"
+" in groups from the price range minimum to price range maximum in increments"
+" of the configured price range step."
+msgstr "Salli tuotteiden suodattaminen hinnan perusteella. Tuotteet näytetään hakutuloksissa silloin kun niiden hinta sattuu pienimmän- ja suurimman sallitun hinta-määreen väliin."
 
 msgid ""
 "Use a numeric value to set the order in which the price range filters will "
@@ -385,13 +410,52 @@ msgid ""
 "Set the price step for each range. Each range will increment by this value."
 msgstr "Aseta askel jokaiselle hintavälille. Jokaiseen väliin lisätään tämä arvo."
 
+msgid "Filter products by its attributes"
+msgstr ""
+
+msgid "Allow products to be filtered according to their attributes."
+msgstr ""
+
+msgid "Attributes that can be filtered"
+msgstr ""
+
+msgid "Select attributes that can used for filtering the products."
+msgstr ""
+
 #, python-format
 msgid "Under %(min_limit)s"
 msgstr "Alle %(min_limit)s"
 
 #, python-format
+msgid "%(min)s to %(max)s"
+msgstr "%(min)s - %(max)s"
+
+#, python-format
 msgid "%(max_limit)s & Above"
 msgstr "%(max_limit)s & yli"
+
+msgid "Filter products by supplier"
+msgstr "Suodata tuotteet toimittajien perusteella"
+
+msgid "Ordering for filter by supplier"
+msgstr "Suodattimen tilaaminen toimittajan mukaan"
+
+msgid "Suppliers"
+msgstr "Toimittajat"
+
+msgid "Enable this to allow products to be filterable by supplier."
+msgstr "Salli tuotteiden suodattaminen toimittajien mukaan."
+
+msgid ""
+"Use a numeric value to set the order in which the supplier filters will "
+"appear."
+msgstr "Määritä numeerisella arvolla järjestys, jossa toimittajasuodattimet näkyvät."
+
+msgid "Allow multiselect suppliers"
+msgstr "Salli monivalintatoimittajat"
+
+msgid "Filter by multiple suppliers at a time."
+msgstr "Suodata tuotteita useilta toimittajilta yhtäaikaa."
 
 msgid "Logged out since this account is inactive."
 msgstr "Tämä tili ei ole aktiivinen"
@@ -401,6 +465,9 @@ msgstr "avain"
 
 msgid "shop"
 msgstr "kauppa"
+
+msgid "supplier"
+msgstr ""
 
 msgid "customer"
 msgstr "asiakas"
@@ -450,11 +517,32 @@ msgstr "tuotteiden_määrä"
 msgid "products"
 msgstr "tuotteet"
 
+msgid "class spec"
+msgstr ""
+
 msgid "stored basket"
 msgstr "tallennettu kori"
 
 msgid "stored baskets"
 msgstr "tallennetut korit"
+
+msgid "ID"
+msgstr "Henkilötunnus"
+
+msgid "Reference Number"
+msgstr "Viitenumero"
+
+msgid "Currency"
+msgstr "Valuutta"
+
+msgid "Customer Name"
+msgstr "Asiakkaan nimi"
+
+msgid "Status"
+msgstr "Tila"
+
+msgid "Shipping Method"
+msgstr "toimitustapa"
 
 msgid "Order Received"
 msgstr "Tilaus vastaanotettu"
@@ -477,6 +565,15 @@ msgstr "Kaupan puhelinnumero"
 msgid "Language"
 msgstr "Kieli"
 
+msgid "Order Status Changed"
+msgstr "Tilauksen tila muutettu"
+
+msgid "Old Status"
+msgstr "Vanha tila"
+
+msgid "New Status"
+msgstr "Uusi tila"
+
 msgid "Shipment Created"
 msgstr "Toimitus luotu"
 
@@ -488,6 +585,15 @@ msgstr "Tilauksen toimituksen tila"
 
 msgid "Shipment Status"
 msgstr "Toimituksen tila"
+
+msgid "Shipment Tracking Code"
+msgstr ""
+
+msgid "Shipment Tracking URL"
+msgstr ""
+
+msgid "Shipment Sent"
+msgstr ""
 
 msgid "Shipment Deleted"
 msgstr "Toimitus poistettu"
@@ -599,11 +705,114 @@ msgid ""
 "well as other informations like shipping method and payment method."
 msgstr "Tämä skripti lähettää sähköpostin asiakkaalle tai märitellyille sähköpostiosoitteille sähköpostin kun tilaus on luotu. Tilauksen sisältöä, sekä toimitus- ja maksutapoja, voidaan käyttää sähköpostin sisältönä."
 
+msgid "Cart Inactivity Delay"
+msgstr "Ostoskorin käyttämättömyysviive"
+
 msgid "Checkout configuration"
 msgstr "Kassan asetukset"
 
 msgid "Product list sorts and filters"
 msgstr "Tuotelistojen järjestäminen ja suodatus"
+
+msgid "Vendor"
+msgstr ""
+
+msgid "Created Date"
+msgstr ""
+
+msgid "Updated Date"
+msgstr ""
+
+msgid "Ordered by"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Phone"
+msgstr ""
+
+msgid "Tax Number"
+msgstr ""
+
+msgid "Customer Comment"
+msgstr ""
+
+msgid "Payment Method"
+msgstr ""
+
+msgid "Total Price"
+msgstr ""
+
+msgid "Address Information"
+msgstr ""
+
+msgid "Billing address"
+msgstr "Laskutusosoite"
+
+msgid "No billing address defined."
+msgstr ""
+
+msgid "Shipping address"
+msgstr "Toimitusosoite"
+
+msgid "No shipping address defined."
+msgstr ""
+
+msgid "Lines"
+msgstr ""
+
+msgid "SKU"
+msgstr "Tuotekoodi"
+
+msgid "Text"
+msgstr ""
+
+msgid "Taxless Unit Price"
+msgstr ""
+
+msgid "Quantity"
+msgstr "Määrä"
+
+msgid "Taxless Discount"
+msgstr ""
+
+msgid "Taxless Discount Percentage"
+msgstr ""
+
+msgid "Tax"
+msgstr "Vero"
+
+msgid "Taxless Total"
+msgstr ""
+
+msgid "Total incl. Tax"
+msgstr ""
+
+#, python-format
+msgid "Supplied by %(supplier)s"
+msgstr ""
+
+msgid "Discount"
+msgstr ""
+
+msgid "Taxless"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Extra"
+msgstr ""
 
 msgid "Storefront Languages"
 msgstr "Kaupan kielet"
@@ -623,6 +832,9 @@ msgstr "Et voi siirtyä kassalle!"
 msgid "Checkout"
 msgstr "Kassa"
 
+msgid "Error! Please reload the page or move to previous step."
+msgstr ""
+
 msgid "Log in"
 msgstr "Kirjaudu sisään"
 
@@ -631,6 +843,9 @@ msgstr "Unohditko salasanasi?"
 
 msgid "There are errors"
 msgstr "Virhe"
+
+msgid "Please wait..."
+msgstr "Odota..."
 
 msgid "My Dashboard"
 msgstr "Hallintapaneelini"
@@ -699,20 +914,18 @@ msgid ""
 "to choose a theme."
 msgstr "Hallintakäyttöliittymä ei ole saatavilla. Käytä jotain muuta tapaa valitaksesi teeman."
 
-msgid "You are not an administrator"
-msgstr "Et ole ylläpitäjä"
-
-msgid "ask an administrator to select a theme."
-msgstr "pyydä ylläpitäjää valitsemaan teema."
-
 msgid "Product added to cart"
 msgstr "Tuote lisätty koriin"
 
-msgid "There was an error adding the product to the basket"
-msgstr "Virhe lisättäessä tuotetta koriin"
+msgid "Adding the product to the basket failed."
+msgstr "Tuotteen lisääminen koriin epäonnistui."
 
 msgid "Remove product from basket"
 msgstr "Poista tuote ostoskorista"
+
+#, python-brace-format
+msgid "{prop}:"
+msgstr ""
 
 msgid ""
 "The following items are not currently available (or are not available in the"
@@ -725,8 +938,11 @@ msgstr "Jatka ostoksia"
 msgid "Proceed to checkout"
 msgstr "Jatka kassalle"
 
-msgid "Have a coupon code? Enter it here"
-msgstr "Onko sinulla kuponkikoodi? Lisää se tähän"
+msgid "Coupons applied"
+msgstr "Kuponkeja on käytetty"
+
+msgid "Do you have a coupon code? Enter it here. "
+msgstr "Onko sinulla alennuskoodi? Syötä se tähän."
 
 msgid "Coupon Code"
 msgstr "Kuponkikoodi"
@@ -746,14 +962,26 @@ msgstr "Tallenna"
 msgid "Back to Products"
 msgstr "Takaisin tuotteisiin"
 
+msgid "Error!"
+msgstr "Virhe!"
+
+msgid "Invalid coupon code."
+msgstr "Virheellinen alennuskoodi."
+
+msgid "Removing a coupon failed."
+msgstr "Kupongin poistaminen epäonnistui."
+
 msgid "Coupon is not available."
 msgstr "Kuponki ei ole saatavilla."
 
-msgid "Error when adding coupon."
-msgstr "Virhe kuponkia lisättäessä."
+msgid "Adding a coupon failed."
+msgstr "Kupongin lisääminen epäonnistui."
 
-msgid "Cart saved!"
-msgstr "Kori tallennettu!"
+msgid "Success!"
+msgstr "Onnistuimme!"
+
+msgid "Cart saved."
+msgstr "Ostoskori tallennettu."
 
 msgid "Filter Products"
 msgstr "Suodata tuotteita"
@@ -767,17 +995,11 @@ msgstr "Ruudukko-/listanäkymä"
 msgid "Continue"
 msgstr "Jatka"
 
-msgid "Billing address"
-msgstr "Laskutusosoite"
-
 msgid "Ordering for a company?"
 msgstr "Oletko tilaamassa yritykselle?"
 
 msgid "Please fill out these fields if you are ordering for a company."
 msgstr "Tilataksesi yrityksen nimissä, täytä nämä kentät."
-
-msgid "Shipping address"
-msgstr "Toimitusosoite"
 
 msgid "Ship to my billing address"
 msgstr "Toimita laskutusosoitteeseeni"
@@ -819,8 +1041,8 @@ msgid "Next"
 msgstr "Seuraava"
 
 #, python-format
-msgid "Items %(start_index)d of %(end_index)d of %(count)d total"
-msgstr "Tuotteet %(start_index)d - %(end_index)d Yhteensä %(count)d"
+msgid "Items %(start_index)d to %(end_index)d of %(count)d total"
+msgstr "Tuotteet (%(start_index)d - %(end_index)d) / %(count)d"
 
 msgid "Change visibility limit to"
 msgstr "Vaihda näkyvyysrajoitteeksi"
@@ -843,11 +1065,11 @@ msgstr "Aseta asiakkuus vierastilaan"
 msgid "Tools"
 msgstr "Työkalut"
 
-msgid "Live"
-msgstr "Julkaistu"
-
 msgid "Maintenance"
 msgstr "Huoltotila"
+
+msgid "Live"
+msgstr "Julkaistu"
 
 msgid "Customer mode"
 msgstr "Asiakastila"
@@ -878,6 +1100,14 @@ msgstr "Kaupan hallinta"
 msgid ""
 "There were errors on submitted form fields. Please check them and try again."
 msgstr "Lähetetyn lomakkeen kentät sisältävät virheitä. Ole hyvä, korjaa ne ja kokeile uudelleen."
+
+#, python-format
+msgid "By <strong>%(supplier_name)s</strong>"
+msgstr "Tekijä <strong>%(supplier_name)s</strong>"
+
+#, python-brace-format
+msgid "Available until: <span class=\"availability-date\">{date}</span></small>"
+msgstr "Saatavilla määräpäivään: <span class=\"availability-date\">{date}</span>"
 
 msgid "Edit account details"
 msgstr "Muokkaa tilin tietoja"
@@ -930,9 +1160,6 @@ msgstr "Tuote"
 msgid "Unit Price"
 msgstr "Yksikköhinta"
 
-msgid "Quantity"
-msgstr "Määrä"
-
 msgid "excl. tax"
 msgstr "ei sis. veroja"
 
@@ -941,9 +1168,6 @@ msgstr "Tilatut tuotteet"
 
 msgid "Tax breakdown"
 msgstr "Veroerittely"
-
-msgid "Tax"
-msgstr "Vero"
 
 msgid "Tax percentage"
 msgstr "Veroprosentti"
@@ -976,23 +1200,11 @@ msgstr "Säästä %(discount_percent)s"
 msgid "Product Information"
 msgstr "Tuotetiedot"
 
-msgid "Description"
-msgstr "Kuvaus"
-
-msgid "Details"
-msgstr "Tiedot"
-
-msgid "Attributes"
-msgstr "Attribuutit"
-
 msgid "Includes these products"
 msgstr "Sisältää nämä tuotteet"
 
 msgid "No product description available"
 msgstr "Tuotekuvausta ei ole saatavilla"
-
-msgid "SKU"
-msgstr "Tuotekoodi"
 
 msgid "Barcode"
 msgstr "Viivakoodi"
@@ -1002,6 +1214,9 @@ msgstr "Valmistaja"
 
 msgid "Package Size"
 msgstr "Pakkauskoko"
+
+msgid "Available Until"
+msgstr "Saatavilla määräpäivään"
 
 msgid "Width"
 msgstr "Leveys"
@@ -1027,11 +1242,21 @@ msgstr "Valitse"
 msgid "Select product"
 msgstr "Valitse tuote"
 
+msgid "One-time purchase"
+msgstr ""
+
+msgid "Subscribe"
+msgstr ""
+
+msgid "Select frequency"
+msgstr ""
+
 msgid "Add to cart"
 msgstr "Lisää ostoskoriin"
 
-msgid "Product is not orderable."
-msgstr "Tuote ei ole tilattavissa"
+#, python-brace-format
+msgid "Available until: {date}"
+msgstr "Saatavilla määräpäivään {date}"
 
 msgid "Maintenance mode"
 msgstr "Huoltotila"
@@ -1075,8 +1300,64 @@ msgstr "Yhdistelmä ei ole saatavilla"
 msgid "Open product page"
 msgstr "Avaa tuotesivu"
 
-msgid "Newest products"
-msgstr "Uusimmat tuotteet"
+msgid "Hide prices"
+msgstr "Piilota hinnat"
+
+msgid "Set shop in catalog mode"
+msgstr "Aseta kauppa esitetilaan"
+
+msgid "Show supplier info"
+msgstr "Näytä toimittajan tiedot"
+
+msgid ""
+"Show supplier name in product-box, product-detail, basket- and order-lines"
+msgstr "Näytä toimittajan nimi tuotepakkauksessa, ostokorissa, sekä tuotetiedot- sekä tilausriveillä"
+
+msgid "Show Product Details"
+msgstr "Näytä tuotetiedot"
+
+msgid ""
+"If you enable this, extra information will be shown on product page in "
+"frontend."
+msgstr "Näytä lisätiedot tuotesivulla."
+
+msgid "Show Variations as Buttons"
+msgstr "Esitä tuotemuunnokset painikkeina tuotesivulla"
+
+msgid ""
+"If you enable this, the variations will be shown as buttons instead of "
+"dropdowns."
+msgstr "Näytä tuotemuunnokset painikkeina sen sijaan että ne listataan pudotusvalikoissa."
+
+msgid "Product detail extra tab title"
+msgstr "Tuotteen lisätiedoille varatun välilehden otsikko"
+
+msgid "Enter the title for the product detail extra tab."
+msgstr "Nimeä tuotteen lisätiedoille varattu välilehti. Voit halutessasi korostaa nimellä lisätietojen luonnetta tai aihetta."
+
+msgid "Product detail extra tab content"
+msgstr "Tuotteen lisätiedoille varatun välilehden sisältö"
+
+msgid "Enter the content for the product detail extra tab."
+msgstr "Kirjoita tuotteen lisätietoja varten varatun välilehden sisältö tähän."
+
+msgid "Description"
+msgstr "Kuvaus"
+
+msgid "Details"
+msgstr "Tiedot"
+
+msgid "Attributes"
+msgstr "Attribuutit"
+
+msgid "Product reviews"
+msgstr "Tuotearvostelut"
+
+msgid "Product detail tabs"
+msgstr "Tuotetiedot-välilehdet"
+
+msgid "Select all tabs that should be rendered in product details."
+msgstr "Valitse kaikki välilehdet jotka näyttää tuotetiedoissa."
 
 msgid "Tax number is not valid."
 msgstr "Veronumero ei ole validi."
@@ -1085,8 +1366,18 @@ msgid "Edit"
 msgstr "Muokkaa"
 
 #, python-brace-format
-msgid "{language_code} is an invalid language code"
-msgstr "{language_code} on virheellinen tälle kielelle"
+msgid "`{language_code}` is an invalid language code."
+msgstr "{language_code} on virheellinen kielikoodi."
 
-msgid "This product is not available in this shop."
-msgstr "Tuote ei ole saatavilla tässä kaupassa."
+msgid "The order is canceled so you can't pay for it."
+msgstr ""
+
+msgid "Error! This product is not available in this shop."
+msgstr "Virhe! Tuote ei ole saatavilla tässä myymälässä."
+
+msgid "Invalid timezone"
+msgstr ""
+
+#, python-format
+msgid "Maximum file size reached (%(size)s MB)."
+msgstr "Tiedoston enimmäiskoko saavutettu (%(size)s MB)."

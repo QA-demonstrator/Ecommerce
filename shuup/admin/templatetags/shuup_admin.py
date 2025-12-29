@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-
 from bootstrap3.renderers import FormRenderer
 from django.utils.safestring import mark_safe
 from django_jinja import library
 
-from shuup.admin.template_helpers import \
-    shuup_admin as shuup_admin_template_helpers
+from shuup.admin.template_helpers import shuup_admin as shuup_admin_template_helpers
 from shuup.admin.utils.bs3_renderers import AdminFieldRenderer
 
 

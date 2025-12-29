@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# An Nesterov <arch.nesterov@gmail.com>, 2021
 # George Voronin <sonictorment@gmail.com>, 2017
 # Алекс Прометеев <promet.alex@gmail.com>, 2017
 # Translator HIO.E <translater@hiqe.ru>, 2017
@@ -11,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-20 15:54+0000\n"
-"PO-Revision-Date: 2018-08-21 06:10+0000\n"
-"Last-Translator: Shuup Admin <admin@shuup.com>\n"
+"POT-Creation-Date: 2021-08-03 19:12+0000\n"
+"PO-Revision-Date: 2021-08-03 19:13+0000\n"
+"Last-Translator: Christian Hess\n"
 "Language-Team: Russian (http://www.transifex.com/shuup/shuup/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -28,9 +29,9 @@ msgstr "Домашняя страница"
 #, python-format
 msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "
-"be case-sensitive. In case of multiple accounts with same email only "
-"username can be used to login."
-msgstr "Пожалуйста, введите правильное %(username)s и пароль. Следует заметить, что в обоих полях учитывается регистр. В случае использования нескольких аккаунтов, зарегистрированных на один адрес электронной почты, только имя пользователя может быть использовано для входа на сайт."
+"be case-sensitive. In case of multiple accounts with the same email, only "
+"username can be used to log in."
+msgstr "Пожалуйста введите корректно %(username)s и пароль. Учтите что оба поля могут быть чувствительны к регистру. В случае нескольких учетных записей с одинаковым адресом электронной почты для входа в систему может использоваться только имя пользователя."
 
 msgid "This account is inactive."
 msgstr "Этот аккаунт не активен"
@@ -41,35 +42,44 @@ msgstr "Имя пользователя или адрес электронной
 msgid "Create New"
 msgstr "Создать новый"
 
+msgid "Select an option"
+msgstr "Выбрать"
+
 msgid "Monday"
-msgstr ""
+msgstr "Понедельник"
 
 msgid "Tuesday"
-msgstr ""
+msgstr "Вторник"
 
 msgid "Wednesday"
-msgstr ""
+msgstr "Среда"
 
 msgid "Thursday"
-msgstr ""
+msgstr "Четверг"
 
 msgid "Friday"
-msgstr ""
+msgstr "Пятница"
 
 msgid "Saturday"
-msgstr ""
+msgstr "Суббота"
 
 msgid "Sunday"
-msgstr ""
-
-msgid "Browse"
-msgstr "Найти"
-
-msgid "Clear"
-msgstr "Очистить"
+msgstr "Воскресенье"
 
 msgid "Select"
 msgstr "Выбрать"
+
+msgid "Select Media"
+msgstr "Медиа"
+
+msgid "Select Image"
+msgstr "Изображение"
+
+msgid "Select Product"
+msgstr "Товар"
+
+msgid "Select Contact"
+msgstr "Контакт"
 
 msgid "Orders"
 msgstr "Заказы"
@@ -86,50 +96,33 @@ msgstr "Акции"
 msgid "Content"
 msgstr "Контент"
 
-msgid "Elements"
-msgstr "Элементы"
-
-msgid "Design"
-msgstr "Дизайн"
-
-msgid "Other"
-msgstr "Другое"
-
 msgid "Reports"
 msgstr "Отчёты"
 
 msgid "Shops"
 msgstr "Магазины"
 
+msgid "Addons"
+msgstr "Модули"
+
 msgid "Settings"
 msgstr "Настройки"
 
-msgid "Payment & Shipping"
-msgstr "Оплата и доставка"
+msgid "Logs"
+msgstr "Журнал действий"
 
-msgid "Currency"
-msgstr "Валюта"
+msgid "Messages"
+msgstr "Сообщения"
 
 msgid "Attributes"
 msgstr "Параметры"
 
-msgid "Other settings"
-msgstr "Другие настройки"
+msgid "Allow the user to select attributes in admin."
+msgstr ""
 
-msgid "Addons"
-msgstr "Модули"
-
-msgid "Data Transfer"
-msgstr "Передача данных"
-
-msgid "Taxes"
-msgstr "Налоги"
-
-msgid "Permissions"
-msgstr "Доступ"
-
-msgid "Other Settings"
-msgstr "Другие настройки"
+#, python-format
+msgid "%s has been deleted."
+msgstr "%s удален "
 
 msgid "Identifier"
 msgstr "Идентификатор"
@@ -158,31 +151,34 @@ msgstr "Используется в # Типах товаров"
 msgid "Categories"
 msgstr "Категории"
 
-msgid "Add a product category to organize your products"
-msgstr "Добавьте категорию товара"
+msgid "Add a product category to organize your products."
+msgstr "Добавьте категорию чтобы была возможность классифицировать товары."
 
 msgid "New category"
 msgstr "Новая категория"
 
-msgid "Can not use this category as parent for this shop."
+msgid "Allow the user to select categories in admin."
 msgstr ""
+
+msgid "Can't use this category as a parent for this shop."
+msgstr "Эту категорию невозможно сделать родительской для этого магазина."
 
 msgid "Primary Category"
 msgstr "Основная категория"
 
-msgid "Set this category as a primary for selected products."
+msgid "Set this category as a primary category for selected products."
 msgstr "Сделать категорию основной для выбранных товаров"
 
 msgid "Additional Category"
 msgstr "Дополнительная категория"
 
-msgid "Add selected products to this category"
+msgid "Add selected products to this category."
 msgstr "Добавить выбранные товары к этой категории"
 
 msgid "Remove Products"
 msgstr "Удалить товары"
 
-msgid "Remove selected products from this category"
+msgid "Remove selected products from this category."
 msgstr "Удалить выбранные товары из данной категории"
 
 msgid "Invalid category"
@@ -191,10 +187,6 @@ msgstr "Неверная категория"
 #, python-format
 msgid "Visibility settings copied to %d product(s)"
 msgstr "Видимые настройки отображения  скопировать для  %d товара(ов)"
-
-#, python-format
-msgid "%s has been deleted."
-msgstr "%s удален "
 
 msgid "Image"
 msgstr "Изображение"
@@ -206,7 +198,7 @@ msgid "Visibility"
 msgstr "Отображаемость"
 
 msgid "Contact Group Pricing Display"
-msgstr ""
+msgstr "Отображение цены для группы контактов"
 
 msgid "unspecified"
 msgstr "Не определено"
@@ -221,7 +213,7 @@ msgid "hide prices"
 msgstr "Скрыть стоимость"
 
 msgid "shop"
-msgstr ""
+msgstr "магазин"
 
 msgid "Price display mode"
 msgstr "Режим отображения цен"
@@ -230,13 +222,13 @@ msgid "Set how prices are displayed to contacts in this group."
 msgstr "Настройте отображение стоимостей для контактов данной группы"
 
 msgid "Group"
-msgstr ""
+msgstr "Группа"
 
 msgid "Display Mode"
-msgstr ""
+msgstr "Режим отображения"
 
 msgid "Unspecified"
-msgstr ""
+msgstr "Не определено"
 
 msgid "Contact Groups"
 msgstr "Группы контактов"
@@ -249,26 +241,35 @@ msgstr "Удалить"
 
 #, python-format
 msgid "%(count)s member added"
-msgid_plural "%(count)s members added"
-msgstr[0] "%(count)s запись добавлена"
-msgstr[1] "%(count)s записей добавлено"
-msgstr[2] "%(count)s записей добавлено"
-msgstr[3] "%(count)s записей добавлено"
+msgid_plural "%(count)s members added."
+msgstr[0] "Добавлена  %(count)s запись"
+msgstr[1] "Добавлено %(count)s записи"
+msgstr[2] "Добавлено %(count)s записей"
+msgstr[3] "Добавлено  %(count)s  записей"
 
 #, python-format
 msgid "%(count)s member removed"
-msgid_plural "%(count)s members removed"
-msgstr[0] "%(count)s запись удалена"
-msgstr[1] "%(count)s записей удалено"
-msgstr[2] "%(count)s записей удалено"
+msgid_plural "%(count)s members removed."
+msgstr[0] "Удалена %(count)s запись"
+msgstr[1] "Удалено %(count)s записи"
+msgstr[2] "Удалено %(count)s записей"
 msgstr[3] "%(count)s записей удалено"
 
 msgid "Number of Members"
 msgstr "Количество представителей"
 
+msgid "Allow the user to select contacts in admin."
+msgstr ""
+
+msgid "Allow the user to select person contacts in admin."
+msgstr ""
+
+msgid "Allow the user to select company contacts in admin."
+msgstr ""
+
 #, python-format
-msgid "User %(bind_user)s already has a contact"
-msgstr "Пользователь %(bind_user)s имеет контакты"
+msgid "User `%(bind_user)s` already has a contact."
+msgstr "У пользователя %(bind_user)s уже есть этот контакт "
 
 msgid ""
 "The contact groups this contact belongs to. Contact groups are defined in "
@@ -277,7 +278,7 @@ msgid ""
 msgstr "Контакт принадлежит данным группам контактов. Группы контактов отображены в разделе Контакты. Группы контактов используются для операций с продажами, акциями и определением стоимости товаров в пределах группы пользователей."
 
 msgid "The shops this contact belongs to"
-msgstr ""
+msgstr "Магазины к которым относятся эти контакты"
 
 msgid "Language"
 msgstr "Язык"
@@ -368,17 +369,28 @@ msgstr "Деактивировать контакт"
 msgid "Activate Contact"
 msgstr "Активировать контакт"
 
+msgid "Options"
+msgstr "Опции"
+
 msgid "Actions"
 msgstr "Действия"
 
-msgid "Edit..."
+msgid "Login as User"
+msgstr "Войти как пользователь"
+
+msgid "Login as Staff User"
+msgstr "Войти как сотрудник"
+
+msgid "Edit"
 msgstr "Редактировать"
 
-msgid "You can not deactivate a superuser."
-msgstr "Вы не можете деактивировать супер пользователя"
+msgid "You can not deactivate a superuser. Remove superuser permission first."
+msgstr "Невозможно деактивировать супер пользователя. Сначала удалите права супер пользователя."
 
-msgid "You can not deactivate yourself."
-msgstr "Вы не можете деактивировать себя"
+msgid ""
+"You can not deactivate yourself. Use another account to deactivate the "
+"current one."
+msgstr "Вы не можете деактивировать свой аккаунт. Используйте другую учетную запись для того чтобы деактивировать этот аккаунт."
 
 #, python-format
 msgid "%(contact)s is now %(state)s."
@@ -402,6 +414,9 @@ msgstr "Персона"
 msgid "Company"
 msgstr "Компания"
 
+msgid "Staff"
+msgstr "Персонал"
+
 msgid "Email"
 msgstr "Электронная почта"
 
@@ -424,16 +439,16 @@ msgid "Groups"
 msgstr "Группы"
 
 msgid "Registered in"
-msgstr ""
+msgstr "Зарегистрировано"
 
 msgid "Contact"
 msgstr "Контакт"
 
 msgid "No group"
-msgstr ""
+msgstr "Нет группы"
 
 msgid "No shops"
-msgstr ""
+msgstr "Нет магазинов"
 
 msgid "Inactive"
 msgstr "Неактивно"
@@ -453,125 +468,17 @@ msgstr "%d заказы"
 msgid "Mass Edit: Contacts"
 msgstr "Массовое редактирование: контакты"
 
-msgid "Contacts changed successfully"
-msgstr "Контакты изменены успешно"
+msgid "Contacts were changed."
+msgstr "Контакты изменены"
 
 msgid "Mass Edit: Contact Groups"
 msgstr "Массовое редактирование: группы контактов"
 
-msgid "Contacts Groups changed successfully"
-msgstr "Группы контактов изменены успешно"
+msgid "Contacts Groups were changed."
+msgstr "Группы контактов изменены"
 
 msgid "The contact does not have an associated user."
 msgstr "Данный контакт не зарегистрирован в системе пользователей"
-
-msgid "About Us"
-msgstr "О нас"
-
-msgid "Privacy Policy"
-msgstr "Политика конфиденциальности"
-
-msgid "Terms and Conditions"
-msgstr "Положения и условия"
-
-msgid "Refund Policy"
-msgstr "Правила возврата денежных средств"
-
-msgid "{{ order.shop }} - Order {{ order.identifier }} Received"
-msgstr "{{ order.shop }} - заказ {{ order.identifier }} получен"
-
-msgid "Send customer order confirmation email"
-msgstr "Выслать пользователю электронное письмо с подтверждением заказа"
-
-msgid ""
-"We will configure a notification to send the customer an email after a "
-"placed order. You can disable this option later or even change the layout of"
-" the email."
-msgstr "Мы настроим уведомления для того, чтобы  выслать клиенту электронное письмо после оформления заказа. Вы можете отключить данную опцию позже, а также изменить само оформление электронного письма."
-
-msgid "Create About Us page"
-msgstr "Создать страницу \"О нас\""
-
-msgid ""
-"We have already created an 'About Us' template for you based on your shop "
-"information. You must review the page and change it accordingly."
-msgstr "Мы уже создали шаблон секции \"О нас\", основанный с учётом информации вашего магазина. Вам нужно проверить страницу и внести коррективы при необходимости."
-
-msgid ""
-"We will create an 'About Us' template for you. We will base content of the "
-"page on your shop information. After we are done, you must review the page "
-"and change it accordingly."
-msgstr "Мы создадим для вас шаблон секции \"О нас\", а также организуем контент страницы с учётом информации, предоставленной вашим магазином. После того, как мы завершим работу, вы должны проверить страницу и внести соответствующие коррективы при необходимости."
-
-msgid "Create Privacy Policy page"
-msgstr "Создать страницу \"Политика конфиденциальности\""
-
-msgid ""
-"We have already created a 'Privacy Policy' template for you based on your "
-"shop information. You must review the page and change it accordingly."
-msgstr "Мы уже создали для вас шаблон секции \"Политика конфиденциальности\" с учётом предоставленной информации о вашем магазине. Вам нужно проверить страницу и внести коррективы при необходимости."
-
-msgid ""
-"We will create a 'Privacy Policy' template for you. We will base content of "
-"the page on your shop information. After we are done, you must review the "
-"page and change it accordingly."
-msgstr "Мы создадим для вас шаблон секции \"Политика конфиденциальности\", а также организуем контент страницы с учётом информации, предоставленной вашим магазином. После того, как мы завершим работу, вы должны проверить страницу и внести соответствующие коррективы при необходимости."
-
-msgid "Create Terms and Conditions page"
-msgstr "Создать страницу \"Положения и условия\""
-
-msgid ""
-"We have already created a 'Terms & Conditions' template for you based on "
-"your shop information. You must review the page and change it accordingly."
-msgstr "Мы уже создали шаблон секции \"Положения и условия\", основанный с учётом информации вашего магазина. Вам нужно проверить страницу и внести коррективы при необходимости."
-
-msgid ""
-"We will create an 'Terms & Conditions' template for you. We will base "
-"content of the page on your shop information. After we are done, you must "
-"review the page and change it accordingly."
-msgstr "Мы создадим для вас шаблон секции \"Положения и условия\", а также организуем контент страницы с учётом информации, предоставленной вашим магазином. После того, как мы завершим работу, вы должны проверить страницу и внести соответствующие коррективы при необходимости."
-
-msgid "Create Refund Policy page"
-msgstr "Создать страницу \"Правила возврата денежных средств\""
-
-msgid ""
-"We have already created a 'Refund Policy' template for you based on your "
-"shop information. You must review the page and change it accordingly."
-msgstr "Мы уже создали для вас шаблон секции \"Правила возврата денежных средств\" с учётом предоставленной информации о вашем магазине. Вам нужно проверить страницу и внести коррективы при необходимости."
-
-msgid ""
-"We will create an 'Refund Policy' template for you. We will base content of "
-"the page on your shop information. After we are done, you must review the "
-"page and change it accordingly."
-msgstr "Мы создадим для вас шаблон секции \"Правила возврата денежных средств\", а также организуем контент страницы с учётом информации, предоставленной вашим магазином. После того, как мы завершим работу, вы должны проверить страницу и внести соответствующие коррективы при необходимости."
-
-msgid "Configure the footer"
-msgstr "Настроить нижний колонтитул"
-
-msgid ""
-"We will now configure your shop footer and fill it with some of your shop's "
-"information. Don't worry, you can change this at any time."
-msgstr "Мы настроим нижний колонтитул для вашего магазина и наполним его информацией, предоставленной вашим магазином. Не переживайте, т.к. изменения можно внести в любое время."
-
-msgid "Content & Behavior"
-msgstr "Контент и поведение"
-
-msgid ""
-"Add the initial content and configure the customer notifications for your "
-"shop"
-msgstr "Добавить изначальный контент и настроить уведомления клиентов для вашего магазина."
-
-msgid "Configure notifications for your shop"
-msgstr "Настроить уведомления для вашего магазина"
-
-msgid "Add the initial content"
-msgstr "Добавить изначальный контент"
-
-msgid "Configure the initial content pages"
-msgstr "Настроить страницы с исходным контентом"
-
-msgid "Configure some notifications"
-msgstr "Настроить уведомления"
 
 msgid "Currencies"
 msgstr "Валюты"
@@ -594,24 +501,39 @@ msgstr "Активные клиенты"
 msgid "Based on orders within 30 days"
 msgstr "Основано на заказах за последние 30 дней"
 
-msgid "Demo"
-msgstr "Демо"
+msgid "Labels"
+msgstr "Ярлыки"
+
+msgid "Created on"
+msgstr "Создано"
+
+msgid "Modified on"
+msgstr "Изменено"
 
 msgid "Manufacturers"
 msgstr "Производители"
 
-msgid ""
-"Select shops for this manufacturer. Keep it blank to share with all shops."
+msgid "Allow the user to select manufacturers in admin."
 msgstr ""
 
+msgid ""
+"Select shops for this manufacturer. Keep it blank to share with all shops."
+msgstr "Выберете магазины для этого производителя. Оставьте пустым чтобы показывать во всех магазинах"
+
 msgid "You have no permission to change a shared Manufacturer."
-msgstr ""
+msgstr "Нет прав для изменения данных производителя"
+
+msgid "Logo"
+msgstr "Логотип"
 
 msgid "Media"
 msgstr "Медиа"
 
 msgid "Media browser"
 msgstr "Медиа браузер"
+
+msgid "Visible for all everyone in the media browser"
+msgstr "Доступно для всех в медиа браузере"
 
 msgid "Root"
 msgstr "Корневая папка"
@@ -625,52 +547,102 @@ msgid "{num} files moved to {folder}."
 msgstr "{num} файлы перемещены в {folder}."
 
 #, python-format
-msgid "Folder %s deleted."
+msgid "Folder `%s` was deleted."
 msgstr "Папка %s удалена."
 
 msgid "Browse Media"
 msgstr "Просмотреть медиафайлы"
 
-#, python-format
-msgid "%(file)s uploaded to %(folder)s"
-msgstr "%(file)s загружены в %(folder)s"
+msgid "You do not have permissions to create a subfolder here."
+msgstr "Нет прав для создания суб-директории"
 
-msgid "Can not rename shared folder."
-msgstr ""
-
-msgid "Folder renamed."
+msgid "Folder was renamed."
 msgstr "Папка переименована."
 
-msgid "Can not delete shared folder."
-msgstr ""
+#, python-format
+msgid "Folder can't be renamed to %s."
+msgstr "Папка не может быть переименована на %s"
 
-msgid "Can not rename shared file."
-msgstr ""
+msgid ""
+"Can't rename this folder, either you don't have permssion to do it or it's a"
+" shared folder between more then one shop or it has a owner"
+msgstr "Невозможно переименовать эту директорию. Возможно у вас нет прав и эта директория используется между магазинами или другими пользователями."
 
-msgid "File renamed."
-msgstr "Файл переименован."
+msgid "This folder is protected and cannot be deleted."
+msgstr "Эта директория защищена от удаления"
 
-msgid "Can not delete shared file."
-msgstr ""
+msgid ""
+"Can't delete this folder, either you don't have permssion to do it or it's a"
+" shared folder between more then one shop"
+msgstr "Невозможно переименовать эту директорию. Возможно у вас нет прав или эта директория используется между магазинами."
 
-msgid "File deleted."
-msgstr "Файл удалён."
+msgid "File was renamed."
+msgstr "Файл переименован"
 
-msgid "Can not move shared file."
-msgstr ""
+msgid "Can not rename this file."
+msgstr "Невозможно переименовать файл"
+
+msgid "File was deleted."
+msgstr "Файл удален"
+
+msgid "Can not delete this file."
+msgstr "Невозможно удалить файл"
+
+msgid "Can't move a shared file."
+msgstr "Невозможно переместить общий файл"
 
 #, python-format
 msgid "%(file)s moved from %(old)s to %(new)s."
 msgstr "%(file)s перемещены из %(old)s в %(new)s."
 
+#, python-format
+msgid "%(file)s uploaded to %(folder)s."
+msgstr "%(file)s загружены в %(folder)s"
+
+msgid "You do not have permission to upload content to this folder"
+msgstr "Загрузка невозможна. Нет прав доступа к этой директории."
+
+msgid "You don't have access to preform this action."
+msgstr "Недостаточно прав доступа для выполнения этого действия"
+
+msgid "Customize Your Admin Menu"
+msgstr "Изменить мое меню "
+
+msgid "Arrange Your Admin Menu"
+msgstr "Сортировать мое меню"
+
+msgid "Customize SuperUser Admin Menu"
+msgstr "Изменить меню супер пользователя"
+
+msgid "Arrange SuperUser Admin Menu"
+msgstr "Сортировать меню супер пользователя"
+
+msgid "Customize Staff Admin Menu"
+msgstr "Изменить меню сотрудника"
+
+msgid "Arrange Staff Admin Menu"
+msgstr "Сортировать меню сотрудника"
+
+msgid "Customize Supplier Admin Menu"
+msgstr "Изменить меню поставщика"
+
+msgid "Arrange Supplier Admin Menu"
+msgstr "Сортировать меню поставщика"
+
+msgid "Menu saved"
+msgstr "Меню сохранено"
+
+msgid "Menu reset"
+msgstr "Меню сброшено"
+
 msgid "Show orders"
 msgstr "Показать заказы."
 
-msgid "Order Status"
-msgstr "Статус заказа"
+msgid "Shipments"
+msgstr "Почтовые отправления"
 
-msgid "List Statuses"
-msgstr "Показать статусы"
+msgid "Show shipments"
+msgstr ""
 
 msgid "Outstanding Orders"
 msgstr "Предварительные заказы"
@@ -682,23 +654,33 @@ msgstr "%d невыполненных заказов"
 msgid "New order"
 msgstr "Новый заказ"
 
+msgid "Order Status"
+msgstr "Статус заказа"
+
+msgid "List Statuses"
+msgstr "Показать статусы"
+
 #, python-format
-msgid "The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s)"
+msgid ""
+"The quantity '%(quantity)s' (for line %(text)s) is invalid (%(error)s)."
 msgstr "Недопустимое количество '%(quantity)s' (для строки %(text)s) с ошибкой (%(error)s)"
 
 #, python-format
-msgid "The price '%(price)s' (for line %(text)s) is invalid (%(error)s)"
+msgid "The price '%(price)s' (for line %(text)s) is invalid (%(error)s)."
 msgstr "Цена '%(price)s' (для строки %(text)s) с ошибкой (%(error)s)"
 
 #, python-format
-msgid "The discount '%(discount)s' (for line %(text)s is invalid (%(error)s)"
+msgid "The discount '%(discount)s' (for line %(text)s is invalid (%(error)s)."
 msgstr "Скидка  '%(discount)s' (для строки %(text)s с ошибкой (%(error)s)"
+
+msgid "Product line does not have a supplier."
+msgstr "У продуктовой линии нет поставщика."
 
 msgid "Product line does not have a product set."
 msgstr "Линия продуктов не включает в себя выбранный продукт"
 
 #, python-format
-msgid "Product %s does not exist."
+msgid "Product `%s` does not exist."
 msgstr "Продукт %s не существует."
 
 #, python-format
@@ -726,23 +708,26 @@ msgstr "Отменить"
 msgid "Print Confirmation PDF(s)"
 msgstr "Распечатать PDF файл(ы) с подтверждением."
 
-msgid "Selecting all is not supported."
-msgstr "Выбрать все категории, которые не поддерживаются."
+msgid "Error! Selecting all is not supported."
+msgstr "Ошибка! Выбор всех записей невозможен."
 
 msgid "Print Delivery PDF(s)"
 msgstr "Распечатать PDF файл(ы) с информацией о доставке"
 
+msgid "Details"
+msgstr "Подробности"
+
 msgid "Payments"
 msgstr "Платежи"
-
-msgid "Shipments"
-msgstr "Почтовые отправления"
 
 msgid "Log Entries"
 msgstr "Записи журнала"
 
 msgid "Admin comment/notes"
 msgstr "Комментарии/заметки администратора"
+
+msgid "Status history"
+msgstr ""
 
 msgid "Set Status"
 msgstr "Установить статус"
@@ -771,9 +756,6 @@ msgstr "Создать платёж"
 msgid "Set Paid"
 msgstr "Оплатить"
 
-msgid "Create Shipment"
-msgstr "Осуществить отправление"
-
 msgid "Create Refund"
 msgstr "Осуществить возврат средств"
 
@@ -791,39 +773,49 @@ msgid "%(field)s updated from: %(old_address)s"
 msgstr "%(field)s поля обновлены для: %(old_address)s"
 
 #, python-format
-msgid "%(field)s saved successfully."
-msgstr "%(field)s поля сохранены успешно."
+msgid "%(field)s were saved."
+msgstr "%(field)s поля сохранены."
 
 #, python-format
-msgid "Edit Addresses -- %s"
-msgstr "Редактировать адреса -- %s"
+msgid "Save -- %s"
+msgstr "Сохранить -- %s"
 
-msgid "Unable to set order as completed at this point"
-msgstr "Невозможно завершить заказ в данный момент"
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Unable to set order as completed at this point."
+msgstr "Невозможно завершить заказ на этом этапе"
+
+msgid "You can't cancel orders that are paid, shipped, or already canceled."
+msgstr "Невозможно отменить заказы в статусах: \"Оплачен\", \"Отгружен\" или \"Завершен\""
 
 #, python-brace-format
-msgid "Order status changed: {old_status} to {new_status}"
-msgstr "Изменён статус заказа: с {old_status} на {new_status}"
+msgid "Order status changed: from `{old_status}` to `{new_status}`."
+msgstr "Статус заказа изменен с  `{old_status}`  на `{new_status}`."
 
 msgid "Create Order"
 msgstr "Совершить заказ"
 
 #, python-format
-msgid "Contact %s does not exist."
+msgid "Contact `%s` does not exist."
 msgstr "Контакт %s не существует."
 
 #, python-format
-msgid "Order %(identifier)s updated."
+msgid "Product `%(product)s` is not available in the `%(shop)s` shop."
+msgstr "Продукт  %(product)s не доступен в магазине  %(shop)s."
+
+#, python-format
+msgid "Order `%(identifier)s` was updated."
 msgstr "Заказ %(identifier)s обновлён."
 
 #, python-format
-msgid "Order %(identifier)s created."
+msgid "Order `%(identifier)s` created."
 msgstr "Заказ %(identifier)s создан."
 
-msgid "Could not proceed with order:"
+msgid "Could not proceed with the order: "
 msgstr "Невозможно продолжить заказ"
 
-msgid "Could not finalize order:"
+msgid "Could not finalize the order: "
 msgstr "Невозможно завершить заказ"
 
 msgid "Order"
@@ -841,8 +833,11 @@ msgstr "Статус оплаты"
 msgid "Shipping Status"
 msgstr "Статус отправления"
 
-msgid "Total"
-msgstr "Итог"
+msgid "Total, incl. tax"
+msgstr ""
+
+msgid "Total, excl. tax"
+msgstr ""
 
 #, python-format
 msgid "Create Payment -- %s"
@@ -851,14 +846,14 @@ msgstr "Создать платёж -- %s"
 msgid "Payment amount"
 msgstr "Объём платежа"
 
-msgid "Payment amount cannot be 0"
-msgstr "Объём платежа не может быть \"0\""
+msgid "Payment amount cannot be 0."
+msgstr "Сумма платежа не может быть \"0\""
 
 #, python-format
 msgid "Payment %s created."
 msgstr "Платёж %s создан."
 
-msgid "Order has already been paid"
+msgid "Order has already been paid."
 msgstr "Заказ уже был оплачен"
 
 msgid "Only orders which are not paid or deferred can be set as paid."
@@ -874,10 +869,10 @@ msgid "Order marked as paid."
 msgstr "Заказ отмечен, как оплаченный"
 
 msgid "Payment doesn't exist."
-msgstr ""
+msgstr "Платеж не существует"
 
 msgid "Payment deleted."
-msgstr ""
+msgstr "Платеж удален"
 
 msgid "Line"
 msgstr "Строка"
@@ -940,27 +935,31 @@ msgstr "Возрат средств создан."
 msgid "Create Full Refund -- %s"
 msgstr "Осуществить полный возврат средств -- %s"
 
-msgid "Could not create full refund."
+msgid "Could not create a full refund."
 msgstr "Невозможно осуществить полный возврат средств."
 
 msgid "Full refund created."
 msgstr "Полный возрат средств осуществлён."
 
+msgid "Description"
+msgstr "Описание"
+
+msgid "Tracking Code"
+msgstr "Код для отслеживания доставки"
+
+msgid "Tracking URL"
+msgstr ""
+
 #, python-format
 msgid "Create Shipment -- %s"
 msgstr "Осуществить отправление -- %s"
 
-msgid "Supplier"
-msgstr "Поставщик"
-
-msgid ""
-"Select the shipment supplier. You can only ship the suppliers assigned to "
-"order lines."
-msgstr ""
+msgid "Create Shipment"
+msgstr "Осуществить отправление"
 
 #, python-format
 msgid "%(product_name)s (%(supplier)s)"
-msgstr ""
+msgstr "%(product_name)s (%(supplier)s)"
 
 msgid "No products to ship."
 msgstr "Нет товаров для отправки."
@@ -969,18 +968,31 @@ msgid "Shipping address is not set."
 msgstr "Адрес доставки не выбран."
 
 #, python-format
-msgid "Shipment %s created."
+msgid "Shipment %s was created."
 msgstr "Доставка %s оформлена."
 
 #, python-format
 msgid "Shipment %s has been deleted."
 msgstr "Отправление %s будет удалено."
 
-msgid "Identifier already exists"
-msgstr "Идентификатор уже существует."
+msgid "Shipment has been marked as sent."
+msgstr ""
 
-msgid "Order Statuses"
-msgstr "Статусы заказов"
+msgid "ID"
+msgstr ""
+
+msgid "Supplier"
+msgstr ""
+
+#, python-brace-format
+msgid "Shipment {shipment_id}"
+msgstr ""
+
+msgid "Tracking code"
+msgstr ""
+
+msgid "Identifier already exists."
+msgstr "Идентификатор уже существует."
 
 msgid "Public Name"
 msgstr "Публичное имя"
@@ -991,23 +1003,23 @@ msgstr "Роль"
 msgid "Default"
 msgstr "Стандартное"
 
-msgid "Permission Groups"
-msgstr "Группы доступа"
+msgid "Allowed Next Status"
+msgstr ""
 
-msgid "The permission group name."
-msgstr "Название группы доступа"
+msgid "Visible For Customer"
+msgstr ""
 
-msgid "Module Permissions"
-msgstr "Разрешения модуля"
+msgid "No allowed next status."
+msgstr ""
 
-msgid ""
-"Select the modules that should be accessible by this permission group. "
-"Modules with the same permissions as selected modules will be added "
-"automatically."
-msgstr "Выберите модули, которые будут доступны данной группой доступа. Модули с одними и теми же разрешениями, как у выбранных модулей, добавятся автоматически."
+msgid "Granular Permission Groups"
+msgstr "Дополнительные группы доступа"
 
-msgid "Set the users that belong to this permission group."
-msgstr "Выбрать пользователей, которые принадлежат к данной группе доступа."
+msgid "Allow the user to select permission group in admin."
+msgstr ""
+
+msgid "The Permission Group name."
+msgstr "Имя группы доступа"
 
 msgid "Create new Permission Group"
 msgstr "Создать новую группу доступа."
@@ -1018,10 +1030,26 @@ msgstr "Типы товаров"
 msgid "Product types"
 msgstr "Типы товаров"
 
+msgid "Allow the user to select product types in admin."
+msgstr ""
+
+#, python-format
+msgid "%s has been marked deleted."
+msgstr "%s был отмечен для удаления"
+
 msgid ""
 "Select attributes that go with your product type. These are defined in "
 "Products Settings - Attributes."
 msgstr "Выберите свойства, подходящие для вашего товара. Вы можете найти их в разделе \"Настройки товаров - Свойства\""
+
+msgid "Delete"
+msgstr "Удалить"
+
+#, python-format
+msgid ""
+"Are you sure you wish to delete %s? Warrning: all related products will "
+"disappear from storefront until new value for product type is set!"
+msgstr "Вы уверены что хотите удалить %s?  Все записи которые относятся к этому продукту будут скрыты на сайте, до тех пор пока новое значение не будет установлено!"
 
 msgid "Number of Attributes"
 msgstr "Количество параметров"
@@ -1032,7 +1060,7 @@ msgstr "Создать продукт \"%s\""
 
 #, python-format
 msgid "Create Product with SKU \"%s\""
-msgstr ""
+msgstr "Создать продукт со артикулом  \" %s \""
 
 msgid "New product"
 msgstr "Новый товар"
@@ -1043,69 +1071,71 @@ msgstr "Импортировать"
 msgid "Add a product to see it in your store"
 msgstr "Добавить товар для отображения в вашем магазине."
 
+msgid "Allow the user to select products in admin."
+msgstr ""
+
+msgid "Allow the user to select shop_products in admin."
+msgstr ""
+
 msgid "Primary Product Image"
 msgstr "Основное изображение товара."
 
 msgid ""
-"The main product image. You can add additional images on the Product Images "
-"tab."
+"The main product image. You can add additional images in the `Product "
+"Images` tab."
 msgstr "Главное изображение товара. Вы можете добавить дополнительные изображения в разделе \"Изображения товара\""
+
+msgid "Select a manufacturer"
+msgstr "Выбрать производителя"
+
+msgid "Product type"
+msgstr "Тип товара"
 
 msgid "Given value is already in use, please use unique SKU and try again."
 msgstr "Данное значение уже используется, пожалуйста, используйте уникальный артикул и повторите попытку."
 
 msgid ""
 "Number of units that can be purchased after the product is out of stock. Set"
-" to blank for product to be purchasable without limits"
+" to blank for product to be purchasable without limits."
 msgstr "Количество товаров, доступных для продажи после того, как товар распродан. Оставьте пробел, если хотите, чтобы товар продавался без ограничений."
+
+msgid "Select a category"
+msgstr "Выбрать категорию"
 
 msgid "Minimum Purchase Quantity must be greater than 0."
 msgstr "Минимальное количество покупок должно быть больше 0."
 
 msgid "Backorder maximum must be greater than or equal to 0."
-msgstr ""
+msgstr "Сумма отложенного заказа должна быть позитивной"
 
 #, python-format
-msgid "Thumbnail generation of %(media)s failed: %(error)s"
-msgstr ""
+msgid "Thumbnail generation of %(media)s failed: %(error)s."
+msgstr "Ошибка оптимизации изображений для %(media)s : %(error)s"
 
-msgid "Use only URL or file, not both"
+msgid "Use only URL or file, not both."
 msgstr "Используйте только URL или файл, но не вместе."
 
 msgid "Is primary"
 msgstr "Основное"
 
-msgid "Only images allowed in this field"
+msgid "Only images are allowed in this field."
 msgstr "Только изображения доступны для данного поля."
 
 #, python-format
-msgid "Unable to make package %(product)s: %(error)s"
-msgstr ""
+msgid "Unable to make package %(product)s: %(error)s."
+msgstr "Невозможно создать набор %(product)s: %(error)s"
 
 #, python-format
-msgid "New: %d"
-msgstr ""
+msgid "New products: %d."
+msgstr "Новые товары: %d."
 
 #, python-format
-msgid "Removed: %d"
-msgstr ""
+msgid "Removed products: %d."
+msgstr "Удаленные товары: %d."
 
 #, python-format
-msgid "Couldn't add product %s to own package"
-msgstr ""
-
-msgid "child"
-msgstr "Дочерний элемент"
-
-msgid "Unlink"
-msgstr "Разъединить"
-
-#, python-format
-msgid "Unable to link %(product)s: %(error)s"
-msgstr ""
-
-msgid "variable combination"
-msgstr "Изменяемая комбинация"
+msgid "Couldn't add product %s to its own package."
+msgstr "Невозможно добавить товар %s в набор"
 
 msgid "Set visible"
 msgstr "Сделать видимым"
@@ -1113,22 +1143,19 @@ msgstr "Сделать видимым"
 msgid "Set invisible"
 msgstr "Сделать невидимым"
 
-msgid "Export CSV"
-msgstr "Загрузить CSV данные"
-
 msgid "Edit products"
 msgstr "Редактировать продукты"
 
-#, python-format
-msgid "%s has been marked deleted."
+#, python-brace-format
+msgid "{product_name} was successfully copied"
 msgstr ""
 
 msgid "Minimum Purchase Quantity has been rounded to match Sales Unit."
 msgstr "Минимальное количество для покупки было округлено, чтобы соответствовать торговому подразделению."
 
 #, python-format
-msgid "Changes to shop instance for %s saved"
-msgstr ""
+msgid "Changes to shop instance for %s saved."
+msgstr "Изменения для магазина %s сохранены."
 
 msgid "Product is not available."
 msgstr "Товар недоступен"
@@ -1138,59 +1165,33 @@ msgstr "Товар"
 
 #, python-format
 msgid "Edit Cross-Sell: %s"
-msgstr ""
-
-msgid "Save"
-msgstr "Сохранить"
+msgstr "Редактировать кросс-продажу  \"%s\""
 
 msgid "Changes saved."
 msgstr "Изменения сохранены."
 
 #, python-format
 msgid "Edit Media: %s"
-msgstr ""
+msgstr "Редактировать медиа: %s"
 
-msgid "Files added to product."
-msgstr "Файлы добавлены к товарам."
+msgid "Changes were saved."
+msgstr "Изменения сохранены."
+
+msgid "Files added to the product."
+msgstr "Файлы добавлены к товару."
 
 msgid "Clear package"
 msgstr "Очистить набор"
 
-msgid "Are you sure? This will remove all products from package."
+msgid "Are you sure? This will remove all products from the package."
 msgstr "Вы уверены. Данное действие уберёт все товары из набора."
 
 #, python-format
 msgid "Edit Package: %s"
-msgstr ""
+msgstr "Редактировать набор: %s"
 
 msgid "Package cleared."
 msgstr "Набор очищен."
-
-msgid ""
-"Are you sure? This will unlink all children and remove all variation "
-"variables."
-msgstr "Вы уверены? Данное действие выключит все дочерние и вариационные переменные."
-
-msgid "Clear variation"
-msgstr "Очистить вариацию"
-
-msgid ""
-"Are you sure? This will remove all variation variables, converting children "
-"to direct links."
-msgstr "Вы уверены? Это удалит все вариационные переменные и переведёт дочерние элементы в прямые ссылки."
-
-msgid "Convert to simple variation"
-msgstr "Преобразовать в простой вариант"
-
-#, python-format
-msgid "Edit Variation: %s"
-msgstr ""
-
-msgid "Variation cleared."
-msgstr "Вариант очищен."
-
-msgid "Variation simplified."
-msgstr "Вариант упрощён."
 
 msgid "Primary Image"
 msgstr "Основное изображение"
@@ -1208,7 +1209,13 @@ msgid "Mode"
 msgstr "Режим"
 
 msgid "Filter by category name..."
-msgstr ""
+msgstr "Фильтровать по категории..."
+
+msgid "Filter by supplier name..."
+msgstr "Фильтровать по поставщику..."
+
+msgid "Suppliers"
+msgstr "Поставщики"
 
 msgid "Additional Categories"
 msgstr "Дополнительные категории"
@@ -1219,11 +1226,8 @@ msgstr "Доступно для покупки"
 msgid "Mass Edit: Products"
 msgstr "Массовое редактирование: Товары"
 
-msgid "Products changed successfully"
+msgid "Products changed."
 msgstr "Товары изменены успешно."
-
-msgid "Save as a copy"
-msgstr "Сохранить, как копию"
 
 msgid "Manage Cross-Selling"
 msgstr "Управлять кросс-продажей"
@@ -1231,23 +1235,20 @@ msgstr "Управлять кросс-продажей"
 msgid "Cross-Selling"
 msgstr "Кросс-продажа"
 
+msgid "Other"
+msgstr "Другое"
+
 #, python-format
 msgid "Child: %s"
-msgstr ""
+msgstr "Дочерний: %s"
 
 #, python-format
 msgid "Parent: %s"
-msgstr ""
+msgstr "Родительский: %s"
 
 #, python-format
 msgid "Sibling: %s"
-msgstr ""
-
-msgid "Variations"
-msgstr "Вариации"
-
-msgid "Manage Variations"
-msgstr "Управлять вариациями"
+msgstr "Родственный: %s"
 
 msgid "Packages"
 msgstr "Наборы"
@@ -1256,10 +1257,7 @@ msgid "Manage Package"
 msgstr "Управлять наборами"
 
 msgid "Convert to Package Parent"
-msgstr ""
-
-msgid "Convert to Variation Parent"
-msgstr ""
+msgstr "Преобразовать в родителя набора"
 
 msgid "Sales Dashboard"
 msgstr "Информационная панель продаж"
@@ -1278,7 +1276,7 @@ msgstr "Общий итог продаж."
 
 #, python-format
 msgid "Based on %d orders"
-msgstr ""
+msgstr "Основано на %d заказах"
 
 msgid "Today's Sales"
 msgstr "Сегодняшние продажи"
@@ -1296,142 +1294,13 @@ msgid "Sales Units"
 msgstr "Наименования для продажи"
 
 msgid "Display Units"
-msgstr ""
+msgstr "Единицы Отображения"
 
 msgid "Symbol"
-msgstr ""
+msgstr "Символ"
 
 msgid "Allowed decimals"
 msgstr "Допустимые десятичные значения"
-
-msgid ""
-"There is sample data installed. Access \"Settings > Sample Data\" for more "
-"information."
-msgstr "Примеры данных добавлены. Перейдите в \"Настройки > Примеры данных\" для получения большей информации."
-
-msgid ""
-"There is sample data installed. Click here to consolidate or delete them."
-msgstr "Примеры данных добавлены. Нажмите здесь для их объединения или удаления."
-
-msgid "Sample Data"
-msgstr "Примеры данных"
-
-msgid "Cosmetics and perfumes"
-msgstr "Косметика и парфюмерия"
-
-msgid "USpicy Makeup Brushes"
-msgstr "Кисти для макияжа USpicy"
-
-msgid ""
-"Professional 10 pieces makeup brush set with soft oval toothbrush design"
-msgstr "Профессиональный набор кистей для макияжа из 10 единиц с мягкими овальными щёточками"
-
-msgid "Precision Eyelash Curler"
-msgstr "Щипчики для завивки ресниц"
-
-msgid ""
-"Precision Eyelash Curler is the professional choice of makeup artists "
-"everywhere."
-msgstr "Щипчики для завивки ресниц - профессиональный выбор визажистов во всём мире."
-
-msgid "PureMoist Lipstick"
-msgstr "Губная помада PureMoist"
-
-msgid ""
-"PureMoist Lipstick has a moisturizing formula designed to quench, comfort "
-"and protect lips."
-msgstr "Губная помада PureMoist обладает увлажняющей формулой, созданой для смягчения, комфорта и защиты губ."
-
-msgid "Clinique Happy"
-msgstr "Парфюм Clinique Happy "
-
-msgid "A hint of citrus. A wealth of flowers. A mix of emotions."
-msgstr "Нотки цитруса. Богатство цветочных оттенков. Обилие эмоций."
-
-msgid "Tommy Girld by Tommy Hilfiger Perfume"
-msgstr "Парфюм Tommy Girld от Tommy Hilfiger"
-
-msgid ""
-"A refreshing and energetic floral - with low notes of sandalwood and "
-"heather."
-msgstr "Освежающий и энергичный, с мягкими нотками вереска, сандалового дерева и цветов."
-
-msgid "Bvlgari Omnia Crystalline Eau de Toilette"
-msgstr "Туалетная вода Bvlgari Omnia Crystalline Eau de Toilette"
-
-msgid ""
-"Give yourself over to this fragrance as intoxicating and pure as a woman's "
-"soul is fragile."
-msgstr "Предайтесь этому аромату, такому же пленительному и чистому, как хрупкая женская душа."
-
-msgid "Still Jennifer Lopez Perfume"
-msgstr "Парфюм Still Jennifer Lopez"
-
-msgid ""
-"Be driven with vitality and confidence, as you wear the Jennifer Lopez Still"
-" fragrance."
-msgstr "Наполнитесь живостью и уверенностью, когда с вами аромат Still от Jennifer Lopez"
-
-msgid "La Vie Est Belle"
-msgstr "Парфюм La Vie Est Belle от Lancôme"
-
-msgid "A captivating new scent joins the La vie est belle path to happiness."
-msgstr "Пленительный новый аромат La Vie est belle окутает вас на пути к счастью."
-
-msgid "Smooth Viking Beard Brush"
-msgstr "Расчёска для бороды Smooth Viking"
-
-msgid "Just a beard brush."
-msgstr "Просто расчёска для бороды"
-
-msgid "Beard & Stash Oil"
-msgstr "Масло для усов и бороды"
-
-msgid "This oil is natural, and is made with the perfect combination of oils."
-msgstr "Данное косметическое масло является полностью натуральным и состоит из отличного сочетания природных масел."
-
-msgid "Sample Carousel"
-msgstr "Карусель образцов"
-
-msgid "Business Segment"
-msgstr "Бизнес-сегмент"
-
-msgid "Select your business segment to install categories."
-msgstr "Выберите ваш бизнес-сегмент для того, чтобы добавить категорию."
-
-msgid "Install Categories"
-msgstr "Добавить категории"
-
-msgid "Check this to install sample categories."
-msgstr "Ознакомтесь с данной информацией для установки категорий образцов"
-
-msgid "Install Products"
-msgstr "Добавить товары"
-
-msgid "Check this to install sample products."
-msgstr "Ознакомтесь с данной информацией для установки товарных образцов"
-
-msgid "Install Carousel"
-msgstr "Добавить карусель"
-
-msgid "Check this to install a sample carousel."
-msgstr "Ознакомтесь с данной информацией для установки карусели образцов"
-
-msgid "Uninstall Categories"
-msgstr "Удалить категории"
-
-msgid "Uninstall Products"
-msgstr "Удалить товары"
-
-msgid "Uninstall Carousel"
-msgstr "Удалить карусель"
-
-msgid "Sample data were consolidated"
-msgstr "Примеры данных были объединены."
-
-msgid ""
-"To start shopping right now, please install some sample data into your shop"
-msgstr "Для того, чтобы позволить начать осуществлять покупки прямо сейчас, пожалуйста, добавьте примеры данных в ваш магазин."
 
 msgid "Service Providers"
 msgstr "Поставщики услуг"
@@ -1441,7 +1310,7 @@ msgstr "Оплата и доставка"
 
 #, python-format
 msgid "Edit %(model)s"
-msgstr ""
+msgstr "Редактировать %(model)s"
 
 msgid ""
 "The service provider type. This can be any of the shipping carriers or "
@@ -1450,14 +1319,14 @@ msgstr "Тип поставщика. Ими могут являться любы
 
 #, python-brace-format
 msgid "Create {service_name}"
-msgstr ""
+msgstr "Создать {service_name}"
 
 msgid "Provider"
 msgstr "Поставщик"
 
 #, python-format
 msgid "Please activate at least one %s."
-msgstr ""
+msgstr "Активируйте хотя бы один %s"
 
 msgid "Carrier"
 msgstr "Служба доставки"
@@ -1492,6 +1361,15 @@ msgstr "Инструкции"
 
 msgid "Additional instructions shown in the shop checkout process."
 msgstr "Дополнительные инструкции представлены в процессе оформления заказа."
+
+msgid "Allow the user to select carriers in admin."
+msgstr ""
+
+msgid "Allow the user to select payment methods in admin."
+msgstr ""
+
+msgid "Allow the user to select shipping methods in admin."
+msgstr ""
 
 msgid "Shipping Methods"
 msgstr "Способы доставки"
@@ -1585,7 +1463,7 @@ msgid "The minimum sum that an order needs to reach to be created."
 msgstr "Минимальная сумма для осуществления заказа"
 
 msgid "Order Settings"
-msgstr ""
+msgstr "Настройки заказа"
 
 msgid "Order Reference number method"
 msgstr "Метод кодового номера заказа"
@@ -1597,19 +1475,16 @@ msgid ""
 "number is running system wide, regardless of the amount of "
 "shops.<br><br><b>Shop Running</b><br>Every shop has its own running numbers "
 "for reference."
-msgstr ""
+msgstr "Эта настройка определяет как формируются номера заказов. Варианты настройки: <br><br><b>Уникальный</b><br> Номер заказа уникален во всей системе, независимо от количества магазинов. <br><br><b>Инкрементальный</b><br>Номера заказов увеличиваются во всей системе, независимо от количества магазинов. <br><br><b>Инкрементальный по магазинам</b><br> Номер заказа увеличивается в каждом магазине отдельно."
 
-msgid "Settings saved"
-msgstr "Настройки сохранены"
+msgid "Settings saved."
+msgstr "Настройки сохранены."
 
 msgid "Reset Defaults"
 msgstr "Сбросить на изначальные"
 
-msgid "Changes saved successfully"
-msgstr ""
-
-msgid "No changes detected"
-msgstr ""
+msgid "No changes detected."
+msgstr "Изменений не обнаружено"
 
 msgid "Save system settings"
 msgstr "Сохранить системные настройки"
@@ -1620,29 +1495,41 @@ msgstr "Добавьте логотип для того, чтобы ваш ма�
 msgid "Add logo"
 msgstr "Добавить логотип"
 
+msgid "Publish your store"
+msgstr "Опубликовать ваш магазин"
+
+msgid "Let customers browse your store and make purchases"
+msgstr "Позволить клиентам просматривать ваш магазин и совершать покупки"
+
+msgid "Publish shop"
+msgstr "Опубликовать магазин"
+
 msgid "Set \"{}\" as the active shop"
-msgstr ""
+msgstr "Установить \"{}\" как активный магазин."
 
 msgid "Available Shops [currently active: {}]"
+msgstr "Доступные магазины [активные: {}]"
+
+msgid "Allow the user to select shops in admin."
 msgstr ""
 
 msgid ""
 "This field cannot be changed since there are existing orders for this shop."
 msgstr "Изменения не могут быть внесены в данное поле, т.к. у магазина есть существующие заказы."
 
+msgid "Currency"
+msgstr "Валюта"
+
 msgid ""
 "The primary shop currency. This is the currency used when selling your "
 "products."
 msgstr "Основная валюта магазина. Эта валюта используется при продаже ваших товаров."
 
-msgid "Staff"
-msgstr "Персонал"
-
 msgid "Select staff members for this shop."
 msgstr "Выбраные сотрудники для данного магазина."
 
 msgid "Domain is unique. Please enter a unique value."
-msgstr ""
+msgstr "Имя домена должно быть уникально."
 
 msgid "Shop name"
 msgstr "Название магазина"
@@ -1685,17 +1572,14 @@ msgstr "Город, в котором находится ваш магазин"
 msgid "The country in which your shop is located."
 msgstr "Страна, в коротой находится ваш магазин"
 
-msgid "There are still some pending actions to complete!"
+msgid "There are still some pending actions to complete."
 msgstr "У вас есть незавершённые действия"
 
-msgid "Your store is now live!"
+msgid "Your store is now live."
 msgstr "Ваш магазин активирован"
 
-msgid "Shop {} is now active!"
-msgstr ""
-
-msgid "Logo"
-msgstr ""
+msgid "Shop {} is now active."
+msgstr "Магазин  {} активирован"
 
 msgid "Domain"
 msgstr "Домен"
@@ -1709,18 +1593,34 @@ msgstr "Добавьте адрес, чтобы вы смогли получат
 msgid "Default Tax Class"
 msgstr "Налоговый класс по умолчанию"
 
-msgid "Suppliers"
-msgstr "Поставщики"
+msgid "Allow the user to select suppliers in admin."
+msgstr ""
 
 msgid "Select shops for this supplier. Keep it blank to share with all shops."
+msgstr "Выберете магазины для этого поставщика. Оставьте пустым чтобы показывать во всех магазинах"
+
+msgid "Is approved for {}"
+msgstr "Одобрено для {}"
+
+msgid "Indicates whether this supplier is approved for the shop."
+msgstr "Показывает если поставщик одобрен для магазина."
+
+msgid "It is not possible to manage inventory when no module is selected."
+msgstr "Управлять инвентарём можно только если выбран модуль"
+
+msgid "{} is not in the Shops field."
+msgstr "{} нет в поле 'Магазины'"
+
+#, python-format
+msgid "Success! %s has been marked deleted."
+msgstr "%s был отмечен для удаления"
+
+msgid "Modules"
 msgstr ""
 
 #, python-format
 msgid "No %s module"
-msgstr ""
-
-msgid "Module"
-msgstr "Модуль"
+msgstr "Нет %s модуля"
 
 msgid "Shuup Support"
 msgstr "Поддержка Shuup"
@@ -1736,11 +1636,26 @@ msgid ""
 " for more information."
 msgstr "Статистика будет периодически высылаться в Shuup.com каждые 24 часа. Нажмите здесь для большей информации."
 
+msgid "Opt-in for telemetry"
+msgstr "Отправлять телеметрию"
+
+msgid "Taxes"
+msgstr "Налоги"
+
 msgid "Customer Tax Groups"
 msgstr "Группы налогов клиентов"
 
 msgid "Tax Classes"
 msgstr "Налоговые классы"
+
+msgid "Allow the user to select customer tax groups in admin."
+msgstr ""
+
+msgid "Allow the user to select taxes in admin."
+msgstr ""
+
+msgid "Allow the user to select tax classes in admin."
+msgstr ""
 
 msgid "Rate"
 msgstr "Ставка"
@@ -1748,11 +1663,44 @@ msgstr "Ставка"
 msgid "Users"
 msgstr "Пользователи"
 
+msgid "Allow the user to change the passwords of other users."
+msgstr ""
+
+msgid "Allow the user send the reset password email."
+msgstr ""
+
+msgid "Allow the user to change the permission groups of other users."
+msgstr ""
+
+msgid "Allow the user to see a user detail."
+msgstr ""
+
+msgid "Allow the user to create a new user."
+msgstr ""
+
+msgid "Allow the user to list the users."
+msgstr ""
+
+msgid "Allow the user to impersonate a different user."
+msgstr ""
+
+msgid "Allow the user to impersonate a staff user."
+msgstr ""
+
+msgid "Allow the user to change the user list columns."
+msgstr ""
+
+msgid "Allow the user to select users in admin."
+msgstr ""
+
 msgid "Add some users to help manage your shop"
 msgstr "Добавьте пользователей для управления вашим магазином"
 
 msgid "New user"
 msgstr "Новый пользователь"
+
+msgid "Send Reset Password Email"
+msgstr "Отправить сообщение для сброса пароля"
 
 #, python-format
 msgid ""
@@ -1762,9 +1710,9 @@ msgid ""
 "    You've been added as an administrator to %(shop_url)s. Here are some details:\n"
 "        Shop url: %(shop_url)s\n"
 "        Login url: %(admin_url)s\n"
-"        Your username: %(username)s\n"
+"        Your username: '%(username)s'\n"
 "        Your password: Please contact your admin.\n"
-msgstr ""
+msgstr "\nДобро пожаловать %(first_name)s!\n\nВы добавлены как администратор в %(shop_url)s. Детали вашего аккаунта:\n     Адрес магазина: %(shop_url)s\n     Страница входа: %(admin_url)s\n     Имя пользователя: %(username)s\n     Пароль: *уточните у администратора*\n"
 
 msgid "Password"
 msgstr "Пароль"
@@ -1772,11 +1720,23 @@ msgstr "Пароль"
 msgid "The user password."
 msgstr "Пароль пользователя."
 
-msgid "See the permissions view to change these."
-msgstr "Откройте режим доступа для внесения изменений."
+msgid "Main Permissions"
+msgstr "Основные разрешения"
 
-msgid "See Contacts - Permission Groups to change these."
-msgstr "Откройте \"контакты - группы доступа\" для внесения изменений."
+msgid ""
+"Two fundamental permissions: Access to Admin Panel and Superuser status "
+"rights. Go to user account -> `Actions` -> `Edit Main Permissions` to change"
+" these."
+msgstr "Две основных настройки доступа: \"Доступ к панели администратора\" и \"Статус супер пользователя\". Чтобы их изменить, перейдите в раздел 'Аккаунт' -> 'Действия' -> 'Редактировать основные настройки'."
+
+msgid ""
+"Use Permission Groups to granularly give more permissions. Search for "
+"`Permission Groups` to change these and add them to multiple users. Go to "
+"user account -> `Actions` -> `Edit Main Permissions` to add them to a "
+"specific user. Will not influence Superusers as they already have all the "
+"rights and can't be stripped of them without removing Superuser status "
+"first."
+msgstr "Используйте настройки групп доступа для добавления прав доступа к отдельным модулям. Найдите раздел \"Настройки Доступа\" чтобы менять эти настройки для разных пользователей. \nЧтобы добавить конкретного пользователя, перейдите в раздел 'Аккаунт' -> 'Действия' -> `Редактировать основные разрешения`. Эти настройки не повлияют на супер пользователей. "
 
 msgid "The user email address. Used for password resets."
 msgstr "Электронный адрес пользователя. Используется для изменения пароля."
@@ -1787,27 +1747,30 @@ msgstr "Имя пользователя."
 msgid "The last name of the user."
 msgstr "Фамилия пользователя."
 
-msgid "staff"
-msgstr "Персонал"
+msgid "Access to Admin Panel"
+msgstr "Открыть панель администратора"
 
-msgid "superuser"
-msgstr "Суперпользователь"
+msgid "Superuser (Full rights)"
+msgstr "Супер пользователь (все разрешения)"
 
-msgid "No special permissions"
-msgstr "Нет специального доступа"
+msgid "No Main Permissions selected."
+msgstr "Не выбраны основные разрешения"
 
-msgid "No permission groups"
-msgstr "Нет групп доступа"
+msgid "No Granular Permission Groups selected."
+msgstr "Не выбрано дополнительных групп доступа"
+
+msgid "No Granular Permission Groups available."
+msgstr "Нет дополнительных групп доступа"
 
 msgid "Send email confirmation"
 msgstr "Выслать электронное письмо для подтверждения"
 
 msgid ""
 "Send an email to the user to let them know they've been added as a shop "
-"user. Applicable only for users with staff status."
-msgstr "Выслать пользователю электронное письмо с уведомлением о добавлении пользователя магазина. Доступно только для пользователей со статусом персонала."
+"user. Applicable only for users with Access to Admin Panel status."
+msgstr "Выслать пользователю электронное письмо с уведомлением о добавлении пользователя магазина. Доступно только для пользователей с доступом к панели администрирования."
 
-msgid "Please enter an email to send a confirmation"
+msgid "Please enter an email to send a confirmation to."
 msgstr "Пожалуйста, введите электронный адрес для отправки подтверждения."
 
 msgid "Change Password"
@@ -1819,8 +1782,8 @@ msgstr "У пользователя нет зарегистрированног�
 msgid "Send Password Reset Email"
 msgstr "Выслать письмо изменения пароля"
 
-msgid "Edit Permissions"
-msgstr "Редактировать настройки доступа"
+msgid "Edit Main Permissions"
+msgstr "Редактировать основные разрешения"
 
 msgid "Contact Details"
 msgstr "Контактная информация"
@@ -1834,23 +1797,26 @@ msgstr "Активировать пользователя"
 msgid "Deactivate User"
 msgstr "Деактивировать пользователя"
 
-msgid "Login as User"
-msgstr "Войти как пользователь"
+#, python-format
+msgid "Info! User bound to contact %(contact)s."
+msgstr "Пользователь привязан к контакту %(contact)s"
 
 #, python-format
-msgid "User bound to contact %(contact)s."
-msgstr ""
-
-#, python-format
-msgid "You've been added as an admin user to %s"
-msgstr ""
+msgid "You've been added as an admin user to `%s`."
+msgstr "Вы стали администратором %s"
 
 msgid "User"
 msgstr "Пользователь"
 
+msgid "You can not deactivate a Superuser. Remove Superuser status first."
+msgstr "Невозможно деактивировать супер пользователя. Сначала удалите права супер пользователя."
+
+msgid "You can not deactivate yourself. Use another account."
+msgstr "Вы не можете деактивировать свой аккаунт. Используйте другую учетную запись для того чтобы деактивировать этот аккаунт."
+
 #, python-format
 msgid "%(user)s is now %(state)s."
-msgstr ""
+msgstr "%(user)s теперь %(state)s."
 
 msgid "No shop configured."
 msgstr "Магазин не настроен"
@@ -1862,8 +1828,8 @@ msgid "This user is not active."
 msgstr "Данный пользователь не активен."
 
 #, python-brace-format
-msgid "You're now logged in as {username}"
-msgstr ""
+msgid "You're now logged in as `{username}`."
+msgstr "Вы вошли как  `{username}`."
 
 msgid "Username"
 msgstr "Имя пользователя"
@@ -1873,17 +1839,6 @@ msgstr "Имя"
 
 msgid "Last Name"
 msgstr "Фамилия"
-
-msgid "Superuser"
-msgstr "Суперпользователь"
-
-#, python-format
-msgid "First Name: %s"
-msgstr ""
-
-#, python-format
-msgid "Last Name: %s"
-msgstr ""
 
 msgid "The two password fields didn't match."
 msgstr "Поля пароля не совпадают"
@@ -1911,52 +1866,94 @@ msgstr "Изменить пароль пользователя"
 
 #, python-format
 msgid "Password changed for %s."
-msgstr ""
+msgstr "Пароль изменён на %s."
 
 msgid "Reset User Password"
 msgstr "Сбросить пароль пользователя"
 
 msgid ""
-"The `shuup.front.apps.auth` app needs to be enabled for password reset."
+"Error! The `shuup.front.apps.auth` app needs to be enabled for password "
+"reset."
 msgstr "Приложение `shuup.front.apps.auth` должно быть активно для изменения пароля."
 
 #, python-format
-msgid "Password recovery email sent to %(email)s"
-msgstr ""
+msgid "Password recovery email sent to %(email)s."
+msgstr "Письмо восстановления пароля отправлено на %(email)s."
 
-msgid "Sending the password recovery email failed."
-msgstr "Не удалось выслать письмо восстановления пароля."
+msgid "Error! Sending the password recovery email failed."
+msgstr "Не удалось отправить письмо восстановления пароля."
 
 msgid ""
-"The permission groups that this user belongs to. Permission groups are "
-"configured through Contacts - Permission Groups."
-msgstr "Группы доступа, которым принадлежит этот пользователь. Группы доступа можно настроить в \"Контакты - Группы доступа\""
+"In order to allow making significant changes to accounts, we need to confirm"
+" that you know the password for the account you are using."
+msgstr "Для того чтобы редактировать эти данные, нам необходимо подтвердить что этот аккаунт принадлежит вам."
 
-msgid "You can't unset this status for yourself."
-msgstr "Вы не можете изменить этот статус для себя."
+msgid "Superuser (Full rights) status"
+msgstr "Статус супер пользователя (все разрешения)"
+
+msgid ""
+"Designates whether this user has all permissions without explicitly "
+"assigning them. Assigning Granular Permission Groups to a Superuser will not"
+" have any effect because Granular Permission Groups are only  able to give "
+"more rights, but Superuser already has them all."
+msgstr "Определяет если пользователь имеет все права доступа без явного ограничения. Добавление супер пользователя в дополнительные группы доступа не имеет смысла, так как супер пользователь имеет все возможные разрешения."
+
+msgid "Access to Admin Panel status"
+msgstr "Открыть статус панели администратора"
+
+msgid ""
+"Designates whether this user can log into this admin site. Even Superusers "
+"should have this status enabled, otherwise they won't be able to access the "
+"Admin Panel."
+msgstr "Определяет если пользователь может войти в панель администратора. Супер пользователи так же подвержены влиянию этой настройки - если выключено, супер пользователь не сможет войти в панель."
+
+msgid ""
+"Use Permission Groups to granularly give more permissions. User can belong "
+"to many groups and their permissions add and stack together. Search for "
+"`Permission Groups` to change these and add them to multiple users. Go to "
+"user account -> `Actions` -> `Edit Main Permissions` to add them to a "
+"specific user. Will not influence Superusers as they already have all the "
+"rights and can't be stripped of them without removing Superuser status "
+"first."
+msgstr "Используйте настройки групп доступа для добавления дополнительных прав доступа к отдельным модулям. Пользователь может принадлежать к разным группам. Найдите раздел \"Настройки Доступа\" чтобы менять эти настройки для разных пользователей. \nЧтобы добавить конкретного пользователя, перейдите в раздел 'Аккаунт' -> 'Действия' -> `Редактировать основные разрешения`. Эти настройки не повлияют на супер пользователей. "
+
+msgid ""
+"You can't unset this status for yourself due to security reasons. Use "
+"another account if you want to remove permissions for this particular "
+"account."
+msgstr "Вы не можете изменить эту настройку самостоятельно из-за настроек безопастности. Войдите под другим пользователем, чтобы изменить настройки для своего аккаунта."
 
 msgid "Change User Permissions"
 msgstr "Изменить настройки доступа для пользователя"
 
 #, python-format
-msgid "Change Permissions: %s"
-msgstr ""
+msgid "Change Main Permissions: %s"
+msgstr "Изменить основные разрешения: %s"
 
 #, python-format
 msgid "Permissions changed for %s."
+msgstr "Настройки изменены для %s"
+
+msgid "You must have the Access to Admin Panel permission."
+msgstr "У вас должно быть разрешение для доступа в панель администратора."
+
+msgid "You must have the Access to Admin Panel permissions to this shop."
+msgstr "У вас должно быть разрешение для доступа в панель администратора этого магазина."
+
+msgid "General Information"
+msgstr "Общая информация"
+
+msgid "Choice Options"
 msgstr ""
 
-msgid "You must be a staff user"
+msgid "Add new option"
 msgstr ""
-
-msgid "You are not a staff member of this shop"
-msgstr ""
-
-msgid "New Attribute"
-msgstr "Новое свойство"
 
 msgid "Login"
 msgstr "Логин"
+
+msgid "Welcome back"
+msgstr "Добро пожаловать"
 
 msgid "Forgot your password?"
 msgstr "Забыли ваш пароль?"
@@ -1975,29 +1972,38 @@ msgstr "Перейти в магазин"
 
 #, python-format
 msgid "Hi %(fullname)s"
-msgstr ""
+msgstr "Привет %(fullname)s"
 
 #, python-format
 msgid "In case you've forgotten, your username is %(username)s."
-msgstr ""
+msgstr "Имя пользователя: %(username)s"
 
 #, python-format
 msgid ""
 "You're receiving this email because you requested a password reset for your "
 "user account at %(site_name)s."
-msgstr ""
+msgstr "Вы получили это сообщение потому что мы получили запрос на сброс пароля для аккаунта %(site_name)s."
 
 msgid "Please go to the following page and choose a new password:"
-msgstr ""
+msgstr "Перейдите на данную страницу и выберите новый пароль:"
 
 msgid "Password Recovery"
-msgstr ""
+msgstr "Восстановление пароля"
 
 msgid "Reset Password"
-msgstr ""
+msgstr "Сменить пароль"
 
 msgid "Send password recovery instructions"
-msgstr ""
+msgstr "Выслать инструкции по восстановлению пароля"
+
+msgid "Active shop:"
+msgstr "Активный магазин:"
+
+msgid "Active vendor:"
+msgstr "Активный поставщик: "
+
+msgid "Dashboard"
+msgstr "Панель информации"
 
 msgid "Quicklinks"
 msgstr "Быстрые ссылки"
@@ -2005,20 +2011,17 @@ msgstr "Быстрые ссылки"
 msgid "Menu"
 msgstr "Меню"
 
-msgid "Dashboard"
-msgstr "Панель информации"
-
-msgid "Go home"
-msgstr "На главную страницу"
-
 msgid "Search for"
 msgstr "Поиск"
 
-msgid "Support ID: "
-msgstr "Идентификатор поддержки:"
-
 msgid "Hello"
 msgstr "Привет"
+
+msgid "Stop Auto Refresh"
+msgstr "Остановить авто обновление"
+
+msgid "Auto Refresh Every 30s"
+msgstr "Обновлять автоматически каждые 30 сек."
 
 msgid "Show Tour"
 msgstr "Тур по сайту"
@@ -2026,16 +2029,13 @@ msgstr "Тур по сайту"
 msgid "Log out"
 msgstr "Выйти"
 
-msgid "General Information"
-msgstr "Общая информация"
-
 msgid "Copy visibility settings to products"
 msgstr "Скопировать настройки отображения для товаров"
 
 msgid "Category Image"
 msgstr "Изображение категории"
 
-msgid "* Products that has this category as a primary category."
+msgid "* Products that have this category as a primary category."
 msgstr "*Товары с данной категорией в качестве главной"
 
 msgid "Add a new product category"
@@ -2045,12 +2045,12 @@ msgid ""
 "You are adding a new product category. When people search your store, they "
 "can find your product under the category you choose for it, like the aisle "
 "signs at the supermarket."
-msgstr ""
+msgstr "Вы добавляете новую категорию. Категория это аналог названия отделов в супермаркете, она помогает клиенту лучше ориентироваться в вашем магазине."
 
 msgid ""
 "You can add a name, description, picture or anything you want to make it "
 "stand out."
-msgstr ""
+msgstr "Можно добавить имя, описание, изображение или любой контент который поможет обратить внимание."
 
 msgid "General information"
 msgstr "Общая информация"
@@ -2100,7 +2100,7 @@ msgstr "НАЗВАНИЕ КОМПАНИИ"
 #, python-format
 msgid ""
 "You can enter here the information about <strong>%(public_name)s</strong>."
-msgstr ""
+msgstr "Вы можете ввести информацию о <strong>%(public_name)s</strong> здесь."
 
 msgid ""
 "Your order has been received and will be processed as soon as possible."
@@ -2169,7 +2169,7 @@ msgid ""
 " us to contact you, for the continued collection, use or disclosure of your "
 "information, at anytime, by contacting us at <strong>%(shop_email)s</strong>"
 " or mailing us at: <strong>%(shop_address)s</strong>"
-msgstr ""
+msgstr "Вы всегда можете отменить ваше согласие на получение рассылок и обработку персональной информации.  Просто напишите нам на <strong>%(shop_email)s</strong>  или отправьте письмо на  <strong>%(shop_address)s</strong>"
 
 msgid "SECTION 3 - DISCLOSURE"
 msgstr "Пункт 3 - Огласка"
@@ -2342,7 +2342,7 @@ msgid ""
 "information contact our Privacy Compliance Officer at "
 "<strong>%(shop_email)s</strong> or by mail at "
 "<strong>%(shop_address)s</strong>."
-msgstr ""
+msgstr "Если вам необходимо: предоставить доступ, отредактировать, или удалить любую часть ваших персональных данных; а так же, если вы хотите зарегистрировать обращение или просто хотите узнать какие данные о вас хранятся на наших серверах, вы можете отправить нам сообщение на <strong>%(shop_email)s</strong> или написать по адресу <strong>%(shop_address)s</strong>."
 
 msgid "YOUR COMPANY NAME HERE"
 msgstr "НАЗВАНИЕ ВАШЕЙ КОМПАНИИ ЗДЕСЬ"
@@ -2439,7 +2439,7 @@ msgstr "Затем обратитесь в свой банк. Зачастую �
 msgid ""
 "If you’ve done all of this and you still have not received your refund yet, "
 "please contact us at <strong>%(shop_email)s</strong>."
-msgstr ""
+msgstr "Если вы следовали инструкции и не получили возврат средств, пожалуйста напишите нам на <strong>%(shop_email)s</strong>. "
 
 msgid "Sale items (if applicable)"
 msgstr "Наименования на продажу (если применимо)"
@@ -2458,7 +2458,7 @@ msgid ""
 "exchange it for the same item, send us an email at "
 "<strong>%(shop_email)s</strong> and send your item to: "
 "<strong>%(shop_address)s</strong>."
-msgstr ""
+msgstr "Мы только можем заменить бракованные или поврежденные товары. Если вам нужна замена товара, напишите нам на <strong>%(shop_email)s</strong> и отправьте бракованный товар на <strong>%(shop_address)s</strong>"
 
 msgid "Gifts"
 msgstr "Подарки"
@@ -2482,7 +2482,7 @@ msgstr "Доставка"
 msgid ""
 "To return your product, you should mail your product to: "
 "<strong>%(shop_address)s</strong>."
-msgstr ""
+msgstr "Адрес для возврата товаров: <strong>%(shop_address)s</strong> "
 
 msgid ""
 "You will be responsible for paying for your own shipping costs for returning"
@@ -2512,7 +2512,7 @@ msgid ""
 "this website, including all information, tools and services available from "
 "this site to you, the user, conditioned upon your acceptance of all terms, "
 "conditions, policies and notices stated here."
-msgstr ""
+msgstr "Владелец и оператор этого сайта: <strong>%(public_name)s</strong>. \nИспользуя этот ресурс, вы выражаете свое согласие с правилами использования ресурса установленными<strong>%(public_name)s</strong>.  Так же, вы выражаете свое согласие с политикой обработки персональных данных и настоящим договором офертой <strong>%(public_name)s</strong>"
 
 msgid ""
 "By visiting our site and/ or purchasing something from us, you engage in our"
@@ -2862,7 +2862,7 @@ msgid ""
 "conditions of any kind, either express or implied, including all implied "
 "warranties or conditions of merchantability, merchantable quality, fitness "
 "for a particular purpose, durability, title, and non-infringement."
-msgstr "Вы однозначно соглашаетесь с тем, что использование или невозможность использования услуги вами оставляется под вашу ответственность. Все продукты и услуги, предоставляемые вам через наши сервисы, осуществляются или поставляются (за исключением случаев, прямо указанных нами)  на условиях «как есть» и «как доступно», без каких-либо примечаний, гарантий или условий любого рода, быстро меняющихся или продуманных, включая все подразумеваемые гарантии или условия коммерческого использования, коммерческое качество, пригодность для определенной цели, долговечность, название и ненарушение прав."
+msgstr "Вы однозначно соглашаетесь с тем, что использование или невозможность использования услуги вами оставляется под вашу ответственность. Все продукты и услуги, предоставляемые вам через наши сервисы, осуществляются или поставляются (за исключением случаев, прямо указанных нами) на условиях «как есть» и «как доступно», без каких-либо примечаний, гарантий или условий любого рода, быстро меняющихся или продуманных, включая все подразумеваемые гарантии или условия коммерческого использования, коммерческое качество, пригодность для определенной цели, долговечность, название и не нарушение прав."
 
 #, python-format
 msgid ""
@@ -2967,15 +2967,15 @@ msgid ""
 "These Terms of Service and any separate agreements whereby we provide you "
 "Services shall be governed by and construed in accordance with the laws of "
 "<strong>%(shop_address)s</strong>."
-msgstr ""
+msgstr "Настоящие условия обслуживания и любые отдельные соглашения, в соответствии с которыми мы предоставляем вам услуги, регулируются и толкуются в соответствии с законами<strong>%(shop_address)s</strong>"
 
 msgid "SECTION 19 - CHANGES TO TERMS OF SERVICE"
-msgstr ""
+msgstr "РАЗДЕЛ 19 - ИЗМЕНЕНИЯ В УСЛОВИЯХ ОБСЛУЖИВАНИЯ"
 
 msgid ""
 "You can review the most current version of the Terms of Service at any time "
 "at this page."
-msgstr ""
+msgstr "Вы можете просмотреть самую последнюю версию условий обслуживания в любое время на этой странице."
 
 msgid ""
 "We reserve the right, at our sole discretion, to update, change or replace "
@@ -2984,7 +2984,7 @@ msgid ""
 "changes. Your continued use of or access to our website or the Service "
 "following the posting of any changes to these Terms of Service constitutes "
 "acceptance of those changes."
-msgstr ""
+msgstr "Мы оставляем за собой право по собственному усмотрению обновлять, изменять или заменять любую часть настоящих условий обслуживания, публикуя обновления и изменения на нашем веб-сайте. Вы обязаны периодически проверять наш веб-сайт на предмет изменений. Ваше дальнейшее использование или доступ к нашему веб-сайту или Сервису после публикации любых изменений в настоящих условиях обслуживания означает принятие этих изменений."
 
 msgid "SECTION 20 - CONTACT INFORMATION"
 msgstr "Пункт 20 - Контактная информация."
@@ -2993,7 +2993,7 @@ msgstr "Пункт 20 - Контактная информация."
 msgid ""
 "Questions about the Terms of Service should be sent to us at "
 "<strong>%(shop_email)s</strong>."
-msgstr ""
+msgstr "Вопросы об условиях использования следует отправлять нам по адресу<strong>%(shop_email)s</strong>"
 
 msgid "Remove block"
 msgstr "Удалить блок"
@@ -3015,21 +3015,21 @@ msgstr "История активности"
 
 #, python-format
 msgid "Shuup %(version)s"
-msgstr ""
+msgstr "Shuup%(version)s"
 
 msgid ""
 "This is the dashboard for your store. It’s like the flight deck for your "
 "ecommerce spaceship. You can control everything from here."
-msgstr ""
+msgstr "Это панель управления вашего магазина. Это похоже на полетную палубу вашего космического корабля электронной коммерции. Отсюда ты можешь контролировать все."
 
 msgid ""
 "Check out your shoppers’ info, add more products or categories, setup "
 "marketing campaigns, see orders and sales stats, and track the money you’ve "
 "made."
-msgstr ""
+msgstr "Проверяйте информацию о своих покупателях, добавляйте больше товаров или категорий, настраивайте маркетинговые кампании, просматривайте заказы и статистику продаж, а также отслеживайте заработанные деньги."
 
 msgid "Every setting you could possibly need is in here."
-msgstr ""
+msgstr "Все настройки можно найти здесь."
 
 msgid "Table Columns"
 msgstr "Колонки таблицы"
@@ -3064,15 +3064,15 @@ msgid ""
 msgstr "К сожалению, произошла внутренняя ошибка сервера. Попробуйте перезагрузить страницу или вернуться к ней позже."
 
 msgid "Edit the selected object"
-msgstr ""
+msgstr "Редактировать выбранный объект"
 
 #, python-brace-format
 msgid "Required. {field_help}"
-msgstr ""
+msgstr "Обязательное поле. {field_help}"
 
 #, python-brace-format
 msgid "Optional. {field_help}"
-msgstr ""
+msgstr "Опциональное поле. {field_help}"
 
 msgid "Welcome to Shuup!"
 msgstr "Добро пожаловать в Shuup!"
@@ -3092,24 +3092,45 @@ msgid ""
 "Let’s go through some of the things you can do here. Click next to begin."
 msgstr "Давайте рассмотрим некоторые из вещей, которые вы можете здесь сделать. Нажмите «Далее», чтобы начать."
 
+msgid "shop logo"
+msgstr ""
+
 msgid "Date"
 msgstr "Дата"
+
+msgid "Total"
+msgstr "Итог"
 
 msgid "Save and Exit"
 msgstr "Сохранить и выйти"
 
-msgid "This action effects on all products."
+msgid "This action effects on all items."
 msgstr "Данное действие может повлиять на все товары."
 
 #, python-format
-msgid "This action effects %(item_count)s products."
-msgstr ""
-
-msgid "Edit"
-msgstr "Редактировать"
+msgid "This action affects %(item_count)s item(s)."
+msgstr "Данное действие может повлиять на %(item_count)s товар(ов)."
 
 msgid "Upload"
 msgstr "Загрузить"
+
+msgid "Copy folder path"
+msgstr "Скопировать путь к директории"
+
+msgid "Access to folder"
+msgstr "Доступ к папке "
+
+msgid "Customize admin menu"
+msgstr "Изменить меню администратора"
+
+msgid "Reset"
+msgstr "Сброс"
+
+msgid "Folder"
+msgstr "Папка"
+
+msgid "Drag me"
+msgstr "Перетащить"
 
 msgid "Comment"
 msgstr "Комментировать"
@@ -3117,26 +3138,65 @@ msgstr "Комментировать"
 msgid "Save comment"
 msgstr "Сохранить комментарий"
 
-msgid "Comment saved."
-msgstr "Комментарий сохранён."
+msgid "Comment was saved."
+msgstr "Комментарий сохранен"
 
-msgid "There was an error updating the admin comment."
+msgid "Updating the admin comment failed."
 msgstr "При обновлении комментария администратора произошла ошибка."
-
-msgid "Description"
-msgstr "Описание"
-
-msgid "Delete"
-msgstr "Удалить"
 
 msgid "No payments have been created yet."
 msgstr "Ни один платёж ещё не создан."
 
 msgid "Are you sure you want to delete this payment?"
-msgstr ""
+msgstr "Вы уверены, что хотите удалить этот платеж?"
 
-msgid "Order Contents"
-msgstr "Содержание заказа"
+msgid "Order Details"
+msgstr "Подробности заказа"
+
+msgid "Order Shop"
+msgstr "Магазин Заказа"
+
+msgid "Order Number"
+msgstr "Номер заказа"
+
+msgid "Reference"
+msgstr "Справка"
+
+msgid "Label"
+msgstr "Ярлык"
+
+msgid "Payment Method"
+msgstr "Способ оплаты"
+
+msgid "Shipping Method"
+msgstr "Способ доставки"
+
+msgid "Ordered by"
+msgstr "Заказано"
+
+msgid "Creator"
+msgstr "Создатель"
+
+msgid "Tax number"
+msgstr "Налоговый номер"
+
+msgid "Total Price (taxless)"
+msgstr "Полная стоимость (без учёта налогов)"
+
+msgid "Total Price"
+msgstr "Полная стоимость"
+
+msgid "Customer Comment"
+msgstr "Комментарий клиента"
+
+msgid "Tracking codes"
+msgstr "Коды для отслеживания доставки"
+
+msgid "Address Information"
+msgstr "Адрес"
+
+msgid "Picture"
+msgstr ""
 
 msgid "Text"
 msgstr "Текст"
@@ -3159,6 +3219,10 @@ msgstr "Итог без учёта налогов"
 msgid "Total incl. Tax"
 msgstr "Общий итог с учётом налогов"
 
+#, python-format
+msgid "Supplied by %(supplier)s"
+msgstr "Поставлено %(supplier)s"
+
 msgid "Discount"
 msgstr "Скидка"
 
@@ -3177,31 +3241,59 @@ msgstr "Используйте поле ниже для того, чтобы д�
 msgid "Add to Log"
 msgstr "Добавить в журнал"
 
-msgid "Log entry added."
+msgid "Log entry was added."
 msgstr "Запись журнала добавлена"
 
-msgid "There was an error adding the log entry."
-msgstr "Произошла ошибка при добавлении записи журнала."
+msgid "Adding the log entry failed."
+msgstr "При добавлении записи журнала произошла ошибка."
 
-msgid "Tracking Code"
-msgstr "Код для отслеживания доставки"
+msgid "Unshipped"
+msgstr "Не отправлено"
+
+msgid "Shipped"
+msgstr "Отправлено"
+
+msgid "Ordered"
+msgstr "Заказано"
+
+msgid "Refunded"
+msgstr "Возмещено"
+
+#, python-format
+msgid "Create new shipment for %(supplier_name)s"
+msgstr "Создать новую отгрузку для %(supplier_name)s."
 
 msgid "Created"
 msgstr "Создан"
 
-msgid "No shipments have been created yet."
-msgstr "Ни одна доставка ещё не была организована."
+msgid "Mark as sent"
+msgstr ""
 
 msgid ""
 "Shipped shipments should not be deleted. Deletion will affect products "
 "physical stock count. Delete anyway?"
 msgstr "Отправленные посылки не стоит удалять. Удаление будет влиять на подсчёт количества товаров на складе. Удалить в любом случае?"
 
+msgid "Do you want to mark this shipment as sent?"
+msgstr ""
+
+msgid "When"
+msgstr ""
+
+msgid "The order has no status history."
+msgstr ""
+
+msgid "Are you sure you want to delete this order status history item?"
+msgstr ""
+
 msgid "Line #"
 msgstr "Строка #"
 
 msgid "Refunded Quantity"
 msgstr "Возвращенное количество"
+
+msgid " Mark as sent "
+msgstr ""
 
 msgid "Refund Amount"
 msgstr "Возвращённая сумма"
@@ -3212,32 +3304,23 @@ msgstr "Вы уверены, что хотите создать полное в�
 msgid "Confirm Refund"
 msgstr "Подтвердить возмещение"
 
+msgid "Order Contents"
+msgstr "Содержание заказа"
+
 msgid "Paid"
 msgstr "Оплачено"
 
 msgid "Remaining"
 msgstr "Остаётся"
 
-msgid "Refunded"
-msgstr "Возмещено"
-
 msgid "Add Another Refund"
 msgstr "Добавить другое возмещение"
 
 msgid "Order Line"
-msgstr ""
+msgstr "Строка Заказа"
 
 msgid "To Ship"
 msgstr "Отправить"
-
-msgid "Ordered"
-msgstr "Заказано"
-
-msgid "Shipped"
-msgstr "Отправлено"
-
-msgid "Unshipped"
-msgstr "Не отправлено"
 
 msgid "Set All Products To Ship"
 msgstr "Выбрать все товары для отправки"
@@ -3245,47 +3328,42 @@ msgstr "Выбрать все товары для отправки"
 msgid "Ship All"
 msgstr "Отправить всё"
 
-msgid "Details"
-msgstr "Подробности"
+msgid "Permissions"
+msgstr "Доступ"
 
-msgid "Order Number"
-msgstr "Номер заказа"
+msgid "Select all permissions"
+msgstr "Выбрать все разрешения"
 
-msgid "Reference"
-msgstr "Справка"
+msgid "Deselect all permissions"
+msgstr "Отменить выбор всех разрешений"
 
-msgid "Label"
-msgstr "Ярлык"
+msgid "Open all permission groups"
+msgstr "Открыть все группы доступа"
 
-msgid "Ordered by"
-msgstr "Заказано"
+msgid "(All permissions granted)"
+msgstr "(Все разрешения предоставлены)"
 
-msgid "Creator"
-msgstr "Создатель"
+msgid "(Partial permissions granted)"
+msgstr "(Некоторые разрешения предоставлены)"
 
-msgid "Tax number"
-msgstr "Налоговый номер"
+msgid "Module permission"
+msgstr "Разрешения модуля"
 
-msgid "Total Price (taxless)"
-msgstr "Полная стоимость (без учёта налогов)"
+msgid "Select the following permission to enable users to access this module."
+msgstr "Выберите следующие разрешения чтобы дать доступ пользователям к этому модулю."
 
-msgid "Total Price"
-msgstr "Полная стоимость"
+msgid "Select all permissions for this module"
+msgstr "Выбрать все разрешения для этого модуля"
 
-msgid "Customer Comment"
-msgstr "Комментарий клиента"
+msgid "Features permissions"
+msgstr "Разрешения функционала"
 
-msgid "Payment Method"
-msgstr "Способ оплаты"
+msgid ""
+"Select the permissions to enable access to specific features of the module."
+msgstr "Выберите разрешения чтобы дать доступ пользователям к специфичному функционалу этого модуля."
 
-msgid "Shipping Method"
-msgstr "Способ доставки"
-
-msgid "Tracking codes"
-msgstr "Коды для отслеживания доставки"
-
-msgid "Address Information"
-msgstr "Адрес"
+msgid "Close all permission groups"
+msgstr "Закрыть все группы доступа"
 
 msgid "Error!"
 msgstr "Ошибка!"
@@ -3315,24 +3393,21 @@ msgstr "Информация, строго касающаяся магазина
 
 #, python-format
 msgid "These settings apply only for shop: <b>%(shop_name)s</b>."
-msgstr ""
+msgstr "Эти настройки применимы только к магазину <b>%(shop_name)s</b>."
 
 #, python-format
 msgid "Product image %(index)s"
-msgstr ""
+msgstr "Изображение продукта %(index)s"
 
 #, python-format
 msgid "Product media %(index)s"
-msgstr ""
+msgstr "Медиа файлы продукта %(index)s"
 
 msgid "Primary image"
 msgstr "Основное изображение"
 
 msgid "Set as primary image"
 msgstr "Выбрать изображение основным"
-
-msgid "Advanced options"
-msgstr "Расширенные опции"
 
 msgid "Product Images"
 msgstr "Изображения товаров"
@@ -3346,6 +3421,9 @@ msgstr "Здесь вы можете прикреплять к товару(ам
 msgid "Showcase your merchandise here."
 msgstr "Выставьте свой товар здесь."
 
+msgid "Drop files here or click to <a href=\"#\">browse</a>."
+msgstr "Перенесите файлы сюда или кликните на <a href=\"#\">выбрать</a>."
+
 msgid "All the orders that have this product."
 msgstr "Все заказы с данным товаром."
 
@@ -3356,7 +3434,7 @@ msgid "This product is currently not orderable."
 msgstr "Данный товар не доступен для заказа в настоящий момент."
 
 msgid "Add a new product"
-msgstr ""
+msgstr "Добавить новый продукт"
 
 msgid "You are adding a product."
 msgstr "Вы добавляете товар."
@@ -3390,12 +3468,12 @@ msgid ""
 msgstr "Задайте конкретные цены для сегментов ваших клиентов, таких как лояльные клиенты, привилегированные клиенты или сезонные клиенты."
 
 msgid "Contact Group Discounts"
-msgstr ""
+msgstr "Скидки для группы контактов"
 
 msgid ""
 "Here you can set individual discount amounts for different contact groups. \" +\n"
 "                    \"The discount amount may be visible on storefront. These groups are defined in"
-msgstr ""
+msgstr "Здесь вы можете установить индивидуальные скидки для групп контактов. Скидки могут быть видимы на сайте магазина."
 
 msgid "Cross-sells"
 msgstr "Кросс-продажи"
@@ -3408,43 +3486,20 @@ msgstr "Файл"
 
 #, python-format
 msgid "Logical count: %(logical_count)s %(sales_unit)s"
-msgstr ""
+msgstr "Логическое количество:  %(logical_count)s %(sales_unit)s"
 
 #, python-format
 msgid "Physical count: %(physical_count)s %(sales_unit)s"
-msgstr ""
+msgstr "Физическое количество: %(physical_count)s %(sales_unit)s"
 
 msgid "This product is not yet a package."
-msgstr ""
+msgstr "Этот товар ещё не является набором."
 
 msgid "To create a package, choose products below."
-msgstr ""
+msgstr "Для создания набора выберите продукты ниже. "
 
 msgid "Package Products"
-msgstr ""
-
-msgid "Simple Variation Children"
-msgstr ""
-
-msgid "Variable Children"
-msgstr ""
-
-msgid "Combination"
-msgstr "Комбинация"
-
-msgid "Variables"
-msgstr "Переменные"
-
-msgid "This product is not yet a variation."
-msgstr "Этот товар ещё не является вариацией."
-
-msgid "To create a simple variation, choose products below."
-msgstr "Создайте простую вариацию, выберите товары ниже."
-
-msgid ""
-"To create a variation with multiple variables, create the variables on the "
-"Variables tab and then link them to products here."
-msgstr "Чтобы создать вариацию с несколькими переменными, создайте переменные во вкладке «Переменные», а затем привяжите их к продуктам здесь."
+msgstr "Продуктовые наборы"
 
 msgid "Recent Orders"
 msgstr "Последние заказы"
@@ -3458,14 +3513,17 @@ msgstr "Клиенты"
 msgid "Today"
 msgstr "Сегодня"
 
-msgid "MTD"
-msgstr "С начала месяца на сегодняшний день"
+msgid "Month to date (MTD)"
+msgstr "С начала месяца (MTD)"
 
-msgid "YTD"
-msgstr "C начала года на сегодняшний день"
+msgid "Year to date (YTD)"
+msgstr "С начала года (YTD)"
 
 msgid "Totals"
 msgstr "Всего"
+
+msgid "Consolidate Data"
+msgstr "Консолидированные Данные"
 
 msgid ""
 "Your shop currently has some sample data installed. Select below which "
@@ -3517,10 +3575,10 @@ msgid ""
 msgstr "Определить ценовой диапазон корзины. Минимальный диапазон учитывается как ноль."
 
 msgid "Behavior"
-msgstr ""
+msgstr "Поведение"
 
 msgid "Behavior component type"
-msgstr ""
+msgstr "Типы компонентов поведения"
 
 msgid ""
 "The behaviors for this service. These behaviors can be used to add costs to "
@@ -3538,7 +3596,7 @@ msgid ""
 "The field \"Reference number prefix\" is disabled because the order "
 "reference number generation method doesn't support a prefix. You can edit "
 "this setting from <a href=\"%(url)s\">system settings</a>."
-msgstr ""
+msgstr "Поле «Префикс ссылочного номера» отключено, поскольку метод генерации ссылочного номера заказа не поддерживает префикс. Вы можете изменить этот параметр в <a href=\"%(url)s\">настройках системы</a>."
 
 msgid "Shop Images"
 msgstr "Изображения магазина"
@@ -3550,7 +3608,7 @@ msgid "Contact Address"
 msgstr "Контактный адрес"
 
 msgid "News &amp; Updates"
-msgstr ""
+msgstr "Новости и обновления "
 
 msgid "Support"
 msgstr "Поддержка"
@@ -3575,10 +3633,10 @@ msgstr "Shuup время от времени будет высылать тел�
 
 #, python-format
 msgid ""
-"The data contains an unique installation key, as well as the hostname of the"
-" installation (as sent by the visiting browser; currently "
+"The data contains a unique installation key, as well as the hostname of the "
+"installation (as sent by the visiting browser; currently "
 "<code>%(host)s</code>)."
-msgstr ""
+msgstr "Данные содержат уникальный ключ установки, а также имя хоста установки (отправленное посещающим браузером; в настоящее время<code>%(host)s</code>)"
 
 msgid ""
 "No business data or other customer information is ever sent. Shuup.com only "
@@ -3592,7 +3650,7 @@ msgstr "Принять участие / не принимать участия"
 msgid ""
 "You are currently <span class=\"lead label label-success\">opted in</span> "
 "to send telemetry data to Shuup.com."
-msgstr ""
+msgstr "В настоящее время вы <span class=\"lead label label-success\">выбрали</span> отправку данных телеметрии на Shuup.com."
 
 msgid "Thank you for your valuable contribution."
 msgstr "Спасибо за ваш ценный вклад."
@@ -3603,7 +3661,7 @@ msgstr "Не принимать участия"
 msgid ""
 "You are currently <span class=\"label label-warning\">opted out</span> of "
 "Shuup telemetry."
-msgstr ""
+msgstr "В настоящее время вы <span class=\"label label-warning\">отключили</span> телеметрию Shuup."
 
 msgid "Opt in"
 msgstr "Принять участие"
@@ -3620,7 +3678,7 @@ msgstr "Загрузка телеметрии в настоящий момент
 msgid ""
 "Telemetry data was last submitted at %(submission_datetime)s - "
 "(%(submission_timesince)s) ago"
-msgstr ""
+msgstr "Данные телеметрии последний раз были отправлены в%(submission_datetime)s - (%(submission_timesince)s) "
 
 msgid "See the data that was submitted."
 msgstr "Смотреть отправленную информацию"
@@ -3634,12 +3692,12 @@ msgstr "Данные телеметрии"
 msgid "Here is an example of the data that would be submitted right now."
 msgstr "Здесь пример информации, которая будет подтверждена прямо сейчас."
 
-msgid "User Information"
-msgstr "Информация пользователя"
+msgid "Customer Information"
+msgstr ""
 
 #, python-format
 msgid "Send a password reset email to %(email)s?"
-msgstr ""
+msgstr "Отправить электронное письмо для сброса пароля на адрес%(email)s?"
 
 msgid "Send Reset Email"
 msgstr "Выслать письмо для повторной установки"
@@ -3659,16 +3717,22 @@ msgstr "Создать новый"
 
 #, python-format
 msgid "New %(model)s"
-msgstr ""
+msgstr "Новая %(model)s"
 
 msgid "Discard Changes"
 msgstr "Отменить изменения"
+
+msgid "Save as a copy"
+msgstr "Сохранить, как копию"
 
 msgid "Save and Create New"
 msgstr "Сохранить и создать новый"
 
 #, python-format
 msgid "Are you sure you wish to delete %s?"
+msgstr "Вы уверены, что хотите удалить%s?"
+
+msgid "Export as CSV file"
 msgstr ""
 
 #, python-format
@@ -3678,73 +3742,77 @@ msgstr "Показаны %(per_page)s из  %(n_items)s %(verbose_name_plural)s"
 msgid "objects"
 msgstr "Объекты"
 
-msgid "Unknown error"
-msgstr "Неизвестный пользователь"
+msgid "Mass Action encountered an unknown error."
+msgstr "Произошла неизвестная ошибка в Mass Action."
 
 msgid "Mass Action"
 msgstr "Массовое действие"
 
 #, python-format
 msgid "Can't view this page. %(reason)s"
-msgstr ""
+msgstr "Не могу просмотреть эту страницу.%(reason)s"
 
 msgid "Log in with different credentials..."
 msgstr "Войти с другими учётными данными..."
 
-msgid "You must be logged in."
-msgstr "Вы должны войти на сайт."
+msgid "Sign in to continue."
+msgstr "Войдите, чтобы продолжить."
 
-msgid "You must be a staff member."
-msgstr "Вы должны быть сотрудником."
+msgid ""
+"Your account must have `Access to Admin Panel` permissions to access this "
+"page."
+msgstr "Для доступа к этой странице ваша учетная запись должна иметь разрешение «Доступ к панели администратора»."
+
+msgid "There is no active shop available. Contact support for more details."
+msgstr "Нет активного магазина. Обратитесь в службу поддержки для получения более подробной информации."
 
 #, python-format
 msgid "You do not have the required permissions: %s"
-msgstr ""
+msgstr "У вас нет необходимых разрешений:%s"
+
+#, python-brace-format
+msgid ""
+"Can't view this page. You do not have the required permission(s): "
+"`{permissions}`."
+msgstr "Не могу просмотреть эту страницу. У вас нет необходимых разрешений. Разрешения: `{permissions}`"
 
 msgid "Unnamed"
 msgstr "Без названия"
 
 msgid "Item"
-msgstr ""
+msgstr "Элемент"
 
 #, python-format
-msgid "New %s created."
-msgstr ""
+msgid "New %s was created."
+msgstr "Новый%sбыл создан."
 
 #, python-format
-msgid "%s edited."
-msgstr ""
+msgid "%s was edited."
+msgstr "%sбыл отредактирован."
 
 #, python-format
 msgid "New %s"
-msgstr ""
+msgstr "Новый%s"
 
 #, python-format
 msgid "Unnamed %s"
-msgstr ""
+msgstr "Безымянный%s"
 
 #, python-format
 msgid "Only one %(model)s permitted."
-msgstr ""
+msgstr "Разрешен только один%(model)s."
 
 msgid "Mass Edit"
 msgstr "Массовое редактирование"
 
 msgid "Invalid object."
-msgstr ""
+msgstr "Неверный объект."
 
 msgid "Invalid model."
-msgstr ""
+msgstr "Неверная модель."
 
-#, python-format
-msgid "You do not have the required permission(s): %s"
-msgstr ""
-
-msgid "Unauthorized"
-msgstr ""
-
-msgid "Object not found"
-msgstr ""
+msgid "Object not found."
+msgstr "Объект не найден."
 
 msgid "Storefront"
 msgstr "Витрина"
@@ -3758,26 +3826,23 @@ msgstr "Закончите установку"
 msgid "Complete the setup wizard"
 msgstr "Завершитер работу мастера установки"
 
-msgid "Publish your store"
-msgstr "Опубликовать ваш магазин"
-
-msgid "Let customers browse your store and make purchases"
-msgstr "Позволить клиентам просматривать ваш магазин и совершать покупки"
-
-msgid "Publish shop"
-msgstr "Опубликовать магазин"
+msgid "All set. Nothing to be configured"
+msgstr "Все готово. Ничего не нужно настраивать"
 
 msgid ""
 "A reset password email was sent. Please, follow the instructions to set a "
 "new password."
-msgstr ""
+msgstr "Было отправлено электронное письмо для сброса пароля. Пожалуйста, следуйте инструкциям, чтобы установить новый пароль."
 
 msgid "This recovery link is invalid."
-msgstr ""
+msgstr "Эта ссылка для восстановления недействительна."
 
-msgid "Password changed successfully!"
-msgstr ""
+msgid "Password was changed."
+msgstr "Пароль был изменен."
 
 #, python-format
 msgid "Couldn't get selections for %s."
+msgstr "Не удалось выбрать для%s."
+
+msgid "Selector not found."
 msgstr ""

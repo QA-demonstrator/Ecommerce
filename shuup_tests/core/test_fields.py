@@ -1,26 +1,32 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import pytest
 import re
 from decimal import Decimal
-
-import pytest
-from django.core.exceptions import ImproperlyConfigured
 from django.forms import Form, ModelForm
 from django.forms.widgets import NumberInput
 from django.utils.encoding import force_text
 
-from shuup.core.fields import FormattedDecimalFormField, MeasurementField
+from shuup.core.fields import (
+    FORMATTED_DECIMAL_FIELD_DECIMAL_PLACES,
+    FORMATTED_DECIMAL_FIELD_MAX_DIGITS,
+    FormattedDecimalFormField,
+    MeasurementField,
+)
 from shuup.core.models import Product
 
 
-def test_measurement_field_doesnt_know_bananas():
-    with pytest.raises(ImproperlyConfigured):
-        scale = MeasurementField(unit="banana")
+def test_measurement_field():
+    field = MeasurementField(unit="mm3")
+    assert field.unit == "mm3"
+    assert field.default == 0
+    assert field.max_digits == FORMATTED_DECIMAL_FIELD_MAX_DIGITS
+    assert field.decimal_places == FORMATTED_DECIMAL_FIELD_DECIMAL_PLACES
 
 
 def test_formatted_decimal_field():
@@ -34,9 +40,7 @@ def test_formatted_decimal_field():
             model = Product
             fields = ["width"]
 
-    values = [
-        "0E-9", "0E-30", "1E-9", "123E-10", "-123E-10", "1.12345666666666E20"
-    ]
+    values = ["0E-9", "0E-30", "1E-9", "123E-10", "-123E-10", "1.12345666666666E20"]
 
     for value in values:
         product = Product(width=Decimal(value))
@@ -55,32 +59,27 @@ def test_formatted_decimal_field():
         form = TestModelForm(instance=product)
 
 
-@pytest.mark.parametrize("decimal_places, expected_step", [
-    (2, '0.01'),
-    (3, '0.001'),
-    (0, '1'),
-    (6, 'any')
-])
+@pytest.mark.parametrize("decimal_places, expected_step", [(2, "0.01"), (3, "0.001"), (0, "1"), (6, "any")])
 def test_formatted_decimal_field_step(decimal_places, expected_step):
     field = FormattedDecimalFormField(max_digits=10, decimal_places=decimal_places)
 
     class TestForm(Form):
         f = field
 
-    rendered_field = force_text(TestForm()['f'])
+    rendered_field = force_text(TestForm()["f"])
     rendered_step = re.search('step="(.*?)"', rendered_field).group(1)
     assert rendered_step == expected_step
 
 
 def test_formatted_decimal_field_overridden_step():
-    field = FormattedDecimalFormField(max_digits=10, decimal_places=10, widget=NumberInput(attrs={'step': '0.1'}))
+    field = FormattedDecimalFormField(max_digits=10, decimal_places=10, widget=NumberInput(attrs={"step": "0.1"}))
 
     class TestForm(Form):
         f = field
 
-    rendered_field = force_text(TestForm()['f'])
+    rendered_field = force_text(TestForm()["f"])
     rendered_step = re.search('step="(.*?)"', rendered_field).group(1)
-    assert rendered_step == '0.1'
+    assert rendered_step == "0.1"
 
 
 def test_formatted_decimal_field_default():
@@ -96,6 +95,7 @@ def test_formatted_decimal_field_default():
 
 def test_separated_value_field():
     from shuup.testing.models import FieldsModel
+
     fm = FieldsModel()
 
     fm.separated_values = ["1", "2", "3"]

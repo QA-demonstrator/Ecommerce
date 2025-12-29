@@ -5,6 +5,9 @@
 .. image:: https://img.shields.io/pypi/v/shuup.svg
    :alt: PyPI
    :target: https://github.com/shuup/shuup
+.. image:: https://snyk.io/test/github/shuup/shuup/badge.svg
+   :alt: Known Vulnerabilities
+   :target: https://snyk.io/test/github/shuup/shuup
 
 Shuup
 =====
@@ -16,12 +19,11 @@ https://shuup.com/
 Copyright
 ---------
 
-Copyright (C) 2012-2018 by Shuup Inc. <support@shuup.com>
+Copyright (c) 2012-2021 by Shuup Commerce Inc. <support@shuup.com>
 
-Shuup is International Registered Trademark & Property of Shuup Inc.,
-Business Address: 200 Continental Drive, Suite 401,
-Newark, DE 19713,
-United States Of America
+Shuup is International Registered Trademark & Property of Shuup Commerce Inc.,
+Business ID: BC1126729,
+Business Address: 1500 West Georgia Suite 1300, Vancouver, BC, V6G-2Z6, Canada.
 
 CLA
 ---
@@ -49,11 +51,27 @@ We have a Gitter chat room for Shuup.  Come chat with us!  |Join chat|
 .. |Join chat| image:: https://badges.gitter.im/Join%20Chat.svg
    :target: https://gitter.im/shuup/shuup
 
-Install Shuup
--------------
+Docker quick start
+------------------
+
+Fastest way to get Shuup up and running is to use `Docker <https://www.docker.com>`_.
+
+1. Run:
+
+   .. code-block:: shell
+
+      docker-compose up
+
+2. Open `localhost:8000/sa <http://localhost:8000/sa>`_ in a browser,
+   log in with username: ``admin`` password: ``admin``
+
+Full Shuup installation guide
+-----------------------------
 
 See `Getting Started
 <http://shuup.readthedocs.io/en/latest/howto/getting_started.html>`__.
+
+For simple project example see our `Django-project template <https://github.com/shuup/shuup-project-template>`__.
 
 Getting Started with Shuup development
 --------------------------------------
@@ -92,33 +110,30 @@ modules, use command:
 Roadmap
 -------
 
-* Per object placeholders. Option to add content per contact group, category, product and CMS page. `#1220 <https://github.com/shuup/shuup/issues/1220>`__ :white_check_mark:.
-* Pricing cache. To improve the performance issues with complex catalog campaigns. `#1163 <https://github.com/shuup/shuup/issues/1163>`__ :white_check_mark:.
-* Option for 'centrally' or 'separately' managed products. `#1275 <https://github.com/shuup/shuup/issues/1275>`__.
-* Improve shop product purchasable attribute. `#1281 <https://github.com/shuup/shuup/issues/1281>`__ :white_check_mark:.
-* Improve product stock behavior. `#1249 <https://github.com/shuup/shuup/issues/1249>`__.
-* Improved unit tests for the multishop feature. `#1160 <https://github.com/shuup/shuup/issues/1160>`__.
-* Improve order status and order status history. `#1211 <https://github.com/shuup/shuup/issues/1211>`__.
-* Initial support for Django 2.0. `#1289 <https://github.com/shuup/shuup/issues/1289>`__.
-* OS Admin design/UX overhaul.
-* Various smaller issues from the issues-list.
+v3 (early 2021)
+###############
 
-OS Addons
----------
+* Initial Django 3.x support
+* Latest Jinja support
+* Deprecate theme folders under Shuup front which are used to override
+  individual macros in macro folders. This does not work well with latest
+  Jinja and adds extra complexity.
 
-* `Shuup Product Reviews <https://github.com/shuup/shuup-product-reviews>`__. Shuup Product Reviews.
-* `Shuup Stripe <https://github.com/shuup/shuup-stripe>`__. Stripe Payment Processor Addon for Shuup.
-* `Shuup Wishlist <https://github.com/shuup/shuup-wishlist>`__. Shuup Wishlist Addon.
-* `Shuup Checkoutfi <https://github.com/shuup/shuup-checkoutfi>`__. Checkout.fi integration for Shuup.
-* `Shuup Yaml <https://github.com/shuup/shuup-yaml>`__. Import categories, manufacturers and products to Shuup.
-* `Shuup Mailchimp <https://github.com/shuup/shuup-mailchimp>`__. Mailchimp integration for Shuup (New v0.7.8 released).
-* `Shuup Xtheme Layouts <https://github.com/shuup/shuup-xtheme-extra-layouts>`__. Xtheme layouts for Shuup.
-* `Shuup Category Organizer <https://github.com/shuup/shuup-category-organizer>`__. Shuup Category Organizer.
+v4 (mid 2021)
+#############
 
-The purpose of these addons, is to demonstrate how to build
-other simple addons to extend Shuup. To learn more, here are
-some useful links about how to extend Shuup.
+* Move Shuup front, xtheme and theming features to own addons. This so that
+  projects not ready for updating theme or front can still get latest Shuup.
+* Introduce new default theme and overhaul templates structure to be more
+  simple (likely Bootstrap 5 will be used).
+* Bump admin Bootstrap version to match with the new front
+* Move various other not essential apps in this repository to addons for
+  better version management.
 
+Additional Material
+-------------------
+
+* `Django-project template <https://github.com/shuup/shuup-project-template>`__. Django-project template.
 * `Provides system <https://shuup.readthedocs.io/en/latest/ref/provides.html>`__.
 * `Core settings <https://shuup.readthedocs.io/en/latest/api/shuup.core.html#module-shuup.core.settings>`__.
 * `Front settings <https://shuup.readthedocs.io/en/latest/api/shuup.front.html#module-shuup.front.settings>`__.

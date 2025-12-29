@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -31,7 +31,6 @@ class BehaviorFormSet(BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         self.form_class = kwargs.pop("form")
         self.owner = kwargs.pop("owner")
-        kwargs.pop("empty_permitted")
         super(BehaviorFormSet, self).__init__(*args, **kwargs)
 
     def _get_actual_model(self):

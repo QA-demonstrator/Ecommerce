@@ -1,106 +1,82 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 
-import random
-
 import pytest
+import random
 from django.core import mail
-from django.core.urlresolvers import reverse
 from django.utils.translation import activate
 
 from shuup.core import cache
 from shuup.core.defaults.order_statuses import create_default_order_statuses
-from shuup.core.models import (
-    get_person_contact, MutableAddress, Order, OrderLineType, Product,
-    StockBehavior
-)
+from shuup.core.models import MutableAddress, Order, OrderLineType, Product, get_person_contact
 from shuup.core.order_creator import OrderCreator
 from shuup.core.pricing import get_pricing_module
 from shuup.notify.models import Script
 from shuup.testing.factories import (
-    create_product, create_random_order, create_random_person,
-    get_default_category, get_default_product, get_default_supplier,
-    get_default_tax_class, get_initial_order_status, get_shop, get_default_shop
+    create_product,
+    create_random_order,
+    create_random_person,
+    get_default_category,
+    get_default_product,
+    get_default_shop,
+    get_default_supplier,
+    get_default_tax_class,
+    get_initial_order_status,
+    get_shop,
 )
 from shuup.testing.mock_population import populate_if_required
 from shuup.testing.soup_utils import extract_form_fields
-from shuup_tests.admin.test_order_creator import (
-    get_frontend_order_state, get_order_from_state
-)
-from shuup_tests.front.test_checkout_flow import (
-    _populate_client_basket, fill_address_inputs
-)
+from shuup.utils.django_compat import reverse
+from shuup_tests.admin.test_order_creator import get_frontend_order_state, get_order_from_state
+from shuup_tests.front.test_checkout_flow import _populate_client_basket, fill_address_inputs
 from shuup_tests.functional.test_refunds import (
-    _add_basket_campaign, _add_catalog_campaign, _add_taxes, _get_product_data,
-    INITIAL_PRODUCT_QUANTITY
+    INITIAL_PRODUCT_QUANTITY,
+    _add_basket_campaign,
+    _add_catalog_campaign,
+    _add_taxes,
+    _get_product_data,
 )
 from shuup_tests.simple_supplier.utils import get_simple_supplier
 from shuup_tests.utils import SmartClient
 from shuup_tests.utils.basketish_order_source import BasketishOrderSource
-from shuup_tests.utils.fixtures import (
-    regular_user, REGULAR_USER_PASSWORD, REGULAR_USER_USERNAME
-)
+from shuup_tests.utils.fixtures import REGULAR_USER_PASSWORD, REGULAR_USER_USERNAME, regular_user
 
-STEP_DATA = [{
-    "cond_op": "all",
-    "enabled": True,
-    "conditions": [{
-        "v1": {"variable":"language"},
-        "template_data": {},
-        "v2": {"variable":"language"},
-        "identifier":"language_equal"
-    }],
-    "next": "continue",
-    "actions": [{
-        "fallback_language": {
-            "constant": "FI"
-        },
-        "template_data": {
-            "en": {
-                "body": "english",
-                "content_type": "plain",
-                "subject": "english"
-            },
-            "fi": {
-                "body": "finnish",
-                "content_type": "plain",
-                "subject": "finnish"
-            },
-            "ja": {
-                "body": "japan",
-                "content_type": "plain",
-                "subject": "japan"
-            },
-            "zh-hans": {
-                "body": "china",
-                "content_type": "plain",
-                "subject": "china"
-            },
-            "pt-br": {
-                "body": "brazil",
-                "content_type": "plain",
-                "subject": "brazil"
-            },
-            "it": {
-                "body": "italia",
-                "content_type": "plain",
-                "subject": "italia"
+STEP_DATA = [
+    {
+        "cond_op": "all",
+        "enabled": True,
+        "conditions": [
+            {
+                "v1": {"variable": "language"},
+                "template_data": {},
+                "v2": {"variable": "language"},
+                "identifier": "language_equal",
             }
-        },
-        "identifier": "send_email",
-        "language": {
-            "variable": "language"
-        },
-        "recipient": {
-            "constant": "janne@shuup.com"
-        }
-    }]
-}]
+        ],
+        "next": "continue",
+        "actions": [
+            {
+                "fallback_language": {"constant": "FI"},
+                "template_data": {
+                    "en": {"body": "english", "content_type": "plain", "subject": "english"},
+                    "fi": {"body": "finnish", "content_type": "plain", "subject": "finnish"},
+                    "ja": {"body": "japan", "content_type": "plain", "subject": "japan"},
+                    "zh-hans": {"body": "china", "content_type": "plain", "subject": "china"},
+                    "pt-br": {"body": "brazil", "content_type": "plain", "subject": "brazil"},
+                    "it": {"body": "italia", "content_type": "plain", "subject": "italia"},
+                },
+                "identifier": "send_email",
+                "language": {"variable": "language"},
+                "recipient": {"constant": "janne@shuup.com"},
+            }
+        ],
+    }
+]
 
 DEFAULT_ADDRESS_DATA = dict(
     prefix="Sir",
@@ -111,7 +87,7 @@ DEFAULT_ADDRESS_DATA = dict(
     city="Dog Fort",
     phone="123456789",
     email="customer@shuup.com",
-    country="GB"
+    country="GB",
 )
 
 SHOP_ADDRESS_DATA = dict(
@@ -121,8 +97,9 @@ SHOP_ADDRESS_DATA = dict(
     city="Cat Fort",
     phone="987654321",
     email="shop@shuup.com",
-    country="US"
+    country="US",
 )
+
 
 def get_address(**overrides):
     data = dict(DEFAULT_ADDRESS_DATA, **overrides)
@@ -160,12 +137,8 @@ def _get_custom_order(regular_user, **kwargs):
     for product_data in _get_product_data():
         quantity = product_data.pop("quantity")
         product = create_product(
-            sku=product_data.pop("sku"),
-            shop=shop,
-            supplier=supplier,
-            stock_behavior=StockBehavior.STOCKED,
-            tax_class=get_default_tax_class(),
-            **product_data)
+            sku=product_data.pop("sku"), shop=shop, supplier=supplier, tax_class=get_default_tax_class(), **product_data
+        )
         shop_product = product.get_shop_instance(shop)
         shop_product.categories.add(get_default_category())
         shop_product.save()
@@ -177,7 +150,7 @@ def _get_custom_order(regular_user, **kwargs):
             supplier=supplier,
             quantity=quantity,
             base_unit_price=pi.base_unit_price,
-            discount_amount=pi.discount_amount
+            discount_amount=pi.discount_amount,
         )
 
     oc = OrderCreator()
@@ -187,7 +160,7 @@ def _get_custom_order(regular_user, **kwargs):
 
 def fill_address_inputs(soup, address, with_company=False):
     inputs = {}
-    for key, value in extract_form_fields(soup.find('form', id='addresses')).items():
+    for key, value in extract_form_fields(soup.find("form", id="addresses")).items():
         if not value:
             if key in ("order-tax_number", "order-company_name"):
                 continue
@@ -198,7 +171,7 @@ def fill_address_inputs(soup, address, with_company=False):
                 value = "test%d@example.shuup.com" % random.random()
             if not value:
                 value = "test"
-        inputs[key] = value
+        inputs[key] = value or ""  # prevent None as data
 
     if with_company:
         inputs["company-tax_number"] = "FI1234567-1"
@@ -207,6 +180,7 @@ def fill_address_inputs(soup, address, with_company=False):
         inputs = dict((k, v) for (k, v) in inputs.items() if not k.startswith("company-"))
 
     return inputs
+
 
 @pytest.mark.django_db
 def test_order_received(rf, regular_user):
@@ -217,10 +191,11 @@ def test_order_received(rf, regular_user):
 
     template_data = STEP_DATA[0]["actions"][0]["template_data"]
     for lang in ["en", "fi"]:
+        cache.clear()
         n_outbox_pre = len(mail.outbox)
         customer = create_random_person(locale=lang)
         create_random_order(customer)
-        assert (len(mail.outbox) == n_outbox_pre + 1), "Sending email failed"
+        assert len(mail.outbox) == n_outbox_pre + 1, "Sending email failed"
         latest_mail = mail.outbox[-1]
         assert latest_mail.subject == template_data[lang]["subject"], "Subject doesn't match"
         assert latest_mail.body == template_data[lang]["body"], "Body doesn't match"
@@ -231,11 +206,12 @@ def test_order_received_admin(rf, admin_user):
     get_test_script("test script", "order_received")
     template_data = STEP_DATA[0]["actions"][0]["template_data"]
     for lang in ["en", "fi"]:
+        cache.clear()
         get_initial_order_status()  # Needed for the API
         n_outbox_pre = len(mail.outbox)
         contact = create_random_person(locale=lang, minimum_name_comp_len=5)
         get_order_from_state(get_frontend_order_state(contact), admin_user)
-        assert (len(mail.outbox) == n_outbox_pre + 1), "Sending email failed"
+        assert len(mail.outbox) == n_outbox_pre + 1, "Sending email failed"
         latest_mail = mail.outbox[-1]
         assert latest_mail.subject == template_data[lang]["subject"], "Subject doesn't match"
         assert latest_mail.body == template_data[lang]["body"], "Body doesn't match"
@@ -256,12 +232,10 @@ def test_basic_order_flow_not_registered(with_company):
 
     template_data = STEP_DATA[0]["actions"][0]["template_data"]
 
-    LANG_CODE = {
-        "en": "US",
-        "fi": "FI"
-    }
+    LANG_CODE = {"en": "US", "fi": "FI"}
 
     for lang in ["en", "fi"]:
+        cache.clear()
         n_outbox_pre = len(mail.outbox)
         c = SmartClient()
         product_ids = _populate_client_basket(c)
@@ -278,14 +252,17 @@ def test_basic_order_flow_not_registered(with_company):
 
         confirm_soup = c.soup(confirm_path)
         Product.objects.get(pk=product_ids[0]).soft_delete()
-        assert c.post(confirm_path, data=extract_form_fields(confirm_soup)).status_code == 200  # user needs to reconfirm
+        assert (
+            c.post(confirm_path, data=extract_form_fields(confirm_soup)).status_code == 200
+        )  # user needs to reconfirm
         data = extract_form_fields(confirm_soup)
-        data['product_ids'] = ','.join(product_ids[1:])
+        data["accept_terms"] = True
+        data["product_ids"] = ",".join(product_ids[1:])
         assert c.post(confirm_path, data=data).status_code == 302  # Should redirect forth
 
         n_orders_post = Order.objects.count()
         assert n_orders_post > n_orders_pre, "order was created"
-        assert (len(mail.outbox) == n_outbox_pre + 1), "Sending email failed"
+        assert len(mail.outbox) == n_outbox_pre + 1, "Sending email failed"
         latest_mail = mail.outbox[-1]
 
         # mail is always sent in fallback language since user is not registered
@@ -307,12 +284,10 @@ def test_basic_order_flow_registered(regular_user):
 
     template_data = STEP_DATA[0]["actions"][0]["template_data"]
 
-    LANG_CODE = {
-        "en": "US",
-        "fi": "FI"
-    }
+    LANG_CODE = {"en": "US", "fi": "FI"}
 
     for lang in ["en", "fi"]:
+        cache.clear()
         n_outbox_pre = len(mail.outbox)
         contact = get_person_contact(regular_user)
         contact.language = lang
@@ -335,14 +310,17 @@ def test_basic_order_flow_registered(regular_user):
 
         confirm_soup = c.soup(confirm_path)
         Product.objects.get(pk=product_ids[0]).soft_delete()
-        assert c.post(confirm_path, data=extract_form_fields(confirm_soup)).status_code == 200  # user needs to reconfirm
+        assert (
+            c.post(confirm_path, data=extract_form_fields(confirm_soup)).status_code == 200
+        )  # user needs to reconfirm
         data = extract_form_fields(confirm_soup)
-        data['product_ids'] = ','.join(product_ids[1:])
+        data["accept_terms"] = True
+        data["product_ids"] = ",".join(product_ids[1:])
         assert c.post(confirm_path, data=data).status_code == 302  # Should redirect forth
 
         n_orders_post = Order.objects.count()
         assert n_orders_post > n_orders_pre, "order was created"
-        assert (len(mail.outbox) == n_outbox_pre + 1), "Sending email failed"
+        assert len(mail.outbox) == n_outbox_pre + 1, "Sending email failed"
         latest_mail = mail.outbox[-1]
 
         # mail is always sent in fallback language since user is not registered
@@ -355,65 +333,62 @@ def test_basic_order_flow_registered(regular_user):
 def test_order_received_variables(rf, with_shop_contact):
     activate("en")
     shop = get_shop(True)
-    shop.contact_address = get_address(**SHOP_ADDRESS_DATA)
-    shop.contact_address.save()
+    contact_address = get_address(**SHOP_ADDRESS_DATA)
+    contact_address.save()
+    shop.contact_address = contact_address
     shop.save()
-    get_default_product()
-    get_default_supplier()
 
-    STEP_DATA = [{
-        "cond_op": "all",
-        "enabled": True,
-        "next": "continue",
-        "actions": [{
-            "template_data": {
-                "en": {
-                    "body": "{{ customer_email }}",
-                    "content_type": "plain",
-                    "subject": "{{ customer_phone }}"
+    get_default_product()
+    get_default_supplier(shop)
+
+    STEP_DATA = [
+        {
+            "cond_op": "all",
+            "enabled": True,
+            "next": "continue",
+            "actions": [
+                {
+                    "template_data": {
+                        "en": {
+                            "body": "{{ customer_email }}",
+                            "content_type": "plain",
+                            "subject": "{{ customer_phone }}",
+                        }
+                    },
+                    "identifier": "send_email",
+                    "language": {"constant": "en"},
+                    "recipient": {"constant": "someone@shuup.com"},
                 }
-            },
-            "identifier": "send_email",
-            "language": {
-                "constant": "en"
-            },
-            "recipient": {
-                "constant": "someone@shuup.com"
-            }
-        }]
-    }]
+            ],
+        }
+    ]
 
     if with_shop_contact:
-        STEP_DATA[0]['actions'].insert(0, {
-            "template_data": {
-                "en": {
-                    "body": "{{ shop_email }}",
-                    "content_type": "plain",
-                    "subject": "{{ shop_phone }}"
-                }
+        STEP_DATA[0]["actions"].insert(
+            0,
+            {
+                "template_data": {
+                    "en": {"body": "{{ shop_email }}", "content_type": "plain", "subject": "{{ shop_phone }}"}
+                },
+                "identifier": "send_email",
+                "language": {"constant": "en"},
+                "recipient": {"constant": "someoneelse@shuup.com"},
             },
-            "identifier": "send_email",
-            "language": {
-                "constant": "en"
-            },
-            "recipient": {
-                "constant": "someoneelse@shuup.com"
-            }
-        })
+        )
 
-    sc = Script.objects.create(
-        name="variables script", event_identifier="order_received", enabled=True, shop=shop)
+    sc = Script.objects.create(name="variables script", event_identifier="order_received", enabled=True, shop=shop)
     sc.set_serialized_steps(STEP_DATA)
     sc.save()
 
     n_outbox_pre = len(mail.outbox)
-    customer = create_random_person(locale='en')
-    customer.default_shipping_address = get_address(**DEFAULT_ADDRESS_DATA)
-    customer.default_shipping_address.save()
+    customer = create_random_person(locale="en")
+    address = get_address(**DEFAULT_ADDRESS_DATA)
+    address.save()
+    customer.default_shipping_address = address
     customer.save()
 
-    create_random_order(customer, shop=shop)
-    assert (len(mail.outbox) == n_outbox_pre + (2 if with_shop_contact else 1)), "Sending email failed"
+    order = create_random_order(customer, shop=shop)
+    assert len(mail.outbox) == n_outbox_pre + (2 if with_shop_contact else 1), "Sending email failed"
 
     latest_mail = mail.outbox[-1]
     assert latest_mail.subject == customer.default_shipping_address.phone

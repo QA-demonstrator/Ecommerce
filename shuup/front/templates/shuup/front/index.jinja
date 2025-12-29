@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="{{ static("img/shuup.ico") }}">
-    <link rel="stylesheet" href="{{ static("shuup/front/css/style.css") }}">
+    <link rel="stylesheet" href="{{ shuup_static("shuup/front/css/style.css") }}">
     <title>{% trans %}Welcome to Shuup!{% endtrans %}</title>
     <style>
         h1 {
@@ -42,22 +42,16 @@
                     <h1>{% trans name=request.shop.public_name or _("your shop") %}Welcome to {{ name }}!{% endtrans %}</h1>
                     <p>{% trans %}You are seeing this page because there is no theme selected for the default frontend.{% endtrans %}</p>
                     <p>
-                        {% if shuup.general.is_shop_admin() %}
-                            {% set admin_url=shuup.urls.get_url("shuup_admin:dashboard") %}
-                            {% if admin_url %}
-                                <p>
-                                    <a href="{{ admin_url }}">
-                                        {% trans %}Log in to the administration interface{% endtrans %}
-                                    </a> {% trans %}to choose a theme and set up your shop.{% endtrans %}
-                                </p>
-                            {% else %}
-                                <p>
-                                    {% trans %}The administration interface does not seem to be available. Use other means to choose a theme.{% endtrans %}
-                                </p>
-                            {% endif %}
+                        {% set admin_url=shuup.urls.get_url("shuup_admin:dashboard") %}
+                        {% if admin_url %}
+                            <p>
+                                <a href="{{ admin_url }}">
+                                    {% trans %}Log in to the administration interface{% endtrans %}
+                                </a> {% trans %}to choose a theme and set up your shop.{% endtrans %}
+                            </p>
                         {% else %}
                             <p>
-                                {% trans %}You are not an administrator{% endtrans %} &ndash; {% trans %}ask an administrator to select a theme.{% endtrans %}
+                                {% trans %}The administration interface does not seem to be available. Use other means to choose a theme.{% endtrans %}
                             </p>
                         {% endif %}
                     </p>

@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -23,11 +23,23 @@ class DashboardViewMixin(object):
 
     def get_menu_items(self):
         items = []
-        for cls in get_provide_objects("customer_dashboard_items"):
+        sorted_items = sorted(get_provide_objects("customer_dashboard_items"), key=lambda dashboard: dashboard.ordering)
+
+        for cls in sorted_items:
             c = cls(self.request)
             if c.show_on_menu():
                 items.append(c)
         return items
+
+    def dispatch(self, request, *args, **kwargs):
+        # these views can only be visible when a contact is available
+        if not getattr(request, "person", None):
+            from django.http.response import HttpResponseRedirect
+
+            from shuup.utils.django_compat import reverse
+
+            return HttpResponseRedirect(reverse("shuup:index"))
+        return super(DashboardViewMixin, self).dispatch(request, *args, **kwargs)
 
 
 class DashboardView(DashboardViewMixin, TemplateView):

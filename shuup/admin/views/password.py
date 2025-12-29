@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -11,13 +11,13 @@ from __future__ import unicode_literals
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.transaction import atomic
 from django.http.response import HttpResponseRedirect
 from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
 
+from shuup.utils.django_compat import reverse, reverse_lazy
 from shuup.utils.excs import Problem
 
 
@@ -26,6 +26,7 @@ class RequestPasswordView(FormView):
 
     def get_form_class(self):
         from shuup.admin.forms._auth import RequestPasswordForm
+
         return RequestPasswordForm
 
     def get_success_url(self):
@@ -45,11 +46,12 @@ class RequestPasswordView(FormView):
 
 class ResetPasswordView(FormView):
     template_name = "shuup/admin/auth/reset_password.jinja"
-    success_url = reverse_lazy("shuup_admin:login")
+    success_url = reverse_lazy("shuup_admin:dashboard")
     token_generator = default_token_generator
 
     def get_form_class(self):
         from django.contrib.auth.forms import SetPasswordForm
+
         return SetPasswordForm
 
     def get_form_kwargs(self):
@@ -71,7 +73,7 @@ class ResetPasswordView(FormView):
         user = self.get_target_user()
         token = self.kwargs["token"]
 
-        valid = (user is not None and self.token_generator.check_token(user, token))
+        valid = user is not None and self.token_generator.check_token(user, token)
         if not valid:
             raise Problem(_("This recovery link is invalid."))
 
@@ -82,5 +84,5 @@ class ResetPasswordView(FormView):
         form.save()
         form.user.backend = "django.contrib.auth.backends.ModelBackend"
         login(self.request, form.user)
-        messages.success(self.request, _("Password changed successfully!"))
+        messages.success(self.request, _("Password was changed."))
         return HttpResponseRedirect(self.get_success_url())

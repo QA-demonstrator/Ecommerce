@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-07-16 20:50+0000\n"
+"POT-Creation-Date: 2021-04-29 12:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
@@ -75,6 +75,25 @@ msgstr[1] ""
 
 #, python-format
 msgid "%(min)s--%(max)s days"
+msgstr ""
+
+#, python-brace-format
+msgid "You can't select less than {min_limit} item."
+msgid_plural "You can't select less than {min_limit} items."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "You can't select more than {max_limit} item."
+msgid_plural "You can't select more than {max_limit} items."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "Maximum file size reached (%(size)s MB)."
+msgstr ""
+
+msgid "Root"
 msgstr ""
 
 msgid "This field is required."

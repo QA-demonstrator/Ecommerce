@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import django
 import itertools
-from operator import ior
-
 import six
 from django.db.models import ForeignKey, Q
+from operator import ior
 from parler.models import TranslatableModel
 
 from shuup.importer.utils import get_model_possible_name_fields
@@ -23,8 +23,8 @@ class RelatedMapper(object):
         self.row_session = row_session
         self.handler = handler
         self.field = field
-        self.rel = rel = field.rel
-        self.to = to = rel.to
+        self.rel = rel = field.remote_field
+        self.to = to = rel.model
         self.map_cache = {}
         self.fk_cache = {}
         self.explicit_uk_fields = tuple(handler._meta.fk_matchers.get(field.name) or ())
@@ -39,11 +39,9 @@ class RelatedMapper(object):
         uk_fields.update((f.name, f) for f in get_model_possible_name_fields(to))
 
         self.uk_fields = uk_fields
-        self.reverse_fields = list(itertools.chain(
-            self.explicit_uk_fields,
-            [f for f in uk_fields if f not in ("id", "pk")],
-            ["pk"]
-        ))
+        self.reverse_fields = list(
+            itertools.chain(self.explicit_uk_fields, [f for f in uk_fields if f not in ("id", "pk")], ["pk"])
+        )
         manager = to.objects
         if issubclass(to, TranslatableModel):
             manager = manager.language(handler.language)
@@ -58,7 +56,7 @@ class RelatedMapper(object):
             if field:
                 try:
                     arg = field.get_prep_value(arg)
-                except:
+                except Exception:
                     continue
                 if self.is_translated and name in self.translated_field_names:
                     name = "translations__%s" % name
@@ -66,7 +64,7 @@ class RelatedMapper(object):
         try:
             int(arg)
             qs.append(Q(pk=arg))
-        except:
+        except Exception:
             pass
 
         if not qs:
@@ -116,14 +114,21 @@ class RelatedMapper(object):
                     setattr(obj, field.name, value)
 
         for field in obj._meta.local_fields:
-            if isinstance(field, ForeignKey) and isinstance(self.row_session.instance, field.rel.to):
+            if (
+                django.VERSION > (2, 0)
+                and isinstance(field, ForeignKey)
+                and isinstance(self.row_session.instance, field.remote_field.model)
+            ):
                 setattr(obj, field.name, self.row_session.instance)
-
             elif field.name in ("name", "title"):
                 setattr(obj, field.name, value)
 
             elif field.name == "shop":
                 obj.shop = self.row_session.shop
+
+        # ask the handler whether we can create new objects of this type
+        if not self.handler.can_create_object(obj):
+            return None
 
         try:
             obj.save()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.db.models import Q
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +17,8 @@ from enumfields import Enum, EnumIntegerField
 from parler.models import TranslatableModel, TranslatedFields
 
 from shuup.core.fields import InternalIdentifierField
-from shuup.utils.analog import define_log_model, LogEntryKind
+from shuup.utils.analog import LogEntryKind, define_log_model
+from shuup.utils.django_compat import force_text
 
 
 class TaskStatus(Enum):
@@ -47,15 +48,15 @@ class TaskCommentVisibility(Enum):
 @python_2_unicode_compatible
 class TaskType(TranslatableModel):
     identifier = InternalIdentifierField(unique=False, blank=True, null=True, editable=True)
-    shop = models.ForeignKey("shuup.Shop", verbose_name=_("shop"), related_name="task_types")
-    translations = TranslatedFields(
-        name=models.TextField(verbose_name=_("name"))
+    shop = models.ForeignKey(
+        on_delete=models.CASCADE, to="shuup.Shop", verbose_name=_("shop"), related_name="task_types"
     )
+    translations = TranslatedFields(name=models.TextField(verbose_name=_("name")))
 
     class Meta:
         unique_together = ("shop", "identifier")
-        verbose_name = _('task type')
-        verbose_name_plural = _('task types')
+        verbose_name = _("task type")
+        verbose_name_plural = _("task types")
 
     def __str__(self):
         return self.name
@@ -83,31 +84,34 @@ class TaskQuerySet(models.QuerySet):
 
 @python_2_unicode_compatible
 class Task(models.Model):
-    shop = models.ForeignKey("shuup.Shop", verbose_name=_("shop"), related_name="tasks")
+    shop = models.ForeignKey(on_delete=models.CASCADE, to="shuup.Shop", verbose_name=_("shop"), related_name="tasks")
     name = models.CharField(verbose_name=_("name"), max_length=60)
-    type = models.ForeignKey(TaskType, verbose_name=_("task type"), related_name="tasks")
+    type = models.ForeignKey(on_delete=models.CASCADE, to=TaskType, verbose_name=_("task type"), related_name="tasks")
     status = EnumIntegerField(TaskStatus, default=TaskStatus.NEW, verbose_name=_("status"))
     priority = models.PositiveIntegerField(default=0, verbose_name=_("priority"), db_index=True)
     creator = models.ForeignKey(
-        "shuup.Contact",
+        on_delete=models.CASCADE,
+        to="shuup.Contact",
         blank=True,
         null=True,
         related_name="creted_tasks",
-        verbose_name=_("creator")
+        verbose_name=_("creator"),
     )
     assigned_to = models.ForeignKey(
-        "shuup.Contact",
+        on_delete=models.CASCADE,
+        to="shuup.Contact",
         blank=True,
         null=True,
         related_name="assigned_tasks",
-        verbose_name=_("assigned to")
+        verbose_name=_("assigned to"),
     )
     completed_by = models.ForeignKey(
-        "shuup.Contact",
+        on_delete=models.CASCADE,
+        to="shuup.Contact",
         blank=True,
         null=True,
         related_name="completed_tasks",
-        verbose_name=_("completed by")
+        verbose_name=_("completed by"),
     )
     completed_on = models.DateTimeField(verbose_name=_("completed on"), null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False, db_index=True, verbose_name=_("created on"))
@@ -126,7 +130,7 @@ class Task(models.Model):
     def delete(self):
         self.status = TaskStatus.DELETED
         self.save(update_fields=["status"])
-        self.add_log_entry("Deleted.", kind=LogEntryKind.DELETION)
+        self.add_log_entry("Success! Deleted (soft).", kind=LogEntryKind.DELETION)
 
     def comment(self, contact, comment, visibility=TaskCommentVisibility.PUBLIC):
         comment = TaskComment(task=self, author=contact, body=comment, visibility=visibility)
@@ -136,19 +140,19 @@ class Task(models.Model):
 
     def set_in_progress(self):
         self.status = TaskStatus.IN_PROGRESS
-        self.add_log_entry("In progress.", kind=LogEntryKind.EDIT)
+        self.add_log_entry("Info! In progress.", kind=LogEntryKind.EDIT)
         self.save()
 
     def set_completed(self, contact):
         self.completed_by = contact
         self.completed_on = now()
         self.status = TaskStatus.COMPLETED
-        self.add_log_entry("Completed.", kind=LogEntryKind.EDIT)
+        self.add_log_entry("Success! Completed.", kind=LogEntryKind.EDIT)
         self.save()
 
     def get_completion_time(self):
         if self.completed_on:
-            return (self.completed_on - self.created_on)
+            return self.completed_on - self.created_on
 
 
 class TaskCommentQuerySet(models.QuerySet):
@@ -162,26 +166,24 @@ class TaskCommentQuerySet(models.QuerySet):
 
             elif contact.user.is_staff:
                 visibility_filters |= Q(
-                    visibility=TaskCommentVisibility.STAFF_ONLY,
-                    task__shop__staff_members=contact.user
+                    visibility=TaskCommentVisibility.STAFF_ONLY, task__shop__staff_members=contact.user
                 )
 
         return self.filter(visibility_filters).distinct()
 
 
 class TaskComment(models.Model):
-    task = models.ForeignKey(Task, verbose_name=_("task"), related_name="comments")
+    task = models.ForeignKey(on_delete=models.CASCADE, to=Task, verbose_name=_("task"), related_name="comments")
     author = models.ForeignKey(
-        "shuup.Contact",
-        blank=True, null=True,
+        on_delete=models.CASCADE,
+        to="shuup.Contact",
+        blank=True,
+        null=True,
         related_name="task_comments",
-        verbose_name=_("author")
+        verbose_name=_("author"),
     )
     visibility = EnumIntegerField(
-        TaskCommentVisibility,
-        default=TaskCommentVisibility.PUBLIC,
-        db_index=True,
-        verbose_name=_("visibility")
+        TaskCommentVisibility, default=TaskCommentVisibility.PUBLIC, db_index=True, verbose_name=_("visibility")
     )
     body = models.TextField(verbose_name=_("body"))
     created_on = models.DateTimeField(auto_now_add=True, editable=False, db_index=True, verbose_name=_("created on"))
@@ -203,11 +205,10 @@ class TaskComment(models.Model):
         is_staff = bool(user.is_staff and user in self.task.shop.staff_members.all())
 
         if not (is_admin or is_staff):
-            return (self.visibility == TaskCommentVisibility.PUBLIC)
+            return self.visibility == TaskCommentVisibility.PUBLIC
         elif not is_admin:
             return (
-                self.visibility == TaskCommentVisibility.PUBLIC or
-                self.visibility == TaskCommentVisibility.STAFF_ONLY
+                self.visibility == TaskCommentVisibility.PUBLIC or self.visibility == TaskCommentVisibility.STAFF_ONLY
             )
 
         return True

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from django.utils.translation import ugettext_lazy as _
 
 from shuup.core.models import CompanyContact
+from shuup.front.utils.companies import allow_company_registration
 from shuup.front.utils.dashboard import DashboardItem
 
 
@@ -36,7 +37,7 @@ class CompanyDashboardItem(DashboardItem):
 
     def show_on_menu(self):
         # Only show this on menu if customer is company
-        return isinstance(self.request.customer, CompanyContact)
+        return isinstance(self.request.customer, CompanyContact) or allow_company_registration(self.request.shop)
 
 
 class AddressBookDashboardItem(DashboardItem):

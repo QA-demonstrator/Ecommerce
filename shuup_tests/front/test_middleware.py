@@ -1,20 +1,28 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+from importlib import import_module
+
 import pytest
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.models import AnonymousUser
+from django.test import override_settings
 from django.utils import timezone
 
 import shuup.core.models
 from shuup.admin.urls import login
 from shuup.core.models import (
-    AnonymousContact, CompanyContact, Contact, get_company_contact,
-    get_person_contact, PersonContact, Shop
+    AnonymousContact,
+    CompanyContact,
+    Contact,
+    PersonContact,
+    Shop,
+    get_company_contact,
+    get_person_contact,
 )
 from shuup.front.middleware import ShuupFrontMiddleware
 from shuup.front.views.index import IndexView
@@ -29,7 +37,7 @@ __all__ = ("regular_user",)  # noqa
 
 def get_unprocessed_request():
     request = get_request()
-    for attrname in ['shop', 'person', 'customer', 'basket']:
+    for attrname in ["shop", "person", "customer", "basket"]:
         assert not hasattr(request, attrname)
     return request
 
@@ -44,12 +52,19 @@ def check_request_attribute_basics(request):
 # TODO: Make these tests faster by faking the Shop and not using database
 
 
+def apply_session_storage(request):
+    engine = import_module(settings.SESSION_ENGINE)
+    engine.SessionStore
+    request.session = engine.SessionStore("sessionid")
+    return request
+
+
 @pytest.mark.django_db
 def test_with_anonymous_user():
     get_default_shop()  # Create a shop
 
     mw = ShuupFrontMiddleware()
-    request = get_unprocessed_request()
+    request = apply_session_storage(get_unprocessed_request())
 
     mw.process_request(request)
 
@@ -65,7 +80,7 @@ def test_with_logged_in_user(regular_user):
     get_default_shop()  # Create a shop
 
     mw = ShuupFrontMiddleware()
-    request = get_unprocessed_request()
+    request = apply_session_storage(get_unprocessed_request())
     request.user = regular_user
 
     mw.process_request(request)
@@ -82,7 +97,7 @@ def test_customer_company_member(regular_user):
     get_default_shop()  # Create a shop
 
     mw = ShuupFrontMiddleware()
-    request = get_unprocessed_request()
+    request = apply_session_storage(get_unprocessed_request())
     request.user = regular_user
     person = get_person_contact(regular_user)
     company = create_random_company()
@@ -102,25 +117,39 @@ def test_customer_company_member(regular_user):
 
 
 @pytest.mark.django_db
-def test_timezone_setting(regular_user):
+def test_timezone_setting(regular_user, admin_user):
     get_default_shop()  # Create a shop
 
     mw = ShuupFrontMiddleware()
-    request = get_unprocessed_request()
+    request = apply_session_storage(get_unprocessed_request())
+    second_request = apply_session_storage(get_unprocessed_request())
     request.user = regular_user
-
-    some_tz = ('US/Hawaii' if settings.TIME_ZONE == 'UTC' else 'UTC')
-
-    person = get_person_contact(regular_user)
-    person.timezone = some_tz
-    person.save()
+    second_request.user = admin_user
+    user_tz = "US/Hawaii" if settings.TIME_ZONE != "US/Hawaii" else "Europe/Stockholm"
     original_tz = timezone.get_current_timezone_name()
 
-    assert timezone.get_current_timezone_name() != some_tz
+    assert timezone.get_current_timezone_name() == settings.TIME_ZONE
+    mw.process_request(request)
+
+    assert timezone.get_current_timezone_name() == settings.TIME_ZONE
+    assert request.TIME_ZONE == settings.TIME_ZONE
+
+    # Test the users timezone
+    person = get_person_contact(regular_user)
+    person.timezone = user_tz
+    person.save()
 
     mw.process_request(request)
 
-    assert timezone.get_current_timezone_name() == some_tz
+    assert timezone.get_current_timezone_name() == user_tz
+    assert request.TIME_ZONE == user_tz
+
+    # Test that the settings.TIME_ZONE gets activated if there is nothing else to fallback on
+    mw.process_request(second_request)
+
+    assert timezone.get_current_timezone_name() == settings.TIME_ZONE
+    assert second_request.TIME_ZONE == settings.TIME_ZONE
+
     timezone.activate(original_tz)
 
 
@@ -178,3 +207,21 @@ def test_with_inactive_contact(rf, regular_user, admin_user):
     assert request.user == AnonymousUser()
     assert request.person == AnonymousContact()
     assert request.customer == AnonymousContact()
+
+
+@pytest.mark.django_db
+def test_with_statics(rf):
+    shop = get_default_shop()  # Create a shop
+
+    request = apply_request_middleware(rf.get("/static/test.png"))
+    assert hasattr(request, "customer")  # Since debug is False
+
+    request = apply_request_middleware(rf.get("/"))
+    assert hasattr(request, "customer")
+
+    with override_settings(DEBUG=True):
+        request = apply_request_middleware(rf.get("/static/test.png"))
+        assert not hasattr(request, "customer")  # Since debug is True
+
+        request = apply_request_middleware(rf.get("/"))
+        assert hasattr(request, "customer")

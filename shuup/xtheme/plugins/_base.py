@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
 from django.template.loader import get_template
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import get_language
+from django.utils.translation import get_language, ugettext_lazy as _
 
-from shuup.apps.provides import (
-    get_identifier_to_object_map, get_provide_objects
-)
+from shuup.apps.provides import get_identifier_to_object_map, get_provide_objects
 from shuup.utils.importing import load
 from shuup.utils.text import space_case
 from shuup.xtheme.plugins.consts import FALLBACK_LANGUAGE_CODE
@@ -29,11 +26,13 @@ class Plugin(object):
     Other plugins should inherit from this class and register themselves in the
     `xtheme_plugin` provide category.
     """
+
     identifier = None
     fields = []
     required_context_variables = set()
     name = _("Plugin")  # User-visible name
     editor_form_class = GenericPluginForm
+    cacheable = False  # Indicates whether this plugin can be cached while rendering
 
     def __init__(self, config):
         """
@@ -127,7 +126,7 @@ class Plugin(object):
         if not value:
             return default
         if isinstance(value, dict):  # It's a dict, so assume it's something from TranslatableField
-            language = (language or get_language())
+            language = language or get_language()
             if language in value:  # The language we requested exists, use that
                 return value[language]
             if FALLBACK_LANGUAGE_CODE in value:  # An untranslated fallback exists, use that
@@ -171,12 +170,15 @@ class Plugin(object):
 
         for plugin in get_provide_objects("xtheme_plugin"):
             if plugin.identifier:
-                choices.append((
-                    plugin.identifier,
-                    getattr(plugin, "name", None) or plugin.identifier
-                ))
+                choices.append((plugin.identifier, getattr(plugin, "name", None) or plugin.identifier))
         choices.sort()
         return choices
+
+    def get_cache_key(self, context, **kwargs) -> str:
+        """
+        Return a string that is used as the cache key when the plugin can be cached
+        """
+        return str((get_language(), self.identifier))
 
 
 class TemplatedPlugin(Plugin):

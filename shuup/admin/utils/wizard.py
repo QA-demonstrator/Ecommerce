@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -23,7 +23,7 @@ def load_setup_wizard_panes(shop, request=None, visible_only=True):
     :type visible_only: bool
     """
     if not shop:
-        raise ValueError("Shop instance is mandatory")
+        raise ValueError("Error! Shop instance is mandatory.")
     panes = []
     for pane_spec in getattr(settings, "SHUUP_SETUP_WIZARD_PANE_SPEC", []):
         pane_class = load(pane_spec)
@@ -45,7 +45,7 @@ def load_setup_wizard_pane(shop, request, pane_id):
     :rtype: shuup.admin.views.wizard.WizardPane|None
     """
     if not shop:
-        raise ValueError("Shop instance is mandatory")
+        raise ValueError("Error! Shop instance is mandatory.")
     for pane_spec in getattr(settings, "SHUUP_SETUP_WIZARD_PANE_SPEC", []):
         pane_class = load(pane_spec)
         pane_inst = pane_class(request=request, object=shop)
@@ -66,18 +66,18 @@ def setup_wizard_complete(request):
     shop = get_shop(request)
     complete = configuration.get(shop, "setup_wizard_complete")
     if complete is None:
-        return not setup_wizard_visible_panes(shop)
+        return not setup_wizard_visible_panes(shop, request=request)
     return complete
 
 
-def setup_wizard_visible_panes(shop):
+def setup_wizard_visible_panes(shop, request):
     """
     Check if shop wizard has visible panes that require merchant configuration.
 
     :return: whether the setup wizard has visible panes
     :rtype: Boolean
     """
-    return len(load_setup_wizard_panes(shop)) > 0
+    return len(load_setup_wizard_panes(shop, request)) > 0
 
 
 def setup_blocks_complete(request):
@@ -88,17 +88,23 @@ def setup_blocks_complete(request):
     :rtype: Boolean
     """
     for module in get_modules():
-        if len([
-            block for block in module.get_help_blocks(request=request, kind="setup")
-                if block.required and not block.done
-        ]) > 0:
+        if (
+            len(
+                [
+                    block
+                    for block in module.get_help_blocks(request=request, kind="setup")
+                    if block.required and not block.done
+                ]
+            )
+            > 0
+        ):
             return False
     return True
 
 
 def onboarding_complete(request):
     """
-    Check if the shop wizard and all setup blocks are complete
+    Check if the shop wizard and all setup blocks are complete.
 
     :return: whether onboarding is complete
     :rtype: Boolean

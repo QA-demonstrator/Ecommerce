@@ -1,200 +1,181 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from datetime import timedelta
-
 import six
+from datetime import timedelta
 from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from shuup.admin.base import AdminModule, MenuEntry, Notification, SearchResult
 from shuup.admin.menu import ORDERS_MENU_CATEGORY, STOREFRONT_MENU_CATEGORY
-from shuup.admin.utils.permissions import (
-    get_default_model_permissions, get_permissions_from_urls
-)
-from shuup.admin.utils.urls import (
-    admin_url, derive_model_url, get_edit_and_list_urls, get_model_url
-)
+from shuup.admin.shop_provider import get_shop
+from shuup.admin.utils.urls import admin_url, derive_model_url, get_edit_and_list_urls, get_model_url
 from shuup.admin.views.home import HelpBlockCategory, SimpleHelpBlock
-from shuup.core.models import (
-    Contact, Order, OrderStatus, OrderStatusRole, Product
-)
+from shuup.core.models import Order, OrderStatus, OrderStatusRole
+
+
+class OrderEntry(MenuEntry):
+    name = _("Orders")
+
+    def get_badge(self, request):
+        shop = get_shop(request)
+        received_orders_count = (
+            Order.objects.valid()
+            .filter(
+                shop=shop,
+                status__role=OrderStatusRole.INITIAL,
+            )
+            .count()
+        )
+
+        if received_orders_count:
+            return {"tag": "danger", "value": received_orders_count}
 
 
 class OrderModule(AdminModule):
     name = _("Orders")
-    breadcrumbs_menu_entry = MenuEntry(name, url="shuup_admin:order.list")
+    breadcrumbs_menu_entry = OrderEntry(name, url="shuup_admin:order.list")
 
     def get_urls(self):
         return [
             admin_url(
-                "^orders/(?P<pk>\d+)/create-shipment/$",
+                r"^orders/(?P<pk>\d+)/create-shipment/(?P<supplier_pk>\d+)/$",
                 "shuup.admin.modules.orders.views.OrderCreateShipmentView",
                 name="order.create-shipment",
-                permissions=["shuup.add_shipment"]
             ),
             admin_url(
-                "^shipments/(?P<pk>\d+)/delete/$",
+                r"^shipments/(?P<pk>\d+)/delete/$",
                 "shuup.admin.modules.orders.views.ShipmentDeleteView",
                 name="order.delete-shipment",
-                permissions=["shuup.delete_shipment"]
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/create-payment/$",
+                r"^shipments/(?P<pk>\d+)/set-sent/$",
+                "shuup.admin.modules.orders.views.ShipmentSetSentView",
+                name="order.set-shipment-sent",
+            ),
+            admin_url(
+                r"^shipments/$", "shuup.admin.modules.orders.views.ShipmentListView", name="order.shipments.list"
+            ),
+            admin_url(
+                r"^orders/(?P<pk>\d+)/create-payment/$",
                 "shuup.admin.modules.orders.views.OrderCreatePaymentView",
                 name="order.create-payment",
-                permissions=["shuup.add_payment"]
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/delete-payment/$",
+                r"^orders/(?P<pk>\d+)/delete-payment/$",
                 "shuup.admin.modules.orders.views.OrderDeletePaymentView",
                 name="order.delete-payment",
-                permissions=["shuup.delete_payment"]
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/set-paid/$",
+                r"^orders/(?P<pk>\d+)/set-paid/$",
                 "shuup.admin.modules.orders.views.OrderSetPaidView",
                 name="order.set-paid",
-                permissions=["shuup.add_payment"]
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/set-status/$",
+                r"^orders/(?P<pk>\d+)/set-status/$",
                 "shuup.admin.modules.orders.views.OrderSetStatusView",
                 name="order.set-status",
-                permissions=get_default_model_permissions(Order)
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/new-log-entry/$",
+                r"^orders/(?P<pk>\d+)/new-log-entry/$",
                 "shuup.admin.modules.orders.views.NewLogEntryView",
                 name="order.new-log-entry",
-                permissions=get_default_model_permissions(Order)
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/update-admin-comment/$",
+                r"^orders/(?P<pk>\d+)/update-admin-comment/$",
                 "shuup.admin.modules.orders.views.UpdateAdminCommentView",
                 name="order.update-admin-comment",
-                permissions=get_default_model_permissions(Order)
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/create-refund/$",
+                r"^orders/(?P<pk>\d+)/create-refund/$",
                 "shuup.admin.modules.orders.views.OrderCreateRefundView",
                 name="order.create-refund",
-                permissions=get_default_model_permissions(Order)
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/create-refund/full-refund$",
+                r"^orders/(?P<pk>\d+)/create-refund/full-refund$",
                 "shuup.admin.modules.orders.views.OrderCreateFullRefundView",
                 name="order.create-full-refund",
-                permissions=get_default_model_permissions(Order)
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/$",
-                "shuup.admin.modules.orders.views.OrderDetailView",
-                name="order.detail",
-                permissions=get_default_model_permissions(Order)
+                r"^orders/(?P<pk>\d+)/$", "shuup.admin.modules.orders.views.OrderDetailView", name="order.detail"
             ),
+            admin_url(r"^orders/new/$", "shuup.admin.modules.orders.views.OrderEditView", name="order.new"),
             admin_url(
-                "^orders/new/$",
-                "shuup.admin.modules.orders.views.OrderEditView",
-                name="order.new",
-                permissions=["shuup.add_order"]
+                r"^orders/(?P<pk>\d+)/edit/$", "shuup.admin.modules.orders.views.OrderEditView", name="order.edit"
             ),
+            admin_url(r"^orders/$", "shuup.admin.modules.orders.views.OrderListView", name="order.list"),
             admin_url(
-                "^orders/(?P<pk>\d+)/edit/$",
-                "shuup.admin.modules.orders.views.OrderEditView",
-                name="order.edit",
-                permissions=["shuup.change_order"]
-            ),
-            admin_url(
-                "^orders/$",
-                "shuup.admin.modules.orders.views.OrderListView",
-                name="order.list",
-                permissions=get_default_model_permissions(Order),
-
-            ),
-            admin_url(
-                "^orders/list-settings/",
+                r"^orders/list-settings/",
                 "shuup.admin.modules.settings.views.ListSettingsView",
                 name="order.list_settings",
-                permissions=get_default_model_permissions(Order),
             ),
             admin_url(
-                "^orders/(?P<pk>\d+)/edit-addresses/$",
+                r"^orders/(?P<pk>\d+)/edit-addresses/$",
                 "shuup.admin.modules.orders.views.OrderAddressEditView",
                 name="order.edit-addresses",
-                permissions=["shuup.change_order"]
             ),
         ]
 
     def get_menu_entries(self, request):
         return [
-            MenuEntry(
+            OrderEntry(
                 text=_("Orders"),
                 icon="fa fa-inbox",
                 url="shuup_admin:order.list",
                 category=ORDERS_MENU_CATEGORY,
-                subcategory="orders",
                 ordering=1,
-                aliases=[_("Show orders")]
-            )
+                aliases=[_("Show orders")],
+            ),
+            MenuEntry(
+                text=_("Shipments"),
+                icon="fa fa-truck",
+                url="shuup_admin:order.shipments.list",
+                category=ORDERS_MENU_CATEGORY,
+                ordering=2,
+                aliases=[_("Show shipments")],
+            ),
         ]
-
-    def get_required_permissions(self):
-        return (
-            get_permissions_from_urls(self.get_urls()) |
-            get_default_model_permissions(Contact) |
-            get_default_model_permissions(Order) |
-            get_default_model_permissions(Product)
-        )
 
     def get_search_results(self, request, query):
         minimum_query_length = 3
         if len(query) >= minimum_query_length:
             orders = Order.objects.filter(
-                Q(identifier__istartswith=query) |
-                Q(reference_number__istartswith=query) |
-                Q(email__icontains=query) |
-                Q(phone__icontains=query)
+                Q(identifier__istartswith=query)
+                | Q(reference_number__istartswith=query)
+                | Q(email__icontains=query)
+                | Q(phone__icontains=query)
             ).order_by("-id")[:15]
 
             for i, order in enumerate(orders):
                 relevance = 100 - i
                 yield SearchResult(
-                    text=six.text_type(order),
-                    url=get_model_url(order),
-                    category=_("Orders"),
-                    relevance=relevance
+                    text=six.text_type(order), url=get_model_url(order), category=_("Orders"), relevance=relevance
                 )
 
     def get_notifications(self, request):
         shop = request.shop
         old_open_orders = Order.objects.filter(
-            shop=shop,
-            status__role=OrderStatusRole.INITIAL,
-            order_date__lt=now() - timedelta(days=4)
+            shop=shop, status__role=OrderStatusRole.INITIAL, order_date__lt=now() - timedelta(days=4)
         ).count()
 
         if old_open_orders:
             yield Notification(
-                title=_("Outstanding Orders"),
-                text=_("%d outstanding orders") % old_open_orders,
-                kind="danger"
+                title=_("Outstanding Orders"), text=_("%d outstanding orders") % old_open_orders, kind="danger"
             )
 
     def get_model_url(self, object, kind, shop=None):
         return derive_model_url(Order, "shuup_admin:order", object, kind)
 
     def get_help_blocks(self, request, kind):
-        if kind == "quicklink":
-            actions = [{
-                "text": _("New order"),
-                "url": self.get_model_url(Order, "new")
-            }]
+        from shuup.admin.utils.permissions import has_permission
+
+        if kind == "quicklink" and has_permission(request.user, "order.new"):
+            actions = [{"text": _("New order"), "url": self.get_model_url(Order, "new")}]
 
             yield SimpleHelpBlock(
                 text=_("New order"),
@@ -202,20 +183,19 @@ class OrderModule(AdminModule):
                 icon_url="shuup_admin/img/product.png",
                 priority=0,
                 category=HelpBlockCategory.ORDERS,
-                done=Order.objects.filter(shop=request.shop).exists() if kind == "setup" else False
+                done=Order.objects.filter(shop=request.shop).exists() if kind == "setup" else False,
             )
 
 
 class OrderStatusModule(AdminModule):
     name = _("Order Status")
-    breadcrumbs_menu_entry = MenuEntry(name, url="shuup_admin:order_status.list")
+    breadcrumbs_menu_entry = OrderEntry(name, url="shuup_admin:order_status.list")
 
     def get_urls(self):
         return get_edit_and_list_urls(
             url_prefix="^order-status",
             view_template="shuup.admin.modules.orders.views.OrderStatus%sView",
             name_template="order_status.%s",
-            permissions=get_default_model_permissions(OrderStatus)
         )
 
     def get_menu_entries(self, request):
@@ -225,14 +205,10 @@ class OrderStatusModule(AdminModule):
                 icon="fa fa-inbox",
                 url="shuup_admin:order_status.list",
                 category=STOREFRONT_MENU_CATEGORY,
-                subcategory="settings",
                 ordering=1,
-                aliases=[_("List Statuses")]
+                aliases=[_("List Statuses")],
             ),
         ]
-
-    def get_required_permissions(self):
-        return get_default_model_permissions(OrderStatus)
 
     def get_model_url(self, object, kind, shop=None):
         return derive_model_url(OrderStatus, "shuup_admin:order_status", object, kind)

@@ -1,22 +1,22 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 import json
-
 import pytest
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import JsonResponse
 from django.test import override_settings
 from django.test.client import RequestFactory
-from django.utils.text import force_text
+from django.utils.encoding import force_text
 from filer.models import File, Folder
 from six import BytesIO
 
 from shuup.admin.modules.media.views import MediaBrowserView
 from shuup.admin.shop_provider import set_shop
+from shuup.admin.utils.permissions import set_permissions_for_group
 from shuup.core.models import MediaFile, MediaFolder
 from shuup.testing import factories
 from shuup.testing.utils import apply_request_middleware
@@ -29,14 +29,21 @@ def test_media_view_images(rf):
         shop1_staff1 = _create_random_staff(shop1)
         shop1_staff2 = _create_random_staff(shop1)
 
+        group = factories.get_default_permission_group()
+        set_permissions_for_group(group, ["media.upload-to-folder", "media.view-all"])
+
         shop2 = factories.get_shop(identifier="shop2", enabled=True)
         shop2_staff = _create_random_staff(shop2)
+
+        shop1_staff1.groups.add(group)
+        shop1_staff2.groups.add(group)
+        shop2_staff.groups.add(group)
 
         # Let's agree this folder is created by for example carousel
         # so it would be shared with all the shops.
         folder = Folder.objects.create(name="Root")
         assert MediaFolder.objects.count() == 0
-        path = "/%s" % folder.name
+        path = "%s" % folder.name
 
         File.objects.create(name="normalfile", folder=folder)  # Shared between shops
 
@@ -181,7 +188,7 @@ def _mbv_command(shop, user, payload, method="post"):
 
 def _mbv_upload(shop, user, **extra_data):
     content = ("42" * 42).encode("UTF-8")
-    imuf = InMemoryUploadedFile(BytesIO(content), "file", "424242.txt", "text/plain", len(content), "UTF-8")
+    imuf = InMemoryUploadedFile(BytesIO(content), "file", "424242.pdf", "application/pdf", len(content), "UTF-8")
     request = RequestFactory().post("/", dict({"action": "upload", "file": imuf}, **extra_data))
     request.user = user
     request.session = {}

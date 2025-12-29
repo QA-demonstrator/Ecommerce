@@ -1,5 +1,6 @@
 {% extends "shuup/front/macros/theme/basket.jinja" %}
 {%- import "shuup/front/macros/order.jinja" as order_macros with context -%}
+{%- from "shuup/front/macros/general.jinja" import render_supplier_info -%}
 
 {% macro render_basket_content(basket) %}
     <div class="basket-items">
@@ -9,6 +10,7 @@
             {{ render_basket_lines(basket) }}
             {{ render_unorderable_basket_lines(basket) }}
         </form>
+        {{ render_used_coupons(basket) }}
         {{ render_coupon_div(basket) }}
         {{ render_basket_summary(basket) }}
     </div>
@@ -17,6 +19,7 @@
 {% macro _render_basket_line(line) %}
     {% set product = line.product %}
     {% set shop_product = line.shop_product %}
+    {% set show_supplier_info = xtheme.get("show_supplier_info") %}
     <div class="single-item">
         {% if product %}
         <div class="product-image">
@@ -35,7 +38,7 @@
                 <a class="product-name"
                    href="{{ shuup.urls.model_url(product) }}">
                     <img class="img-responsive"
-                         src="{{ STATIC_URL }}shuup/front/img/no_image_thumbnail.png">
+                         src="{{ static('shuup/front/img/no_image_thumbnail.png') }}">
                 </a>
             {% endif %}
         </div>
@@ -44,13 +47,21 @@
             <h4 class="name">
                 {% if product %}
                     <a class="product-name" href="{{ shuup.urls.model_url(product) }}">{{ line.text }}</a>
+                    {% if show_supplier_info %}{{ render_supplier_info(line.supplier) }}{% endif %}
                 {% else %}
                     {{ line.text }}
                 {% endif %}
             </h4>
+
+            {% set line_properties = shuup.basket.get_properties_from_line(line) %}
+            {% if line_properties %}
+                {{ render_basket_line_properties(line_properties) }}
+            {% endif %}
+
             {% if product and product.is_package_parent() %}
                 {{ order_macros.render_package_children(product) }}
             {% endif %}
+
             <div class="quantity">
                 {% if product %}
                     {% set unit = shop_product.unit %}
@@ -97,6 +108,27 @@
                 </button>
             {% endif %}
         </div>
+    </div>
+{% endmacro %}
+
+{% macro render_basket_line_properties(properties) %}
+    <div class="basket-line-properties">
+        {% for property in properties %}
+            <p class="basket-line-property">
+                {% if property.name %}
+                    <strong class="property-name">
+                        {% if property.value %}
+                            {{ _("{prop}:").format(prop=property.name) }}
+                        {% else %}
+                            {{ property.name }}
+                        {% endif %}
+                    </strong>
+                {% endif %}
+                {% if property.value %}
+                    <span class="property-value">{{ property.value }}</span>
+                {% endif %}
+            </p>
+        {% endfor %}
     </div>
 {% endmacro %}
 
@@ -155,17 +187,35 @@
     </a>
 {% endmacro %}
 
+{% macro render_used_coupons(basket) %}
+    {% if basket.codes %}
+    <div class="row basket-used-codes">
+        <div class="col-sm-6 col-sm-offset-6">
+            <p class="used-coupon-text">{% trans %}Coupons applied{% endtrans %}</p>
+            {% for code in basket.codes %}
+                <div class="basket-used-code">
+                    <span class="basket-code">{{ code }}</span>
+                    <button class="btn btn-primary basket-remove-code-btn" data-code="{{ code }}" type="button">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
 {% macro render_coupon_div(basket) %}
     <div class="row basket-discount-code">
         <div class="col-sm-6 pull-right">
-            <p class="coupon-text">{% trans %}Have a coupon code? Enter it here{% endtrans %}</p>
+            <p class="coupon-text">{% trans %}Do you have a coupon code? Enter it here. {% endtrans %}</p>
             <div id="collapseCoupon">
                 <div class="input-group">
                     <input type="text"
-                           class="form-control"
-                           name="code"
-                           id="discount-code"
-                           placeholder="{% trans %}Coupon Code{% endtrans %}">
+                        class="form-control"
+                        name="code"
+                        id="discount-code"
+                        placeholder="{% trans %}Coupon Code{% endtrans %}">
                     <span class="input-group-btn">
                         <button type="submit"
                                 id="submit-code"
@@ -181,7 +231,7 @@
 {% endmacro %}
 
 {% macro render_cart_saver() %}
-    {% if user.is_authenticated() and shuup.urls.has_url("shuup:saved_cart.save") %}
+    {% if request.person and shuup.urls.has_url("shuup:saved_cart.save") %}
         <div class="cart-saver row">
             <div class="col-sm-6 col-sm-offset-6">
                 <div class="clearfix">
@@ -227,24 +277,67 @@
             {{ submit_coupon_code() }}
             {{ save_cart_js() }}
             {{ single_submit_form() }}
+            {{ remove_basket_code() }}
         });
     </script>
 {% endmacro %}
 
 {% macro update_quantity_js() %}
-    $("#update_basket_form .quantity :input").change(function() {
+    function checkEvent(e) {
+        return (e.which == 13 || e.keyCode == 13 || e.key == "Enter");
+    }
+
+    $("#update_basket_form .quantity :input")
+    .keydown(function(e) {
+        if (checkEvent(e)) {
+            e.preventDefault();
+        }
+    })
+    .keyup(function(e) {
+        if (checkEvent(e)) {
+            $("#update_basket_form").submit();
+        }
+    })
+    .change(function() {
         $("#update_basket_form").submit();
+    });
+{% endmacro %}
+
+{% macro remove_basket_code() %}
+    $(".basket-remove-code-btn").click(function(evt) {
+        var code = $(evt.currentTarget).data("code");
+        if (code) {
+            var data = {
+                "command": "remove_campaign_code",
+                "code": code
+            };
+            $.ajax({
+                url: "",
+                method: "POST",
+                data: data,
+                success: function(response) {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("{% trans %}Error!{% endtrans %} {% trans %}Invalid coupon code.{% endtrans %}")
+                    }
+                },
+                error: function() {
+                    alert("{% trans %}Error!{% endtrans %} {% trans %}Removing a coupon failed.{% endtrans %}")
+                }
+            });
+        }
     });
 {% endmacro %}
 
 {% macro submit_coupon_code() %}
     $("#submit-code").click(function(e){
         e.preventDefault();
-        const coupon = $("#discount-code").val();
+        var coupon = $("#discount-code").val();
 
         if (coupon.length) {
             // ajax request to command
-            const data = {
+            var data = {
                 "command": "add_campaign_code",
                 "code": coupon
             };
@@ -256,13 +349,12 @@
                 success: function(response) {
                     if (response.ok) {
                         location.reload();
-                    }
-                    else {
-                        alert("{% trans %}Coupon is not available.{% endtrans %}")
+                    } else {
+                        alert("{% trans %}Error!{% endtrans %} {% trans %}Coupon is not available.{% endtrans %}")
                     }
                 },
                 error: function() {
-                    alert("{% trans %}Error when adding coupon.{% endtrans %}")
+                    alert("{% trans %}Error!{% endtrans %} {% trans %}Adding a coupon failed.{% endtrans %}")
                 }
             });
         }
@@ -273,7 +365,7 @@
     {% if shuup.urls.has_url("shuup:saved_cart.save") %}
         $("#save-cart").click(function(e){
             e.preventDefault();
-            const title = $("#cart-title").val();
+            var title = $("#cart-title").val();
             $("#save-cart-status").empty();
             $.ajax({
                 url: "{{ url('shuup:saved_cart.save') }}",
@@ -283,10 +375,10 @@
                     csrfmiddlewaretoken: "{{ csrf_token }}"
                 },
                 success: function(response) {
-                    $("#save-cart-status").append("<p>" + "{% trans %}Cart saved!{% endtrans %}" + "</p>");
+                    $("#save-cart-status").append("<p>" + "{% trans %}Success!{% endtrans %} {% trans %}Cart saved.{% endtrans %}" + "</p>");
                 },
                 error: function(e) {
-                    $("#save-cart-status").append("<p>" + e.responseJSON.error + "</p>");
+                    $("#save-cart-status").append("<p>" + "{% trans %}Error!{% endtrans %}" + e.responseJSON.error + "</p>");
                 }
             });
         });

@@ -1,19 +1,20 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
-from __future__ import unicode_literals
-
 import abc
-
 import six
 from django.http import HttpRequest
+from typing import TYPE_CHECKING, Union
 
 from shuup.apps.provides import load_module
 
 from ._context import PricingContext
+
+if TYPE_CHECKING:  # pragma: no cover
+    from shuup.core.models import ShopProduct
 
 
 def get_pricing_module():
@@ -39,7 +40,7 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
             return context
         elif isinstance(context, HttpRequest):
             return self.get_context_from_request(context)
-        raise TypeError("Not pricing contextable: %r" % (context,))
+        raise TypeError("Error! Not pricing contextable: %r." % (context,))
 
     def get_context_from_request(self, request):
         """
@@ -53,7 +54,8 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
         return self.pricing_context_class(
             customer=request.customer,
             shop=request.shop,
-            basket=getattr(request, "basket", None)
+            basket=getattr(request, "basket", None),
+            supplier=getattr(request, "supplier", None),
         )
 
     def get_context_from_data(self, shop, customer, time=None, **kwargs):
@@ -65,15 +67,14 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
         :type time: datetime.datetime|None
         :rtype: PricingContext
         """
-        return self.pricing_context_class(
-            shop=shop, customer=customer, time=time, **kwargs)
+        return self.pricing_context_class(shop=shop, customer=customer, time=time, **kwargs)
 
     @abc.abstractmethod
     def get_price_info(self, context, product, quantity=1):
         """
-        Get price info of product for given quantity.
+        Get price info for a given quantity of the product.
 
-        :param product: `Product` object or id of `Product`
+        :param product: `Product` object or id of `Product`.
         :type product: shuup.core.models.Product|int
         :rtype: PriceInfo
         """
@@ -93,7 +94,7 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
         If there are "no steps", the return value will be a list of single
         PriceInfo object with the constant price, i.e. ``[price_info]``.
 
-        :param product: Product or product id
+        :param product: `Product` object or id of `Product`.
         :type product: shuup.core.models.Product|int
         :rtype: list[PriceInfo]
         """
@@ -108,7 +109,7 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
         May be faster than doing :func:`get_price_info` for each product
         separately, since inheriting class may override this.
 
-        :param products: List of product objects or id's
+        :param products: List of `Product` objects or id's
         :type products:  Iterable[shuup.core.models.Product|int]
         :rtype: dict[int,PriceInfo]
         """
@@ -128,12 +129,17 @@ class PricingModule(six.with_metaclass(abc.ABCMeta)):
         May be faster than doing :func:`get_pricing_steps` for each
         product separately, since inheriting class may override this.
 
-        :param products: List of product objects or id's
+        :param products: List of `Product` objects or id's.
         :type products:  Iterable[shuup.core.models.Product|int]
         :rtype: dict[int,list[PriceInfo]]
         """
         product_map = {getattr(x, "pk", x): x for x in products}
         return {
-            product_id: self.get_pricing_steps(context, product)
-            for (product_id, product) in six.iteritems(product_map)
+            product_id: self.get_pricing_steps(context, product) for (product_id, product) in six.iteritems(product_map)
         }
+
+    def index_shop_product(self, shop_product: Union["ShopProduct", int], **kwargs):
+        """
+        Index the prices for the given shop product
+        """
+        pass

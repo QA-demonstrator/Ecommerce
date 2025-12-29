@@ -1,31 +1,30 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
+import pytest
 from decimal import Decimal
 
-import pytest
-
-from shuup.campaigns.models import BasketCampaign, Coupon, CatalogCampaign
+from shuup.campaigns.models import BasketCampaign, CatalogCampaign, Coupon
+from shuup.campaigns.models.basket_conditions import BasketTotalProductAmountCondition, ProductsInBasketCondition
+from shuup.campaigns.models.basket_effects import (
+    BasketDiscountAmount,
+    BasketDiscountPercentage,
+    DiscountPercentageFromUndiscounted,
+)
+from shuup.campaigns.models.basket_line_effects import (
+    DiscountFromCategoryProducts,
+    DiscountFromProduct,
+    FreeProductLine,
+)
 from shuup.campaigns.models.catalog_filters import ProductFilter
 from shuup.campaigns.models.product_effects import ProductDiscountAmount, ProductDiscountPercentage
-from shuup.campaigns.models.basket_conditions import (
-    BasketTotalProductAmountCondition, ProductsInBasketCondition
-)
-from shuup.campaigns.models.basket_effects import (
-    BasketDiscountAmount, BasketDiscountPercentage,
-    DiscountPercentageFromUndiscounted)
-from shuup.campaigns.models.basket_line_effects import (
-    DiscountFromCategoryProducts, DiscountFromProduct, FreeProductLine
-)
 from shuup.core.models import OrderLineType, ShopProduct
 from shuup.core.order_creator._source import LineSource
 from shuup.front.basket import get_basket
-from shuup.testing.factories import (
-    CategoryFactory, create_product, get_default_supplier, get_shipping_method
-)
+from shuup.testing.factories import CategoryFactory, create_product, get_default_supplier, get_shipping_method
 from shuup_tests.campaigns import initialize_test
 from shuup_tests.utils import printable_gibberish
 
@@ -35,7 +34,7 @@ def test_basket_free_product(rf):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     original_quantity = 2
@@ -45,10 +44,9 @@ def test_basket_free_product(rf):
     basket.shipping_method = get_shipping_method(shop=shop)
     basket.save()
 
-    second_product = create_product(printable_gibberish(),
-                                    shop=shop,
-                                    supplier=supplier,
-                                    default_price=single_product_price)
+    second_product = create_product(
+        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price
+    )
 
     # no shop
     third_product = create_product(printable_gibberish(), supplier=supplier)
@@ -60,12 +58,12 @@ def test_basket_free_product(rf):
 
     effect = FreeProductLine.objects.create(campaign=campaign, quantity=2)
     effect.products.add(second_product)
-    discount_lines_count = len(effect.get_discount_lines(basket, []))
+    discount_lines_count = len(effect.get_discount_lines(basket, [], supplier))
     assert discount_lines_count == 1
 
     # do not affect as there is no shop product for the product
     effect.products.add(third_product)
-    assert len(effect.get_discount_lines(basket, [])) == discount_lines_count
+    assert len(effect.get_discount_lines(basket, [], supplier)) == discount_lines_count
 
     basket.uncache()
     final_lines = basket.get_final_lines()
@@ -92,7 +90,7 @@ def test_basket_free_product_coupon(rf):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
 
@@ -103,10 +101,9 @@ def test_basket_free_product_coupon(rf):
     basket.shipping_method = get_shipping_method(shop=shop)
     basket.save()
 
-    second_product = create_product(printable_gibberish(),
-                                    shop=shop,
-                                    supplier=supplier,
-                                    default_price=single_product_price)
+    second_product = create_product(
+        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price
+    )
 
     rule = BasketTotalProductAmountCondition.objects.create(value="2")
     coupon = Coupon.objects.create(code="TEST", active=True)
@@ -142,7 +139,7 @@ def test_productdiscountamount(rf):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     discount_amount_value = "10"
@@ -161,8 +158,7 @@ def test_productdiscountamount(rf):
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    effect = DiscountFromProduct.objects.create(
-        campaign=campaign, discount_amount=discount_amount_value)
+    effect = DiscountFromProduct.objects.create(campaign=campaign, discount_amount=discount_amount_value)
     effect.products.add(product)
 
     assert rule.matches(basket, [])
@@ -185,7 +181,7 @@ def test_productdiscountamount_with_minimum_price(rf, per_line_discount):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = Decimal("50")
     single_product_min_price = Decimal("40")
@@ -209,9 +205,9 @@ def test_productdiscountamount_with_minimum_price(rf, per_line_discount):
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    effect = DiscountFromProduct.objects.create(campaign=campaign,
-                                                discount_amount=discount_amount_value,
-                                                per_line_discount=per_line_discount)
+    effect = DiscountFromProduct.objects.create(
+        campaign=campaign, discount_amount=discount_amount_value, per_line_discount=per_line_discount
+    )
     effect.products.add(product)
 
     assert rule.matches(basket, [])
@@ -233,7 +229,7 @@ def test_product_category_discount_amount_with_minimum_price(rf):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = Decimal("50")
     single_product_min_price = Decimal("40")
@@ -263,9 +259,9 @@ def test_product_category_discount_amount_with_minimum_price(rf):
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    DiscountFromCategoryProducts.objects.create(campaign=campaign,
-                                                discount_amount=discount_amount_value,
-                                                category=category)
+    DiscountFromCategoryProducts.objects.create(
+        campaign=campaign, discount_amount=discount_amount_value, category=category
+    )
     assert rule.matches(basket, [])
     basket.uncache()
 
@@ -285,7 +281,7 @@ def test_productdiscountamount_greater_then_products(rf):
     request, shop, _ = initialize_test(rf, False)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     discount_amount_value = "150"
@@ -294,7 +290,7 @@ def test_productdiscountamount_greater_then_products(rf):
     # the expected discount amount should not be greater than the products
     expected_discount_amount = basket.create_price(single_product_price) * quantity
 
-     # create basket rule that requires 2 products in basket
+    # create basket rule that requires 2 products in basket
     product = create_product(printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
     basket.add_product(supplier=supplier, shop=shop, product=product, quantity=quantity)
     basket.shipping_method = get_shipping_method(shop=shop)
@@ -307,8 +303,7 @@ def test_productdiscountamount_greater_then_products(rf):
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    effect = DiscountFromProduct.objects.create(
-        campaign=campaign, discount_amount=discount_amount_value)
+    effect = DiscountFromProduct.objects.create(campaign=campaign, discount_amount=discount_amount_value)
     effect.products.add(product)
 
     assert rule.matches(basket, [])
@@ -331,7 +326,7 @@ def test_product_category_discount_amount_greater_then_products(rf, include_tax)
     request, shop, _ = initialize_test(rf, include_tax)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
     discount_amount_value = "150"
@@ -342,7 +337,7 @@ def test_product_category_discount_amount_greater_then_products(rf, include_tax)
 
     category = CategoryFactory()
 
-     # create basket rule that requires 2 products in basket
+    # create basket rule that requires 2 products in basket
     product = create_product(printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
     ShopProduct.objects.get(shop=shop, product=product).categories.add(category)
     basket.add_product(supplier=supplier, shop=shop, product=product, quantity=quantity)
@@ -356,9 +351,9 @@ def test_product_category_discount_amount_greater_then_products(rf, include_tax)
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    DiscountFromCategoryProducts.objects.create(campaign=campaign,
-                                                discount_amount=discount_amount_value,
-                                                category=category)
+    DiscountFromCategoryProducts.objects.create(
+        campaign=campaign, discount_amount=discount_amount_value, category=category
+    )
     assert rule.matches(basket, [])
     basket.uncache()
 
@@ -379,10 +374,10 @@ def test_product_category_discount_percentage_greater_then_products(rf, include_
     request, shop, _ = initialize_test(rf, include_tax)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = "50"
-    discount_percentage = Decimal(1.9) # 190%
+    discount_percentage = Decimal(1.9)  # 190%
     quantity = 2
 
     # the expected discount amount should not be greater than the products
@@ -390,7 +385,7 @@ def test_product_category_discount_percentage_greater_then_products(rf, include_
 
     category = CategoryFactory()
 
-     # create basket rule that requires 2 products in basket
+    # create basket rule that requires 2 products in basket
     product = create_product(printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
     ShopProduct.objects.get(shop=shop, product=product).categories.add(category)
     basket.add_product(supplier=supplier, shop=shop, product=product, quantity=quantity)
@@ -404,9 +399,9 @@ def test_product_category_discount_percentage_greater_then_products(rf, include_
     campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test", public_name="test")
     campaign.conditions.add(rule)
 
-    DiscountFromCategoryProducts.objects.create(campaign=campaign,
-                                                discount_percentage=discount_percentage,
-                                                category=category)
+    DiscountFromCategoryProducts.objects.create(
+        campaign=campaign, discount_percentage=discount_percentage, category=category
+    )
     assert rule.matches(basket, [])
     basket.uncache()
 
@@ -420,7 +415,6 @@ def test_product_category_discount_percentage_greater_then_products(rf, include_
     assert basket.total_price == original_price - expected_discount_amount
 
 
-
 @pytest.mark.parametrize("include_tax", (True, False))
 @pytest.mark.django_db
 def test_discount_no_limits(rf, include_tax):
@@ -429,24 +423,23 @@ def test_discount_no_limits(rf, include_tax):
     request, shop, _ = initialize_test(rf, include_tax)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = Decimal(50)
     quantity = 4
-    discount_amount = (single_product_price * quantity * 2)
-    discount_percentage = Decimal(1.9) # 190%
+    discount_amount = single_product_price * quantity * 2
+    discount_percentage = Decimal(1.9)  # 190%
 
-    second_product = create_product(printable_gibberish(),
-                                    shop=shop,
-                                    supplier=supplier,
-                                    default_price=single_product_price)
+    second_product = create_product(
+        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price
+    )
 
     # the expected discount amount should not be greater than the products
     expected_discount_amount = basket.create_price(single_product_price) * quantity
 
     category = CategoryFactory()
 
-     # create basket rule that requires 2 products in basket
+    # create basket rule that requires 2 products in basket
     product = create_product(printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
     ShopProduct.objects.get(shop=shop, product=product).categories.add(category)
     basket.add_product(supplier=supplier, shop=shop, product=product, quantity=quantity)
@@ -462,9 +455,9 @@ def test_discount_no_limits(rf, include_tax):
     campaign.conditions.add(rule)
 
     # effect 1 - categories from products
-    DiscountFromCategoryProducts.objects.create(campaign=campaign,
-                                                discount_percentage=discount_percentage,
-                                                category=category)
+    DiscountFromCategoryProducts.objects.create(
+        campaign=campaign, discount_percentage=discount_percentage, category=category
+    )
 
     # effect 2 - discount from products
     effect2 = DiscountFromProduct.objects.create(campaign=campaign, discount_amount=discount_amount)
@@ -525,7 +518,7 @@ def test_undiscounted_effects(rf, include_tax):
     request, shop, _ = initialize_test(rf, include_tax)
 
     basket = get_basket(request)
-    supplier = get_default_supplier()
+    supplier = get_default_supplier(shop)
 
     single_product_price = Decimal(50)
     discounted_product_quantity = 4
@@ -536,9 +529,11 @@ def test_undiscounted_effects(rf, include_tax):
     category = CategoryFactory()
 
     discounted_product = create_product(
-        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
+        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price
+    )
     second_product = create_product(
-        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price)
+        printable_gibberish(), shop=shop, supplier=supplier, default_price=single_product_price
+    )
 
     ShopProduct.objects.get(shop=shop, product=discounted_product).categories.add(category)
     ShopProduct.objects.get(shop=shop, product=second_product).categories.add(category)
@@ -558,8 +553,7 @@ def test_undiscounted_effects(rf, include_tax):
     catalog_campaign.filters.add(product_filter)
 
     # BasketCampaign
-    campaign = BasketCampaign.objects.create(
-        active=True, shop=shop, name="test2", public_name="test2")
+    campaign = BasketCampaign.objects.create(active=True, shop=shop, name="test2", public_name="test2")
 
     final_lines = basket.get_final_lines()
     assert len(final_lines) == 3

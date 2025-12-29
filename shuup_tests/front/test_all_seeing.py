@@ -1,6 +1,6 @@
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -49,8 +49,6 @@ def test_all_seeing_and_maintenance(rf, admin_user):
 
     assert not admin_contact.is_all_seeing
     configuration.set(None, get_all_seeing_key(admin_user), True)
-    # refresh cache
-    del admin_contact.is_all_seeing
     assert admin_contact.is_all_seeing
 
     assert admin_contact.user.is_superuser

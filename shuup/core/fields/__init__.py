@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 from __future__ import unicode_literals
 
-import decimal
-import numbers
-
 import babel
+import decimal
+import json
+import numbers
 import six
 from django import forms
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import BLANK_CHOICE_DASH
 from django.forms.widgets import NumberInput
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from jsonfield.fields import JSONField
 
-from shuup.core.fields.tagged_json import tag_registry, TaggedJSONEncoder
+from shuup.core.fields.tagged_json import TaggedJSONEncoder, tag_registry
+from shuup.utils.django_compat import force_text
 from shuup.utils.i18n import get_current_babel_locale, remove_extinct_languages
 
 IdentifierValidator = RegexValidator("[a-z][a-z_]+")
@@ -33,15 +33,14 @@ FORMATTED_DECIMAL_FIELD_MAX_DIGITS = 36
 
 
 class InternalIdentifierField(models.CharField):
-
     def __init__(self, **kwargs):
         if "unique" not in kwargs:
-            raise ValueError("You must explicitly set the `unique` flag for `InternalIdentifierField`s.")
+            raise ValueError("Error! You must explicitly set the `unique` flag for `InternalIdentifierField`s.")
         kwargs.setdefault("max_length", 64)
         kwargs.setdefault("blank", True)
         kwargs.setdefault("null", bool(kwargs.get("blank")))  # If it's allowed to be blank, it should be null
         kwargs.setdefault("verbose_name", _("internal identifier"))
-        kwargs.setdefault("help_text", _(u"Do not change this value if you are not sure what you are doing."))
+        kwargs.setdefault("help_text", _("Do not change this value if you are not sure what you are doing."))
         kwargs.setdefault("editable", False)
         super(InternalIdentifierField, self).__init__(**kwargs)
         self.validators.append(IdentifierValidator)
@@ -51,7 +50,7 @@ class InternalIdentifierField(models.CharField):
         # for `InternalIdentifierField`s to avoid `IntegrityError`s on unique fields.
         prepared_value = super(InternalIdentifierField, self).get_prep_value(value)
         if self.null:
-            return (prepared_value or None)
+            return prepared_value or None
         return prepared_value
 
     def deconstruct(self):
@@ -77,12 +76,12 @@ class FormattedDecimalFormField(forms.DecimalField):
 
     def widget_attrs(self, widget):
         # be more lenient when setting step than the default django widget_attrs
-        if isinstance(widget, NumberInput) and 'step' not in widget.attrs:
+        if isinstance(widget, NumberInput) and "step" not in widget.attrs:
             if self.decimal_places <= self.MAX_DECIMAL_PLACES_FOR_STEP:
-                step = format(decimal.Decimal('1') / 10 ** self.decimal_places, 'f')
+                step = format(decimal.Decimal("1") / 10 ** self.decimal_places, "f")
             else:
-                step = 'any'
-            widget.attrs.setdefault('step', step)
+                step = "any"
+            widget.attrs.setdefault("step", step)
         return super(FormattedDecimalFormField, self).widget_attrs(widget)
 
 
@@ -91,6 +90,7 @@ class FormattedDecimalField(models.DecimalField):
     DecimalField subclass to display decimal values in non-scientific
     format.
     """
+
     def value_from_object(self, obj):
         value = super(FormattedDecimalField, self).value_from_object(obj)
         if isinstance(value, numbers.Number):
@@ -101,12 +101,12 @@ class FormattedDecimalField(models.DecimalField):
         val = value.normalize()
         (sign, digits, exponent) = val.as_tuple()
         if exponent > exponent_limit:
-            raise ValueError('Exponent too large for formatting: %r' % value)
+            raise ValueError("Error! Exponent is too large for formatting: %r." % value)
         elif exponent < -exponent_limit:
-            raise ValueError('Exponent too small for formatting: %r' % value)
+            raise ValueError("Error! Exponent is too small for formatting: %r." % value)
         if len(digits) > max_digits:
-            raise ValueError('Too many digits for formatting: %r' % value)
-        return format(val, 'f')
+            raise ValueError("Error! Too many digits for formatting: %r." % value)
+        return format(val, "f")
 
     def formfield(self, **kwargs):
         kwargs.setdefault("form_class", FormattedDecimalFormField)
@@ -129,11 +129,7 @@ class QuantityField(FormattedDecimalField):
 
 
 class MeasurementField(FormattedDecimalField):
-    KNOWN_UNITS = ("mm", "m", "kg", "g", "m3")
-
     def __init__(self, unit, **kwargs):
-        if unit not in self.KNOWN_UNITS:
-            raise ImproperlyConfigured("Unit %r is not a known unit." % unit)
         self.unit = unit
         kwargs.setdefault("decimal_places", FORMATTED_DECIMAL_FIELD_DECIMAL_PLACES)
         kwargs.setdefault("max_digits", FORMATTED_DECIMAL_FIELD_MAX_DIGITS)
@@ -148,11 +144,7 @@ class MeasurementField(FormattedDecimalField):
 
 
 class LanguageFieldMixin(object):
-    # TODO: This list will include extinct languages
-    LANGUAGE_CODES = set(babel.Locale("en").languages.keys())
-
-    def clean_language_codes(self):
-        self.LANGUAGE_CODES = remove_extinct_languages(self.LANGUAGE_CODES)
+    LANGUAGE_CODES = remove_extinct_languages(tuple(set(babel.Locale("en").languages.keys())))
 
 
 class LanguageField(LanguageFieldMixin, models.CharField):
@@ -165,8 +157,7 @@ class LanguageField(LanguageFieldMixin, models.CharField):
         locale = get_current_babel_locale()
         translated_choices = [
             (code, locale.languages.get(code, code))
-            for (code, _)
-            in super(LanguageField, self).get_choices(include_blank, blank_choice)
+            for (code, _) in super(LanguageField, self).get_choices(include_blank, blank_choice)
         ]
         translated_choices.sort(key=lambda pair: pair[1].lower())
         return translated_choices
@@ -176,17 +167,12 @@ class LanguageFormField(LanguageFieldMixin, forms.ChoiceField):
     def __init__(self, *args, **kwargs):
         include_blank = kwargs.pop("include_blank", True)
         blank_choice = kwargs.pop("blank_choice", BLANK_CHOICE_DASH)
-        self.clean_language_codes()
         kwargs["choices"] = self.get_choices(include_blank, blank_choice)
         super(LanguageFormField, self).__init__(*args, **kwargs)
 
     def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH):
         locale = get_current_babel_locale()
-        translated_choices = [
-            (code, locale.languages.get(code, code))
-            for code
-            in sorted(self.LANGUAGE_CODES)
-        ]
+        translated_choices = [(code, locale.languages.get(code, code)) for code in sorted(self.LANGUAGE_CODES)]
         translated_choices.sort(key=lambda pair: pair[1].lower())
         if include_blank:
             translated_choices = blank_choice + translated_choices
@@ -202,7 +188,7 @@ class TaggedJSONField(JSONField):
     def __init__(self, *args, **kwargs):
         dump_kwargs = kwargs.setdefault("dump_kwargs", {})
         dump_kwargs.setdefault("cls", TaggedJSONEncoder)
-        dump_kwargs.setdefault("separators", (',', ':'))
+        dump_kwargs.setdefault("separators", (",", ":"))
         load_kwargs = kwargs.setdefault("load_kwargs", {})
         load_kwargs.setdefault("object_hook", tag_registry.decode)
         super(TaggedJSONField, self).__init__(*args, **kwargs)
@@ -210,8 +196,9 @@ class TaggedJSONField(JSONField):
 
 class HexColorField(models.CharField):
     """
-    Supports hexadecimal color values: #ABC, #AABBCC, #001122AA
+    Supports hexadecimal color values: #ABC, #AABBCC, #001122AA.
     """
+
     def __init__(self, **kwargs):
         kwargs["max_length"] = 9
         super(HexColorField, self).__init__(**kwargs)
@@ -222,11 +209,12 @@ class SeparatedValuesField(models.TextField):
     """
     https://stackoverflow.com/questions/1110153/what-is-the-most-efficient-way-to-store-a-list-in-the-django-models
     """
+
     def __init__(self, *args, **kwargs):
         self.separator = kwargs.pop("separator", ",")
         super(SeparatedValuesField, self).__init__(*args, **kwargs)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         if isinstance(value, six.string_types):
             return value.split(self.separator)
         return []
@@ -234,7 +222,7 @@ class SeparatedValuesField(models.TextField):
     def get_db_prep_value(self, value, connection, prepared=False):
         if not value:
             return
-        if (isinstance(value, list) or isinstance(value, tuple)):
+        if isinstance(value, list) or isinstance(value, tuple):
             return self.separator.join([force_text(s) for s in value])
         if isinstance(value, six.string_types):
             return value
@@ -242,3 +230,36 @@ class SeparatedValuesField(models.TextField):
     def value_to_string(self, obj):
         value = self._get_val_from_obj(obj)
         return self.get_db_prep_value(value)
+
+
+def polymorphic_has_pk(obj):
+    if getattr(obj, "polymorphic_primary_key_name", None):
+        if getattr(obj, obj.polymorphic_primary_key_name, None):
+            return True
+    return False
+
+
+class PolymorphicJSONField(JSONField):
+    """
+    Use this field when using JSONField inside a polumorphic model.
+    https://github.com/dmkoch/django-jsonfield/pull/193
+    """
+
+    def pre_init(self, value, obj):
+        try:
+            if obj._state.adding:
+                # Make sure the primary key actually exists on the object before
+                # checking if it's empty. This is a special case for South datamigrations
+                # see: https://github.com/bradjasper/django-jsonfield/issues/52
+                if getattr(obj, "pk", None) is not None or polymorphic_has_pk(obj):
+                    if isinstance(value, six.string_types):
+                        try:
+                            return json.loads(value, **self.load_kwargs)
+                        except ValueError:
+                            raise ValidationError(_("Enter a valid JSON."))
+        except AttributeError:
+            # south fake meta class doesn't create proper attributes
+            # see this:
+            # https://github.com/bradjasper/django-jsonfield/issues/52
+            pass
+        return value

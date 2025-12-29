@@ -8,7 +8,6 @@ Subpackages
 
     shuup.addons
     shuup.admin
-    shuup.api
     shuup.apps
     shuup.campaigns
     shuup.core
@@ -36,8 +35,8 @@ Subpackages
 Submodules
 ----------
 
-shuup.configuration module
---------------------------
+shuup\.configuration module
+---------------------------
 
 .. automodule:: shuup.configuration
     :members:

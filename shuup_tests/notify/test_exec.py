@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of Shuup.
 #
-# Copyright (c) 2012-2018, Shuup Inc. All rights reserved.
+# Copyright (c) 2012-2021, Shuup Commerce Inc. All rights reserved.
 #
 # This source code is licensed under the OSL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
@@ -54,10 +54,14 @@ def test_conditionless_step_executes():
 
 @pytest.mark.parametrize("cond_op", list(StepConditionOperator))
 def test_condops(cond_op):
-    step = Step(cond_op=cond_op, conditions=[
-        NonEmpty({"v": {"variable": "a"}}),
-        NonEmpty({"v": {"variable": "b"}}),
-    ], actions=[SetDebugFlag({})])
+    step = Step(
+        cond_op=cond_op,
+        conditions=[
+            NonEmpty({"v": {"variable": "a"}}),
+            NonEmpty({"v": {"variable": "b"}}),
+        ],
+        actions=[SetDebugFlag({})],
+    )
     context = Context.from_variables(a=True, b=False)
     step.execute(context)
     if cond_op == StepConditionOperator.ALL:
@@ -67,14 +71,18 @@ def test_condops(cond_op):
     elif cond_op == StepConditionOperator.NONE:
         assert not context.get("debug")
     else:
-        raise ValueError("Unexpected condop %r" % cond_op)
+        raise ValueError("Error! Unexpected cond_op %r." % cond_op)
 
 
 def test_none_condop():
-    step = Step(cond_op=StepConditionOperator.NONE, conditions=[
-        NonEmpty({"v": {"variable": "a"}}),
-        NonEmpty({"v": {"variable": "b"}}),
-    ], actions=[SetDebugFlag({})])
+    step = Step(
+        cond_op=StepConditionOperator.NONE,
+        conditions=[
+            NonEmpty({"v": {"variable": "a"}}),
+            NonEmpty({"v": {"variable": "b"}}),
+        ],
+        actions=[SetDebugFlag({})],
+    )
     context = Context.from_variables(a=False, b=False)
     step.execute(context)
     assert context.get("debug")

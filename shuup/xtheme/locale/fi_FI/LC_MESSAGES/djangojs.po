@@ -6,15 +6,15 @@
 # Aarni Koskela, 2015
 # Heikki Saari <heikki.saari@anders.fi>, 2016
 # Juha Kujala, 2015
-# Panu Tulimäki <panu@shuup.com>, 2018
+# Panu Tulimäki <panu@shuup.com>, 2018,2020
 # Teemu Selkälä <teemu.selkala@anders.fi>, 2015
 # Tuomas Suutari <tuomas.suutari@anders.fi>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Shuup\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-21 23:57+0000\n"
-"PO-Revision-Date: 2018-09-25 17:18+0000\n"
+"POT-Creation-Date: 2019-12-05 00:12+0000\n"
+"PO-Revision-Date: 2020-09-29 08:38+0000\n"
 "Last-Translator: Panu Tulimäki <panu@shuup.com>\n"
 "Language-Team: Finnish (Finland) (http://www.transifex.com/shuup/shuup/language/fi_FI/)\n"
 "MIME-Version: 1.0\n"
@@ -27,6 +27,11 @@ msgstr ""
 #, javascript-format
 msgid "Edit %s"
 msgstr "Muokkaa %s"
+
+msgid ""
+"Changing plugin cells without saving will cause changes made to this cell to"
+" be lost."
+msgstr "Laajennussolujen vaihtaminen tallentamatta tälle solulle tehdyt muutokset menetetään."
 
 #, javascript-format
 msgid "Error: Cannot add more than %s cells to one row."
@@ -52,9 +57,6 @@ msgstr "Oletko varma, että haluat perua kaikki muutokset, jotka on tehty edelli
 msgid ""
 "Changing plugins will cause other changes made on this form to be lost."
 msgstr "Liitännäisten vaihtaminen aiheuttaa muiden tämän lomakkeen muutosten menettämisen."
-
-msgid "Toggle Editor"
-msgstr "Näytä / piilota editori"
 
 msgid "Custom CSS/JS"
 msgstr "Kustomoitu CSS/JS"
